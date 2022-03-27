@@ -7,7 +7,7 @@ import (
 
 func MemberClosureInsert(nodeID, targetID string) string {
 
-	t := "SELECT ancestor, " + nodeID + "prefix, lvl+1,'" + meta.Prefix + "' FROM tbl_members_tree WHERE descendant = " + targetID + " UNION SELECT " + nodeID + "," + nodeID + ",0,'" + meta.Prefix + "'"
+	t := "SELECT ancestor, " + nodeID + ",lvl+1,'" + meta.Prefix + "' FROM tbl_members_tree WHERE descendant = " + targetID + " UNION SELECT " + nodeID + "," + nodeID + ",0,'" + meta.Prefix + "'"
 	query := "INSERT INTO tbl_members_tree (ancestor, descendant,lvl,prefix) (" + t + ")"
 
 	return query

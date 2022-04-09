@@ -16,10 +16,10 @@ import (
 type MemberController struct{}
 
 type MemberRegParam struct {
-	VID      string `rule:"sDigit" min:"10" max:"35" msg:"vid error" name:"vid"`
-	LinkID   string `rule:"none" json:"link_id" name:"link_id"`
-	RegUrl   string `rule:"none" json:"reg_url" name:"reg_url"`
-	Code     string `rule:"alnum" min:"3" max:"4" msg:"code error" name:"code"`
+	//VID      string `rule:"sDigit" min:"10" max:"35" msg:"vid error" name:"vid"`
+	LinkID string `rule:"none" json:"link_id" name:"link_id"`
+	RegUrl string `rule:"none" json:"reg_url" name:"reg_url"`
+	//Code     string `rule:"alnum" min:"3" max:"4" msg:"code error" name:"code"`
 	Name     string `rule:"uname" name:"username" min:"4" max:"9" msg:"username error"`
 	DeviceNo string `rule:"none" name:"device_no"`
 	Password string `rule:"upwd" name:"password" min:"8" max:"15" msg:"password error"`
@@ -132,10 +132,10 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	if ok := model.MemberVerify(param.VID, param.Code); !ok {
-		helper.Print(ctx, false, helper.CaptchaErr)
-		return
-	}
+	//if ok := model.MemberVerify(param.VID, param.Code); !ok {
+	//	helper.Print(ctx, false, helper.CaptchaErr)
+	//	return
+	//}
 
 	createdAt := uint32(ctx.Time().Unix())
 	device := string(ctx.Request.Header.Peek("d"))

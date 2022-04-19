@@ -244,6 +244,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		QP: qp.StringFixed(1),
 		DJ: dj.StringFixed(1),
 		DZ: dz.StringFixed(1),
+		CP: cp.StringFixed(1),
 	}
 	createdAt := uint32(ctx.Time().Unix())
 	// 添加下级代理

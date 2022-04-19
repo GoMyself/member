@@ -967,6 +967,7 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].ZR = rb.ZR
 			data.D[i].QP = rb.QP
 			data.D[i].DZ = rb.DZ
+			data.D[i].CP = rb.CP
 		}
 	}
 

@@ -19,6 +19,7 @@ type Link_t struct {
 	TY        string `name:"ty" db:"ty" json:"ty" rule:"float" required:"1" min:"3" max:"3" msg:""` //体育返水
 	DJ        string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""` //电竞返水
 	DZ        string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""` //电子返水
+	CP        string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""` //彩票返水
 	CreatedAt uint32 `db:"created_at" json:"created_at" rule:"none" required:"0"`                   //
 }
 
@@ -29,12 +30,14 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	ty, _ := decimal.NewFromString(data.TY)
 	dj, _ := decimal.NewFromString(data.DJ)
 	dz, _ := decimal.NewFromString(data.DZ)
+	cp, _ := decimal.NewFromString(data.CP)
 
 	zr = zr.Truncate(1)
 	qp = qp.Truncate(1)
 	ty = ty.Truncate(1)
 	dj = dj.Truncate(1)
 	dz = dz.Truncate(1)
+	cp = dz.Truncate(1)
 
 	sess, err := MemberInfo(ctx)
 	if err != nil {
@@ -61,6 +64,9 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	if dj.GreaterThan(own.DJ) || dj.IsNegative() {
 		return errors.New(helper.RebateOutOfRange)
 	}
+	if cp.GreaterThan(own.CP) || cp.IsNegative() {
+		return errors.New(helper.RebateOutOfRange)
+	}
 
 	recs := g.Record{
 		"id":         data.ID,
@@ -71,6 +77,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		"ty":         ty.StringFixed(1),
 		"dj":         dj.StringFixed(1),
 		"dz":         dz.StringFixed(1),
+		"cp":         cp.StringFixed(1),
 		"prefix":     meta.Prefix,
 	}
 
@@ -85,6 +92,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 }
 
 func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
+
 	sess, err := MemberInfo(ctx)
 	if err != nil {
 		return err
@@ -111,7 +119,7 @@ func LinkFindOne(id string) (Link_t, error) {
 	}
 
 	t := dialect.From("tbl_member_link")
-	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "created_at").Where(g.Ex{"id": id, "prefix": meta.Prefix}).Limit(1).ToSQL()
+	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"id": id, "prefix": meta.Prefix}).Limit(1).ToSQL()
 	err := meta.MerchantDB.Get(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		return data, pushLog(err, helper.DBErr)
@@ -130,7 +138,7 @@ func LinkList(ctx *fasthttp.RequestCtx) ([]Link_t, error) {
 	}
 
 	t := dialect.From("tbl_member_link")
-	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()
+	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()
 	err = meta.MerchantDB.Select(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		return data, pushLog(err, helper.DBErr)

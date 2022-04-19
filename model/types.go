@@ -91,6 +91,7 @@ type MemberRebate struct {
 	TY        string `db:"ty" json:"ty"` //体育返水
 	DJ        string `db:"dj" json:"dj"` //电竞返水
 	DZ        string `db:"dz" json:"dz"` //电游返水
+	CP        string `db:"cp" json:"cp"` //电游返水
 	CreatedAt uint32 `db:"created_at" json:"created_at"`
 	Prefix    string `db:"prefix" json:"prefix"`
 }
@@ -433,6 +434,7 @@ type MemberListCol struct {
 	QP        string  `json:"qp" db:"qp"`
 	DJ        string  `json:"dj" db:"dj"`
 	DZ        string  `json:"dz" db:"dz"`
+	CP        string  `json:"cp" db:"cp"`
 }
 
 type MemberAggData struct {

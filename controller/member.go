@@ -172,6 +172,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 	sqp := string(ctx.PostArgs().Peek("qp"))
 	sdj := string(ctx.PostArgs().Peek("dj"))
 	sdz := string(ctx.PostArgs().Peek("dz"))
+	scp := string(ctx.PostArgs().Peek("cp"))
 
 	username := string(ctx.UserValue("token").([]byte))
 	if username == "" {
@@ -217,6 +218,12 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 
 	dz, err := decimal.NewFromString(sdz) //下级会员电子返水比例
 	if err != nil || dz.IsNegative() || dz.GreaterThan(parent.DZ) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
+	cp, err := decimal.NewFromString(scp) //下级会员彩票返水比例
+	if err != nil || cp.IsNegative() || cp.GreaterThan(parent.CP) {
 		helper.Print(ctx, false, helper.RebateOutOfRange)
 		return
 	}

@@ -287,6 +287,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID stri
 		m.ParentName = parent.Username
 		m.TopUid = parent.TopUid
 		m.TopName = parent.TopName
+		m.AgencyType = parent.AgencyType
+		m.GroupName = parent.GroupName
 	} else {
 
 		rootRebate, err := RebateScale(topId)
@@ -313,6 +315,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID stri
 		m.ParentName = root.Username
 		m.TopUid = root.TopUid
 		m.TopName = root.TopName
+		m.AgencyType = root.AgencyType
+		m.GroupName = root.GroupName
 	}
 
 	query, _, _ := dialect.Insert("tbl_members").Rows(&m).ToSQL()

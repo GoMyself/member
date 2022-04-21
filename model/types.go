@@ -33,7 +33,7 @@ type Member struct {
 	LockAmount         string `db:"lock_amount" json:"lock_amount"`                   //锁定金额
 	Commission         string `db:"commission" json:"commission"`                     //佣金
 	GroupName          string `db:"group_name" json:"group_name"`                     //团队名称
-	AgencyType         int64  `json:"agency_type" json:"agency_type"`                 //391团队代理 393普通代理
+	AgencyType         int64  `db:"agency_type" json:"agency_type"`                   //391团队代理 393普通代理
 }
 
 type MemberData struct {

@@ -16,23 +16,21 @@ import (
 type MemberController struct{}
 
 type MemberRegParam struct {
-	//VID      string `rule:"sDigit" min:"10" max:"35" msg:"vid error" name:"vid"`
-	LinkID string `rule:"none" json:"link_id" name:"link_id"`
-	RegUrl string `rule:"none" json:"reg_url" name:"reg_url"`
-	//Code     string `rule:"alnum" min:"3" max:"4" msg:"code error" name:"code"`
-	Name     string `rule:"uname" name:"username" min:"4" max:"9" msg:"username error"`
+	LinkID   string `rule:"none" json:"link_id" name:"link_id"`
+	RegUrl   string `rule:"none" json:"reg_url" name:"reg_url"`
+	Name     string `rule:"uname" name:"username" min:"5" max:"14" msg:"username error"`
 	DeviceNo string `rule:"none" name:"device_no"`
-	Password string `rule:"upwd" name:"password" min:"8" max:"15" msg:"password error"`
+	Password string `rule:"upwd" name:"password" min:"8" max:"20" msg:"password error"`
 }
 
 // 修改用户密码参数
 type forgetPassword struct {
-	Username  string `rule:"alnum" min:"4" max:"9" msg:"username error" name:"username"`
+	Username  string `rule:"alnum" min:"5" max:"14" msg:"username error" name:"username"`
 	Sid       string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
 	Code      string `json:"code" name:"code" rule:"alnum" min:"2" max:"8" msg:"code error"`
 	Addr      string `rule:"alnum" msg:"addr error" name:"addr"`
-	Password1 string `rule:"upwd" name:"password1" min:"8" max:"15" msg:"password error"`
-	Password2 string `rule:"upwd" name:"password2" min:"8" max:"15" msg:"reset_password error"`
+	Password1 string `rule:"upwd" name:"password1" min:"8" max:"20" msg:"password error"`
+	Password2 string `rule:"upwd" name:"password2" min:"8" max:"20" msg:"reset_password error"`
 }
 
 // 绑定邮箱
@@ -71,13 +69,13 @@ func (that *MemberController) Balance(ctx *fasthttp.RequestCtx) {
 func (that *MemberController) Login(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.PostArgs().Peek("username"))
-	if !validator.CheckUName(username, 4, 9) {
+	if !validator.CheckUName(username, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameFMTErr)
 		return
 	}
 
 	password := string(ctx.PostArgs().Peek("password"))
-	if !validator.CheckUPassword(password, 8, 15) {
+	if !validator.CheckUPassword(password, 8, 20) {
 		helper.Print(ctx, false, helper.PasswordFMTErr)
 		return
 	}
@@ -131,11 +129,6 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 			return
 		}
 	}
-
-	//if ok := model.MemberVerify(param.VID, param.Code); !ok {
-	//	helper.Print(ctx, false, helper.CaptchaErr)
-	//	return
-	//}
 
 	createdAt := uint32(ctx.Time().Unix())
 	device := string(ctx.Request.Header.Peek("d"))
@@ -228,12 +221,12 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if !validator.CheckUName(subName, 4, 9) {
+	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}
 
-	if !validator.CheckUPassword(password, 8, 15) {
+	if !validator.CheckUPassword(password, 8, 20) {
 		helper.Print(ctx, false, helper.PasswordFMTErr)
 		return
 	}
@@ -411,7 +404,7 @@ func (that *MemberController) Available(ctx *fasthttp.RequestCtx) {
 
 	username := strings.ToLower(string(ctx.QueryArgs().Peek("username")))
 	//字母数字组合，4-9，前2个字符必须为字母
-	if !validator.CheckUName(username, 4, 9) {
+	if !validator.CheckUName(username, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}
@@ -457,7 +450,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
 	ex := g.Ex{}
 	if username != "" {
-		if !validator.CheckUName(username, 4, 9) {
+		if !validator.CheckUName(username, 5, 14) {
 			helper.Print(ctx, false, helper.UsernameErr)
 			return
 		}
@@ -581,13 +574,13 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if !validator.CheckUName(subName, 4, 9) {
+	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}
 
 	if password != "" {
-		if !validator.CheckUPassword(password, 8, 15) {
+		if !validator.CheckUPassword(password, 8, 20) {
 			helper.Print(ctx, false, helper.PasswordFMTErr)
 			return
 		}

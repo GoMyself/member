@@ -116,7 +116,7 @@ func RecordGame(ty int, uid, playerName, startTime, endTime string, flag, gameID
 	if ty == 1 {
 		// 直属下级游戏记录
 		params["parent_uid"] = uid
-		if playerName != "" && validator.CheckUName(playerName, 4, 9) {
+		if playerName != "" && validator.CheckUName(playerName, 5, 14) {
 			params["player_name"] = playerName
 		}
 	} else { // 查自己的游戏记录

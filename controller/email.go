@@ -35,7 +35,7 @@ func (that *EmailController) Send(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		if !validator.CheckUName(username, 4, 9) {
+		if !validator.CheckUName(username, 5, 14) {
 			helper.Print(ctx, false, helper.UsernameErr)
 			return
 		}

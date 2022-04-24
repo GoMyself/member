@@ -12,5 +12,5 @@ BuildGoVersion=`go version`
 
 go build -ldflags "-X main.gitReversion=${GitReversion}  -X 'main.buildTime=${BuildTime}' -X 'main.buildGoVersion=${BuildGoVersion}'" -o $PROJECT
 # cg
-sshpass -p $1 scp $PROJECT testp3@34.92.240.177:/home/centos/workspace/cg/$PROJECT
+scp -i /opt/data/p3test -P 10087 $PROJECT testp3@34.92.240.177:/home/centos/workspace/cg/$PROJECT
 

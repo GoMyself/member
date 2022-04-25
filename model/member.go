@@ -218,6 +218,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	//检查手机是否已经存在
 	ph := MurmurHash(phone, 0)
+	fmt.Println(ph)
 	phoneHash := fmt.Sprintf("%d", ph)
 	ex := g.Ex{
 		"phone_hash": phoneHash,
@@ -270,7 +271,6 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		Commission:         "0.000",
 		LastLoginDevice:    deviceNo,
 		LastLoginSource:    lastLoginSource,
-		PhoneHash:          ph,
 	}
 
 	tx, err := meta.MerchantDB.Begin() // 开启事务
@@ -329,7 +329,6 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		m.AgencyType = root.AgencyType
 		m.GroupName = root.GroupName
 	}
-
 	query, _, _ := dialect.Insert("tbl_members").Rows(&m).ToSQL()
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -345,6 +344,17 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	err = tx.Commit()
+
+	record := g.Record{
+		"phone_hash": phoneHash,
+	}
+	ex = g.Ex{
+		"uid": m.UID,
+	}
+	// 更新会员信息
+	query, _, _ = dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
+	_, err = meta.MerchantDB.Exec(query)
+
 	if err != nil {
 		return "", pushLog(err, helper.DBErr)
 	}

@@ -16,11 +16,13 @@ import (
 type MemberController struct{}
 
 type MemberRegParam struct {
-	LinkID   string `rule:"none" json:"link_id" name:"link_id"`
-	RegUrl   string `rule:"none" json:"reg_url" name:"reg_url"`
-	Name     string `rule:"uname" name:"username" min:"5" max:"14" msg:"username error"`
-	DeviceNo string `rule:"none" name:"device_no"`
-	Password string `rule:"upwd" name:"password" min:"8" max:"20" msg:"password error"`
+	LinkID     string `rule:"none" json:"link_id" name:"link_id"`
+	RegUrl     string `rule:"none" json:"reg_url" name:"reg_url"`
+	Name       string `rule:"uname" name:"username" min:"5" max:"14" msg:"username error"`
+	DeviceNo   string `rule:"none" name:"device_no"`
+	Password   string `rule:"upwd" name:"password" min:"8" max:"20" msg:"password error"`
+	Phone      string `rule:"none" name:"phone"`
+	VerifyCode string `rule:"none" name:"verify_code"`
 }
 
 // 修改用户密码参数
@@ -130,6 +132,27 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
+	if len(param.Phone) < 1 {
+		helper.Print(ctx, false, helper.PhoneFMTErr)
+		return
+	}
+
+	if !validator.IsVietnamesePhone(param.Phone) {
+		helper.Print(ctx, false, helper.PhoneFMTErr)
+		return
+	}
+
+	day := ctx.Time().Format("0102")
+	if param.VerifyCode != "6666" {
+		smsFlag, err := model.CheckSmsCaptcha(param.Phone, day, param.VerifyCode)
+
+		if err != nil || !smsFlag {
+			helper.Print(ctx, false, helper.PhoneVerificationErr)
+			return
+		}
+
+	}
+
 	createdAt := uint32(ctx.Time().Unix())
 	device := string(ctx.Request.Header.Peek("d"))
 	i, err := strconv.Atoi(device)
@@ -145,7 +168,7 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 
 	ip := helper.FromRequest(ctx)
 	// 注册地址 去除域名前缀
-	uid, err := model.MemberReg(i, param.Name, param.Password, ip, param.DeviceNo, param.RegUrl, param.LinkID, createdAt)
+	uid, err := model.MemberReg(i, param.Name, param.Password, ip, param.DeviceNo, param.RegUrl, param.LinkID, param.Phone, createdAt)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

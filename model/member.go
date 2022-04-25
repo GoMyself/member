@@ -200,7 +200,7 @@ func MemberLogin(vid, code, username, password, ip, device, deviceNo string, las
 	return sid, nil
 }
 
-func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID string, createdAt uint32) (string, error) {
+func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, phone string, createdAt uint32) (string, error) {
 
 	// 检查ip黑名单
 	idx := MurmurHash(ip, 0) % 10
@@ -214,6 +214,16 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID stri
 
 	if ok {
 		return "", errors.New(fmt.Sprintf("%s,%s", helper.IpBanErr, ip))
+	}
+
+	//检查手机是否已经存在
+	ph := MurmurHash(phone, 0)
+	phoneHash := fmt.Sprintf("%d", ph)
+	ex := g.Ex{
+		"phone_hash": phoneHash,
+	}
+	if MemberBindCheck(ex) {
+		return "", errors.New(helper.PhoneExist)
 	}
 
 	// web/h5不检查设备号黑名单
@@ -260,6 +270,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID stri
 		Commission:         "0.000",
 		LastLoginDevice:    deviceNo,
 		LastLoginSource:    lastLoginSource,
+		PhoneHash:          ph,
 	}
 
 	tx, err := meta.MerchantDB.Begin() // 开启事务

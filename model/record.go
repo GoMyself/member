@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"github.com/olivere/elastic/v7"
 	"github.com/shopspring/decimal"
 	"member2/contrib/helper"
@@ -529,4 +530,19 @@ func recordTradeAdjust(uid string, flag, page, pageSize int, startAt, endAt int6
 	}
 
 	return data, nil
+}
+
+func CheckSmsCaptcha(phone, day, code string) (bool, error) {
+
+	key := fmt.Sprintf("SMS%s%s", phone, day)
+	val, err := meta.MerchantRedis.Get(ctx, key).Result()
+	if err != nil && err != redis.Nil {
+		return false, errors.New(helper.CaptchaErr)
+	}
+
+	if code == val {
+		return true, nil
+	}
+
+	return false, errors.New(helper.CaptchaErr)
 }

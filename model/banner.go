@@ -25,10 +25,12 @@ func BannerImages(flags, device string) (string, error) {
 	}
 
 	if v, ok := data[1].(string); ok {
+		fmt.Println("1:" + data[1].(string))
 		base.Set("filter", fastjson.MustParse(v))
 	}
 
 	if v, ok := data[0].(string); ok {
+		fmt.Println("0:" + data[0].(string))
 		if flags == "5" {
 			arr := new(fastjson.Arena)
 			aa := arr.NewArray()

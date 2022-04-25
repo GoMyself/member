@@ -61,6 +61,7 @@ func (that *SlotController) Search(ctx *fasthttp.RequestCtx) {
 		"keyword": params.Keyword,
 		"flag":    fmt.Sprintf("%d", params.Flag),
 	}
+	fmt.Println(param)
 
 	data, err := model.SlotSearch(params.Page, params.PageSize, param)
 	if err != nil {

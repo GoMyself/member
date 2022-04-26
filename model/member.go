@@ -391,6 +391,18 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		fmt.Printf("zlog error : %v data : %#v\n", err, l)
 	}
 
+	var res []schema.Enc_t
+	recs := schema.Enc_t{
+		Field: "phone",
+		Value: phone,
+		ID:    m.UID,
+	}
+	res = append(res, recs)
+	_, err = rpcInsert(res)
+	if err != nil {
+		fmt.Printf("rpcInsert error : %v data : %#v\n", err, recs)
+	}
+
 	return id, nil
 }
 

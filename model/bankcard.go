@@ -32,12 +32,12 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 	}
 
 	// 未绑定手机号 且 手机号不传  提示：请先绑定手机
-	if phone == "" && mb.PhoneHash == 0 {
+	if phone == "" && mb.PhoneHash == "0" {
 		return errors.New(helper.UserIDCheckInvalidPhone)
 	}
 
 	// 未绑定手机号 需要验证手机号是否已经被绑定
-	if phone != "" && mb.PhoneHash == 0 {
+	if phone != "" && mb.PhoneHash == "0" {
 		if !validator.IsVietnamesePhone(phone) {
 			return errors.New(helper.PhoneFMTErr)
 		}
@@ -125,7 +125,7 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 		"bankcard_total": g.L("bankcard_total+1"),
 	}
 	// 会员未绑定真实姓名，更新第一次绑定银行卡的真实姓名到会员信息
-	if mb.RealnameHash == 0 {
+	if mb.RealnameHash == "0" {
 		// 第一次新增银行卡判断真实姓名是否为越南文
 		if !validator.CheckStringVName(realname) {
 			return errors.New(helper.RealNameFMTErr)
@@ -144,7 +144,7 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 	}
 
 	// 会员未绑定手机号，更新手机号和手机号hash
-	if phone != "" && mb.PhoneHash == 0 {
+	if phone != "" && mb.PhoneHash == "0" {
 		recs := schema.Enc_t{
 			Field: "phone",
 			Value: phone,

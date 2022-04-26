@@ -217,9 +217,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	//检查手机是否已经存在
-	ph := MurmurHash(phone, 0)
-	fmt.Println(ph)
-	phoneHash := fmt.Sprintf("%d", ph)
+	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
 	ex := g.Ex{
 		"phone_hash": phoneHash,
 	}
@@ -255,6 +253,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		UID:                uid,
 		Username:           userName,
 		Password:           fmt.Sprintf("%d", MurmurHash(password, createdAt)),
+		PhoneHash:          phoneHash,
 		Prefix:             meta.Prefix,
 		State:              1,
 		Regip:              ip,
@@ -647,7 +646,7 @@ func MemberPasswordUpdate(ty int, sid, code, old, password string, ctx *fasthttp
 	}
 
 	// 邮箱 有绑定
-	if ty == 1 && mb.EmailHash > 0 {
+	if ty == 1 && mb.EmailHash != "0" {
 		if sid == "" || !validator.CheckStringDigit(sid) {
 			return errors.New(helper.ParamErr)
 		}
@@ -734,7 +733,7 @@ func MemberUpdatePhone(phone string, ctx *fasthttp.RequestCtx) error {
 	}
 
 	//会员绑定手机号后，不允许更新手机号
-	if mb.PhoneHash != 0 {
+	if mb.PhoneHash != "0" {
 		return errors.New(helper.PhoneBindAlreadyErr)
 	}
 
@@ -833,7 +832,7 @@ func MemberUpdateName(ctx *fasthttp.RequestCtx, realName string) error {
 	//会员填写真实姓名后，不允许更新真实姓名
 	if realName != "" { // 传入用户真实姓名  需要修改
 
-		if mb.RealnameHash != 0 {
+		if mb.RealnameHash != "0" {
 			return errors.New(helper.RealNameAlreadyBind)
 		}
 
@@ -900,7 +899,7 @@ func MemberForgetPwd(username, pwd, email, ip, sid, code string) error {
 		return errors.New(helper.UsernameErr)
 	}
 
-	emailHash := MurmurHash(email, 0)
+	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
 	if emailHash != mb.EmailHash {
 		return errors.New(helper.UsernameEmailMismatch)
 	}

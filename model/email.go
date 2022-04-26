@@ -53,7 +53,7 @@ func EmailSend(day, ip, username, address string, flag int) (string, error) {
 	}
 
 	if flag == EmailForgetPassword {
-		emailHash := MurmurHash(address, 0)
+		emailHash := fmt.Sprintf("%d", MurmurHash(address, 0))
 		if emailHash != mb.EmailHash {
 			return id, errors.New(helper.UsernameEmailMismatch)
 		}

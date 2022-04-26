@@ -343,21 +343,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", pushLog(err, helper.DBErr)
 	}
 
-	err = tx.Commit()
-
-	record := g.Record{
-		"phone_hash": phoneHash,
-	}
-	ex = g.Ex{
-		"uid": m.UID,
-	}
-	// 更新会员信息
-	query, _, _ = dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
-	_, err = meta.MerchantDB.Exec(query)
-
-	if err != nil {
-		return "", pushLog(err, helper.DBErr)
-	}
+	_ = tx.Commit()
 
 	id, err := session.Set([]byte(m.Username), m.UID)
 	if err != nil {

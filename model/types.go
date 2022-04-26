@@ -29,6 +29,7 @@ type Member struct {
 	LastLoginSource    int    `db:"last_login_source" json:"last_login_source"`       //上次登录设备来源:1=pc,2=h5,3=ios,4=andriod
 	Remarks            string `db:"remarks" json:"remarks"`                           //备注
 	State              uint8  `db:"state" json:"state"`                               //状态 1正常 2禁用
+	Level              int    `db:"level" json:"level" redis:"level"`                 //等级
 	Balance            string `db:"balance" json:"balance"`                           //余额
 	LockAmount         string `db:"lock_amount" json:"lock_amount"`                   //锁定金额
 	Commission         string `db:"commission" json:"commission"`                     //佣金
@@ -58,6 +59,7 @@ type MemberInfos struct {
 	PhoneHash     uint64 `db:"phone_hash" json:"phone_hash" redis:"phone_hash"`
 	CreatedAt     uint32 `db:"created_at" json:"created_at" redis:"created_at"`
 	BankcardTotal int    `db:"bankcard_total" json:"bankcard_total" redis:"bankcard_total"`
+	Level         int    `db:"level" json:"level" redis:"level"` //等级
 }
 
 type MemberInfosData struct {

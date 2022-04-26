@@ -271,6 +271,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		Commission:         "0.000",
 		LastLoginDevice:    deviceNo,
 		LastLoginSource:    lastLoginSource,
+		Level:              1,
 	}
 
 	tx, err := meta.MerchantDB.Begin() // 开启事务

@@ -254,6 +254,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		Username:           userName,
 		Password:           fmt.Sprintf("%d", MurmurHash(password, createdAt)),
 		PhoneHash:          phoneHash,
+		EmailHash:          "0",
+		RealnameHash:       "0",
 		Prefix:             meta.Prefix,
 		State:              1,
 		Regip:              ip,

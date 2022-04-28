@@ -75,6 +75,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	slotCtl := new(controller.SlotController)
 	// 公告
 	noticeCtl := new(controller.NoticeController)
+	// 咋内信
+	msgCtl := new(controller.MessageController)
 	// 推广链接
 	linkCtl := new(controller.LinkController)
 	// 返水
@@ -162,6 +164,13 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 
 	// 公告跑马灯
 	get("/member/notices", noticeCtl.List)
+
+	// 站内信-列表
+	get("/member/message/list", msgCtl.List)
+	// 站内信-已读
+	get("/member/message/read", msgCtl.Read)
+	// 站内信-删除
+	get("/member/message/delete", msgCtl.Delete)
 
 	// 找回密码发送邮件
 	post("/member/email", emailCtl.Send)

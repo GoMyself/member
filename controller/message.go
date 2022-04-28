@@ -15,7 +15,7 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
-	ty := ctx.QueryArgs().GetUintOrZero("ty")
+	ty := ctx.QueryArgs().GetUintOrZero("ty") //1 站内消息 2 活动消息
 	username := string(ctx.UserValue("token").([]byte))
 	if username == "" {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
@@ -97,18 +97,20 @@ func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	s := strings.Split(ids, ",")
+	var s []interface{}
 	if flag == 1 {
 		if len(s) == 0 {
 			helper.Print(ctx, false, helper.IDErr)
 			return
 		}
 
-		for _, v := range s {
+		for _, v := range strings.Split(ids, ",") {
 			if !validator.CtypeDigit(v) {
 				helper.Print(ctx, false, helper.IDErr)
 				return
 			}
+
+			s = append(s, v)
 		}
 	}
 

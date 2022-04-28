@@ -57,10 +57,10 @@ func MessageRead(id, username string) error {
 }
 
 // 站内信删除已读
-func MessageDelete(ids []string, username string, flag int) error {
+func MessageDelete(ids []interface{}, username string, flag int) error {
 
 	query := elastic.NewBoolQuery().Filter(
-		elastic.NewTermQuery("id", ids),
+		elastic.NewTermsQuery("id", ids...),
 		elastic.NewTermQuery("username", username),
 		elastic.NewTermQuery("prefix", meta.Prefix))
 	if flag == 2 {

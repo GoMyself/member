@@ -47,13 +47,13 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 //MessageRead  站内信已读
 func MessageRead(id, username string) error {
 
-	handle := meta.ES.UpdateByQuery(meta.EsPrefix + "messages")
+	boolQuery := elastic.NewBoolQuery().Must(
+		elastic.NewTermQuery("id", id),
+		elastic.NewTermQuery("username", username),
+		elastic.NewTermQuery("prefix", meta.Prefix))
 
-	handle.Query(elastic.NewTermQuery("id", id))
-	handle.Query(elastic.NewTermQuery("username", username))
-	handle.Query(elastic.NewTermQuery("prefix", meta.Prefix))
-
-	_, err := handle.Script(elastic.NewScript("ctx._source['is_read']=1;")).ProceedOnVersionConflict().Do(ctx)
+	_, err := meta.ES.UpdateByQuery(meta.EsPrefix + "messages").Query(boolQuery).
+		Script(elastic.NewScript("ctx._source['is_read']=1;")).ProceedOnVersionConflict().Do(ctx)
 	if err != nil {
 		return pushLog(err, helper.ESErr)
 	}
@@ -69,14 +69,13 @@ func MessageDelete(ids []interface{}, username string, flag int) error {
 		elastic.NewTermQuery("username", username),
 		elastic.NewTermQuery("prefix", meta.Prefix))
 	if flag == 2 {
-		query = elastic.NewBoolQuery().Filter(
+		query = elastic.NewBoolQuery().Must(
 			elastic.NewTermQuery("is_read", 1),
 			elastic.NewTermQuery("username", username),
 			elastic.NewTermQuery("prefix", meta.Prefix))
 	}
 
-	_, err := meta.ES.DeleteByQuery(meta.EsPrefix + "messages").
-		Query(query).ProceedOnVersionConflict().Do(ctx)
+	_, err := meta.ES.DeleteByQuery(meta.EsPrefix + "messages").Query(query).ProceedOnVersionConflict().Do(ctx)
 	if err != nil {
 		return pushLog(err, helper.ESErr)
 	}

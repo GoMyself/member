@@ -15,7 +15,7 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 	param := map[string]interface{}{
 		"prefix": meta.Prefix,
 		//"ty":       ty,
-		"username": username,
+		//"username": username,
 	}
 	total, esData, _, err := esSearch(meta.EsPrefix+"messages", "send_at", page, pageSize, fields, param, map[string][]interface{}{}, map[string]string{})
 	if err != nil {

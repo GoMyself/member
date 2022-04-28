@@ -41,7 +41,6 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 		return "", errors.New(helper.FormatErr)
 	}
 
-	fmt.Println("MessageList", username, total, esData, string(b))
 	return string(b), nil
 }
 

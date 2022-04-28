@@ -51,8 +51,8 @@ func MessageRead(id, username string) error {
 	handle := meta.ES.UpdateByQuery(meta.EsPrefix + "messages")
 
 	handle.Query(elastic.NewTermQuery("id", id))
-	handle.Query(elastic.NewTermQuery("username.keyword", username))
-	handle.Query(elastic.NewTermQuery("prefix.keyword", meta.Prefix))
+	handle.Query(elastic.NewTermQuery("username", username))
+	handle.Query(elastic.NewTermQuery("prefix", meta.Prefix))
 
 	_, err := handle.Script(elastic.NewScript("ctx._source['is_read']=1;")).ProceedOnVersionConflict().Do(ctx)
 	if err != nil {
@@ -66,14 +66,14 @@ func MessageRead(id, username string) error {
 func MessageDelete(ids []interface{}, username string, flag int) error {
 
 	query := elastic.NewBoolQuery().Filter(
-		elastic.NewTermsQuery("id.keyword", ids...),
-		elastic.NewTermQuery("username.keyword", username),
-		elastic.NewTermQuery("prefix.keyword", meta.Prefix))
+		elastic.NewTermsQuery("id", ids...),
+		elastic.NewTermQuery("username", username),
+		elastic.NewTermQuery("prefix", meta.Prefix))
 	if flag == 2 {
 		query = elastic.NewBoolQuery().Filter(
 			elastic.NewTermQuery("is_read", 1),
-			elastic.NewTermQuery("username.keyword", username),
-			elastic.NewTermQuery("prefix.keyword", meta.Prefix))
+			elastic.NewTermQuery("username", username),
+			elastic.NewTermQuery("prefix", meta.Prefix))
 	}
 
 	_, err := meta.ES.DeleteByQuery(meta.EsPrefix + "messages").

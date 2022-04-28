@@ -39,6 +39,8 @@ func main() {
 	apollo.Parse(os.Args[2], &cfg)
 	apollo.Close()
 
+	fmt.Println(cfg)
+
 	mt.Lang = cfg.Lang
 	mt.Prefix = cfg.Prefix
 	mt.EsPrefix = cfg.EsPrefix

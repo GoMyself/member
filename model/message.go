@@ -13,7 +13,7 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 
 	fields := []string{"msg_id", "username", "title", "sub_title", "content", "is_top", "is_vip", "ty", "is_read", "send_name", "send_at", "prefix"}
 	param := map[string]interface{}{
-		"prefix.keyword":   meta.Prefix,
+		"prefix":           meta.Prefix,
 		"ty":               ty,
 		"username.keyword": username,
 	}

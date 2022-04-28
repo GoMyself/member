@@ -2,6 +2,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"github.com/olivere/elastic/v7"
 	"github.com/wI2L/jettison"
 	"member2/contrib/helper"
@@ -36,6 +37,7 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 		return "", errors.New(helper.FormatErr)
 	}
 
+	fmt.Println("MessageList", total, esData, string(b))
 	return string(b), nil
 }
 

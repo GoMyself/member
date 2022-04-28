@@ -30,7 +30,7 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 		msg.ID = v.Id
 		err = helper.JsonUnmarshal(v.Source, &msg)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("json : %s \n, error : %v", string(v.Source), err)
 		}
 		data.D = append(data.D, msg)
 	}

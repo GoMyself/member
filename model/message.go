@@ -26,11 +26,12 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 	data.S = pageSize
 	data.T = total
 	for _, v := range esData {
+		fmt.Println(v.Source)
 		msg := MessageEs{}
 		msg.ID = v.Id
 		err = helper.JsonUnmarshal(v.Source, &msg)
 		if err != nil {
-			fmt.Printf("json : %s \n, error : %v", string(v.Source), err)
+			fmt.Printf("json : %s \n, error : %v \n", string(v.Source), err)
 		}
 		data.D = append(data.D, msg)
 	}

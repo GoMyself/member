@@ -167,7 +167,7 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 
 	// 站内信-列表
 	get("/member/message/list", msgCtl.List)
-	// 站内信-已读
+	// 站内信-读取
 	get("/member/message/read", msgCtl.Read)
 	// 站内信-删除
 	get("/member/message/delete", msgCtl.Delete)

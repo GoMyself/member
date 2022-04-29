@@ -14,10 +14,17 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 	fields := []string{"msg_id", "username", "title", "sub_title", "content", "is_top", "is_vip", "ty", "is_read", "send_name", "send_at", "prefix"}
 	param := map[string]interface{}{
 		"prefix":   meta.Prefix,
-		"ty":       ty,
 		"username": username,
 	}
-	total, esData, _, err := esSearch(meta.EsPrefix+"messages", "send_at", page, pageSize, fields, param, map[string][]interface{}{}, map[string]string{})
+	if ty != 0 {
+		param["ty"] = ty
+	}
+	sortFields := map[string]bool{
+		"send_at": false,
+		"is_read": true,
+		"is_top":  false,
+	}
+	total, esData, _, err := esSearch(esPrefixIndex("messages"), sortFields, page, pageSize, fields, param, map[string][]interface{}{}, map[string]string{})
 	if err != nil {
 		return `{"t":0,"d":[]}`, pushLog(err, helper.ESErr)
 	}

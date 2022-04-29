@@ -22,13 +22,15 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	tys := map[int]bool{
-		1: true,
-		2: true,
-	}
-	if _, ok := tys[ty]; !ok {
-		helper.Print(ctx, false, helper.ParamErr)
-		return
+	if ty > 0 {
+		tys := map[int]bool{
+			1: true,
+			2: true,
+		}
+		if _, ok := tys[ty]; !ok {
+			helper.Print(ctx, false, helper.ParamErr)
+			return
+		}
 	}
 
 	mb, err := model.MemberFindOne(username)
@@ -40,8 +42,8 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 	if page == 0 {
 		page = 1
 	}
-	if pageSize < 10 {
-		pageSize = 10
+	if pageSize < 1 {
+		pageSize = 1
 	}
 	s, err := model.MessageList(ty, page, pageSize, mb.Username)
 	if err != nil {

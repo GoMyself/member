@@ -85,8 +85,10 @@ func RecordTransfer(username, billNo, state, transferType, pidIn, pidOut, startT
 	agg := map[string]string{
 		"amount_agg": "amount",
 	}
-
-	data, err = esTransferQuery(esPrefixIndex("tbl_member_transfer"), "created_at", page, pageSize, param, rangeParam, agg)
+	sortFields := map[string]bool{
+		"created_at": false,
+	}
+	data, err = esTransferQuery(esPrefixIndex("tbl_member_transfer"), sortFields, page, pageSize, param, rangeParam, agg)
 	if err != nil {
 		return data, err
 	}
@@ -141,7 +143,11 @@ func RecordGame(ty int, uid, playerName, startTime, endTime string, flag, gameID
 		"net_amount_agg":       "net_amount",
 		"valid_bet_amount_agg": "valid_bet_amount",
 	}
-	data, err = esGameRecordQuery(pullPrefixIndex("tbl_game_record"), "bet_time", page, pageSize, params, rangeParam, agg)
+
+	sortFields := map[string]bool{
+		"bet_time": false,
+	}
+	data, err = esGameRecordQuery(pullPrefixIndex("tbl_game_record"), sortFields, page, pageSize, params, rangeParam, agg)
 	if err != nil {
 		return data, err
 	}
@@ -187,7 +193,10 @@ func RecordTransaction(uid, cashTypes, startTime, endTime string, page, pageSize
 		"created_at": {startAt, endAt},
 	}
 
-	data, err = esTransactionQuery(esPrefixIndex("tbl_member_transaction"), "created_at", page, pageSize, param, rangeParam, map[string]string{})
+	sortFields := map[string]bool{
+		"created_at": false,
+	}
+	data, err = esTransactionQuery(esPrefixIndex("tbl_member_transaction"), sortFields, page, pageSize, param, rangeParam, map[string]string{})
 	if err != nil {
 		return data, err
 	}
@@ -293,7 +302,10 @@ func recordTradeWithdraw(flag, page, pageSize int,
 
 	data := TradeData{}
 	param["prefix"] = meta.Prefix
-	body, err := esWithdrawQuery(esPrefixIndex("tbl_withdraw"), "created_at", page, pageSize, param, rangeParam, aggField)
+	sortFields := map[string]bool{
+		"created_at": false,
+	}
+	body, err := esWithdrawQuery(esPrefixIndex("tbl_withdraw"), sortFields, page, pageSize, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -326,7 +338,10 @@ func recordTradeDeposit(flag, page, pageSize int,
 
 	data := TradeData{}
 	param["prefix"] = meta.Prefix
-	body, err := esDepositQuery(esPrefixIndex("tbl_deposit"), "created_at", page, pageSize, param, rangeParam, aggField)
+	sortFields := map[string]bool{
+		"created_at": false,
+	}
+	body, err := esDepositQuery(esPrefixIndex("tbl_deposit"), sortFields, page, pageSize, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -359,7 +374,10 @@ func recordTradeTransfer(flag, page, pageSize int,
 
 	data := TradeData{}
 	param["prefix"] = meta.Prefix
-	body, err := esTransferQuery(esPrefixIndex("tbl_member_transfer"), "created_at", page, pageSize, param, rangeParam, aggField)
+	sortFields := map[string]bool{
+		"created_at": false,
+	}
+	body, err := esTransferQuery(esPrefixIndex("tbl_member_transfer"), sortFields, page, pageSize, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -392,7 +410,10 @@ func recordTradeDividend(flag, page, pageSize int,
 
 	data := TradeData{}
 	param["prefix"] = meta.Prefix
-	body, err := esDividendQuery(esPrefixIndex("tbl_member_dividend"), "apply_at", page, pageSize, param, rangeParam, aggField)
+	sortFields := map[string]bool{
+		"apply_at": false,
+	}
+	body, err := esDividendQuery(esPrefixIndex("tbl_member_dividend"), sortFields, page, pageSize, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}

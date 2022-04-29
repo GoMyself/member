@@ -18,7 +18,7 @@ var (
 )
 
 //ES查询转账记录
-func esSearch(index, sortField string, page, pageSize int, fields []string,
+func esSearch(index string, sortFields map[string]bool, page, pageSize int, fields []string,
 	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (int64, []*elastic.SearchHit, elastic.Aggregations, error) {
 
 	boolQuery := elastic.NewBoolQuery()
@@ -88,8 +88,13 @@ func esSearch(index, sortField string, page, pageSize int, fields []string,
 	fsc := elastic.NewFetchSourceContext(true).Include(fields...)
 	offset := (page - 1) * pageSize
 	//打印es查询json
-	esService := meta.ES.Search().FetchSourceContext(fsc).Query(boolQuery).From(offset).Size(pageSize).TrackTotalHits(true).Sort(sortField, false)
+	esService := meta.ES.Search().FetchSourceContext(fsc).Query(boolQuery).From(offset).Size(pageSize).TrackTotalHits(true)
 
+	if len(sortFields) > 0 {
+		for k, v := range sortFields {
+			esService = esService.Sort(k, v)
+		}
+	}
 	// 聚合条件
 	if len(aggField) > 0 {
 		for k, v := range aggField {
@@ -134,11 +139,11 @@ func esQuerySearch(index, sortField string, page, pageSize int,
 }
 
 //ES查询转账记录
-func esTransferQuery(index, sortField string, page, pageSize int,
+func esTransferQuery(index string, sortFields map[string]bool, page, pageSize int,
 	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (TransferData, error) {
 
 	data := TransferData{Agg: map[string]string{}}
-	total, esData, aggData, err := esSearch(index, sortField, page, pageSize, transferFields, param, rangeParam, aggField)
+	total, esData, aggData, err := esSearch(index, sortFields, page, pageSize, transferFields, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -162,11 +167,11 @@ func esTransferQuery(index, sortField string, page, pageSize int,
 	return data, nil
 }
 
-func esGameRecordQuery(index, sortField string, page, pageSize int,
+func esGameRecordQuery(index string, sortFields map[string]bool, page, pageSize int,
 	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (GameRecordData, error) {
 
 	data := GameRecordData{Agg: map[string]string{}}
-	total, esData, aggData, err := esSearch(index, sortField, page, pageSize, gameRecordFields, param, rangeParam, aggField)
+	total, esData, aggData, err := esSearch(index, sortFields, page, pageSize, gameRecordFields, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -191,11 +196,11 @@ func esGameRecordQuery(index, sortField string, page, pageSize int,
 }
 
 //ES查询账变记录
-func esTransactionQuery(index, sortField string, page, pageSize int,
+func esTransactionQuery(index string, sortFields map[string]bool, page, pageSize int,
 	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (TransactionData, error) {
 
 	data := TransactionData{Agg: map[string]string{}}
-	total, esData, aggData, err := esSearch(index, sortField, page, pageSize, transactionFields, param, rangeParam, aggField)
+	total, esData, aggData, err := esSearch(index, sortFields, page, pageSize, transactionFields, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -220,11 +225,11 @@ func esTransactionQuery(index, sortField string, page, pageSize int,
 }
 
 //ES查询取款记录
-func esWithdrawQuery(index, sortField string, page, pageSize int,
+func esWithdrawQuery(index string, sortFields map[string]bool, page, pageSize int,
 	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (WithdrawData, error) {
 
 	data := WithdrawData{Agg: map[string]string{}}
-	total, esData, aggData, err := esSearch(index, sortField, page, pageSize, withdrawFields, param, rangeParam, aggField)
+	total, esData, aggData, err := esSearch(index, sortFields, page, pageSize, withdrawFields, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -248,11 +253,11 @@ func esWithdrawQuery(index, sortField string, page, pageSize int,
 }
 
 //ES查询存款记录
-func esDepositQuery(index, sortField string, page, pageSize int,
+func esDepositQuery(index string, sortFields map[string]bool, page, pageSize int,
 	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (DepositData, error) {
 
 	data := DepositData{Agg: map[string]string{}}
-	total, esData, aggData, err := esSearch(index, sortField, page, pageSize, depositFields, param, rangeParam, aggField)
+	total, esData, aggData, err := esSearch(index, sortFields, page, pageSize, depositFields, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}
@@ -277,11 +282,11 @@ func esDepositQuery(index, sortField string, page, pageSize int,
 }
 
 //ES查询红利记录
-func esDividendQuery(index, sortField string, page, pageSize int,
+func esDividendQuery(index string, sortFields map[string]bool, page, pageSize int,
 	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (DividendData, error) {
 
 	data := DividendData{Agg: map[string]string{}}
-	total, esData, aggData, err := esSearch(index, sortField, page, pageSize, dividendFields, param, rangeParam, aggField)
+	total, esData, aggData, err := esSearch(index, sortFields, page, pageSize, dividendFields, param, rangeParam, aggField)
 	if err != nil {
 		return data, err
 	}

@@ -87,7 +87,7 @@ func MessageDelete(ids []interface{}, username string, flag int) error {
 			elastic.NewTermQuery("prefix", meta.Prefix))
 	}
 
-	_, err := meta.ES.DeleteByQuery(meta.EsPrefix + "messages").Query(query).ProceedOnVersionConflict().Do(ctx)
+	_, err := meta.ES.DeleteByQuery(esPrefixIndex("messages")).Query(query).ProceedOnVersionConflict().Do(ctx)
 	if err != nil {
 		return pushLog(err, helper.ESErr)
 	}

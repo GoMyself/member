@@ -85,10 +85,17 @@ func esSearch(index string, sortFields map[string]bool, page, pageSize int, fiel
 
 	boolQuery.Filter(filters...)
 	boolQuery.Must(terms...)
-	fsc := elastic.NewFetchSourceContext(true).Include(fields...)
-	offset := (page - 1) * pageSize
+	fsc := elastic.NewFetchSourceContext(true)
+	if len(fields) > 0 {
+		fsc = fsc.Include(fields...)
+	}
+
 	//打印es查询json
-	esService := meta.ES.Search().FetchSourceContext(fsc).Query(boolQuery).From(offset).Size(pageSize).TrackTotalHits(true)
+	esService := meta.ES.Search().FetchSourceContext(fsc).Query(boolQuery).TrackTotalHits(true)
+	offset := (page - 1) * pageSize
+	if page > 0 && pageSize > 0 {
+		esService = esService.From(offset).Size(pageSize)
+	}
 
 	if len(sortFields) > 0 {
 		for k, v := range sortFields {

@@ -56,6 +56,22 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 	return string(b), nil
 }
 
+func MessageNum(username string) (int64, error) {
+
+	param := map[string]interface{}{
+		"prefix":   meta.Prefix,
+		"username": username,
+		"is_read":  0,
+	}
+
+	total, _, _, err := esSearch(esPrefixIndex("messages"), map[string]bool{}, 1, 0, []string{}, param, map[string][]interface{}{}, map[string]string{})
+	if err != nil {
+		return total, pushLog(err, helper.ESErr)
+	}
+
+	return total, nil
+}
+
 //MessageRead  站内信已读
 func MessageRead(id, username string) error {
 
@@ -64,7 +80,7 @@ func MessageRead(id, username string) error {
 		elastic.NewTermQuery("username", username),
 		elastic.NewTermQuery("prefix", meta.Prefix))
 
-	_, err := meta.ES.UpdateByQuery(meta.EsPrefix + "messages").Query(boolQuery).
+	_, err := meta.ES.UpdateByQuery(esPrefixIndex("messages")).Query(boolQuery).
 		Script(elastic.NewScript("ctx._source['is_read']=1;ctx._source['is_top']=0;")).ProceedOnVersionConflict().Do(ctx)
 	if err != nil {
 		return pushLog(err, helper.ESErr)

@@ -55,6 +55,30 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 }
 
 // 站内信已读
+func (that *MessageController) Num(ctx *fasthttp.RequestCtx) {
+
+	username := string(ctx.UserValue("token").([]byte))
+	if username == "" {
+		helper.Print(ctx, false, helper.AccessTokenExpires)
+		return
+	}
+
+	mb, err := model.MemberFindOne(username)
+	if err != nil {
+		helper.Print(ctx, false, helper.UsernameErr)
+		return
+	}
+
+	num, err := model.MessageNum(mb.Username)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+
+	helper.Print(ctx, true, num)
+}
+
+// 站内信已读
 func (that *MessageController) Read(ctx *fasthttp.RequestCtx) {
 
 	id := string(ctx.QueryArgs().Peek("id"))

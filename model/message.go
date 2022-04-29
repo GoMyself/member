@@ -65,7 +65,7 @@ func MessageRead(id, username string) error {
 		elastic.NewTermQuery("prefix", meta.Prefix))
 
 	_, err := meta.ES.UpdateByQuery(meta.EsPrefix + "messages").Query(boolQuery).
-		Script(elastic.NewScript("ctx._source['is_read']=1;")).ProceedOnVersionConflict().Do(ctx)
+		Script(elastic.NewScript("ctx._source['is_read']=1;ctx._source['is_top']=0;")).ProceedOnVersionConflict().Do(ctx)
 	if err != nil {
 		return pushLog(err, helper.ESErr)
 	}

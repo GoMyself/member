@@ -101,7 +101,7 @@ func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 
 	var s []interface{}
 	if flag == 1 {
-		if len(s) == 0 {
+		if ids == "" {
 			helper.Print(ctx, false, helper.IDErr)
 			return
 		}

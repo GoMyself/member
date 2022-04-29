@@ -48,7 +48,7 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 func MessageRead(id, username string) error {
 
 	boolQuery := elastic.NewBoolQuery().Must(
-		elastic.NewTermQuery("id", id),
+		elastic.NewTermQuery("_id", id),
 		elastic.NewTermQuery("username", username),
 		elastic.NewTermQuery("prefix", meta.Prefix))
 

@@ -20,9 +20,9 @@ func MessageList(ty, page, pageSize int, username string) (string, error) {
 		param["ty"] = ty
 	}
 	sortFields := map[string]bool{
-		"send_at": false,
-		"is_read": true,
 		"is_top":  false,
+		"is_read": true,
+		"send_at": false,
 	}
 	total, esData, _, err := esSearch(esPrefixIndex("messages"), sortFields, page, pageSize, fields, param, map[string][]interface{}{}, map[string]string{})
 	if err != nil {

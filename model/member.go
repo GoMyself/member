@@ -791,8 +791,11 @@ func MemberPasswordUpdate(ty int, sid, code, old, password string, ctx *fasthttp
 	// 更新会员信息
 	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
 
-	return err
+	return nil
 }
 
 // 更新用户手机号
@@ -841,8 +844,60 @@ func MemberUpdatePhone(phone string, ctx *fasthttp.RequestCtx) error {
 	// 更新会员信息
 	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
 
-	return err
+	return nil
+}
+
+// 更新用户zalo号
+func MemberUpdateZalo(zalo string, ctx *fasthttp.RequestCtx) error {
+
+	zaloHash := fmt.Sprintf("%d", MurmurHash(zalo, 0))
+	ex := g.Ex{
+		"phone_hash": zaloHash,
+	}
+	if MemberBindCheck(ex) {
+		return errors.New(helper.ZaloExist)
+	}
+
+	mb, err := MemberCache(ctx, "")
+	if err != nil {
+		return err
+	}
+
+	//会员绑定zalo号后，不允许更新zalo号
+	if mb.ZaloHash != "0" {
+		return errors.New(helper.ZaloBindAlreadyErr)
+	}
+
+	var res []schema.Enc_t
+	recs := schema.Enc_t{
+		Field: "zalo",
+		Value: zalo,
+		ID:    mb.UID,
+	}
+	res = append(res, recs)
+	_, err = rpcInsert(res)
+	if err != nil {
+		return errors.New(helper.UpdateRPCErr)
+	}
+
+	record := g.Record{
+		"zalo_hash": zaloHash,
+	}
+	ex = g.Ex{
+		"uid": mb.UID,
+	}
+	// 更新会员信息
+	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
+	_, err = meta.MerchantDB.Exec(query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
+
+	return nil
 }
 
 // 更新用户信息
@@ -888,8 +943,11 @@ func MemberUpdateEmail(sid, code, email string, ctx *fasthttp.RequestCtx) error 
 	// 更新会员信息
 	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
 
-	return err
+	return nil
 }
 
 // 用户信息更新
@@ -999,8 +1057,11 @@ func MemberForgetPwd(username, pwd, email, ip, sid, code string) error {
 	// 更新会员信息
 	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
 
-	return err
+	return nil
 }
 
 func MemberBindCheck(ex g.Ex) bool {

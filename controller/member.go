@@ -392,6 +392,19 @@ func (that *MemberController) BindPhone(ctx *fasthttp.RequestCtx) {
 	helper.Print(ctx, true, helper.Success)
 }
 
+// 用户绑定手机号
+func (that *MemberController) BindZalo(ctx *fasthttp.RequestCtx) {
+
+	zalo := string(ctx.PostArgs().Peek("zalo"))
+	err := model.MemberUpdateZalo(zalo, ctx)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+
+	helper.Print(ctx, true, helper.Success)
+}
+
 // 更新用户信息
 func (that *MemberController) Update(ctx *fasthttp.RequestCtx) {
 

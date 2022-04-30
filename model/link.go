@@ -148,6 +148,10 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 		return data, pushLog(err, helper.FormatErr)
 	}
 
+	for _, v := range mp {
+		data = append(data, v)
+	}
+
 	return data, nil
 
 	//t := dialect.From("tbl_member_link")

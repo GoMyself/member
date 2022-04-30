@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"member2/contrib/helper"
 	"member2/contrib/validator"
 	"member2/model"
@@ -20,7 +21,7 @@ func (that *LinkController) Insert(ctx *fasthttp.RequestCtx) {
 	}
 
 	params.ID = helper.GenId()
-	params.CreatedAt = uint32(ctx.Time().Unix())
+	params.CreatedAt = fmt.Sprintf("%d", ctx.Time().Unix())
 	err = model.LinkInsert(ctx, params)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())

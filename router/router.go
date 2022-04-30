@@ -85,6 +85,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	recordCtl := new(controller.RecordController)
 	// 佣金
 	commissionCtl := new(controller.CommissionController)
+	// 报表
+	reportCtl := new(controller.ReportController)
 	// 邮件
 	emailCtl := new(controller.EmailController)
 
@@ -185,6 +187,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 佣金下发
 	post("/member/commission/ration", commissionCtl.Ration)
 
+	// 代理报表
+	post("/member/agency/report", reportCtl.Report)
 	buildInfo = b
 
 	return router

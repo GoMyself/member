@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/wI2L/jettison"
 	"member2/contrib/helper"
 	"member2/contrib/session"
 	"member2/contrib/tdlog"
@@ -18,7 +19,6 @@ import (
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/go-redis/redis/v8"
 	"github.com/valyala/fasthttp"
-	"github.com/wI2L/jettison"
 )
 
 type Game struct {
@@ -44,24 +44,16 @@ type Game struct {
 
 func MemberAmount(ctx *fasthttp.RequestCtx) (string, error) {
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
+	m, err := MemberCache(ctx, "")
+	if err != nil {
 		return "", errors.New(helper.AccessTokenExpires)
 	}
 
-	mb := MBBalance{}
-
-	t := dialect.From("tbl_members")
-	query, _, _ := t.Select(colsMemberBalance...).Where(g.Ex{"username": username, "prefix": meta.Prefix}).ToSQL()
-	err := meta.MerchantDB.Get(&mb, query)
-	if err != nil && err != sql.ErrNoRows {
-		return "", pushLog(err, helper.DBErr)
+	mb := MBBalance{
+		Balance:    m.Balance,
+		Commission: m.Commission,
+		LockAmount: m.LockAmount,
 	}
-
-	if err == sql.ErrNoRows {
-		return "", errors.New(helper.AccessTokenExpires)
-	}
-
 	data, err := jettison.Marshal(mb)
 	if err != nil {
 		return "", errors.New(helper.FormatErr)
@@ -518,17 +510,11 @@ func MemberCaptcha() ([]byte, string, error) {
 // 返回用户信息，会员端使用
 func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 
+	var err error
 	res := MemberInfosData{}
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		return res, errors.New(helper.AccessTokenExpires)
-	}
-
-	t := dialect.From("tbl_members")
-	query, _, _ := t.Select(colsMemberInfos...).Where(g.Ex{"username": username, "prefix": meta.Prefix}).ToSQL()
-	err := meta.MerchantDB.Get(&res.MemberInfos, query)
+	res.MemberInfos, err = memberInfoCache(ctx)
 	if err != nil {
-		return res, pushLog(err, helper.DBErr)
+		return res, errors.New(helper.AccessTokenExpires)
 	}
 
 	if res.MemberInfos.RealnameHash != 0 {
@@ -581,6 +567,42 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 	}
 
 	return res, nil
+}
+
+// 返回用户信息，会员端使用
+func memberInfoCache(fCtx *fasthttp.RequestCtx) (MemberInfos, error) {
+
+	m := MemberInfos{}
+	name := string(fCtx.UserValue("token").([]byte))
+	if name == "" {
+		return m, errors.New(helper.UsernameErr)
+	}
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	defer pipe.Close()
+
+	exist := pipe.Exists(ctx, name)
+	rs := pipe.HMGet(ctx, name, fieldsMemberInfo...)
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return m, pushLog(err, helper.RedisErr)
+	}
+
+	num, err := exist.Result()
+	if num == 0 {
+		return m, errors.New(helper.UsernameErr)
+	}
+
+	if rs.Err() != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
+	}
+
+	if err = rs.Scan(&m); err != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
+	}
+
+	return m, nil
 }
 
 // 通过用户名获取用户在redis中的数据

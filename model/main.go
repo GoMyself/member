@@ -53,13 +53,13 @@ var (
 	loc  *time.Location
 	ctx  = context.Background()
 
-	dialect           = g.Dialect("mysql")
-	colsMember        = helper.EnumFields(Member{})
-	colsMemberBalance = helper.EnumFields(MBBalance{})
-	colsMemberInfos   = helper.EnumFields(MemberInfos{})
-	colsBankcard      = helper.EnumFields(BankCard{})
-	colsMemberRebate  = helper.EnumFields(MemberRebate{})
-	fieldsMember      = helper.EnumRedisFields(Member{})
+	dialect          = g.Dialect("mysql")
+	colsMember       = helper.EnumFields(Member{})
+	colsMemberInfos  = helper.EnumFields(MemberInfos{})
+	colsBankcard     = helper.EnumFields(BankCard{})
+	colsMemberRebate = helper.EnumFields(MemberRebate{})
+	fieldsMember     = helper.EnumRedisFields(Member{})
+	fieldsMemberInfo = helper.EnumRedisFields(MemberInfos{})
 
 	colsEsCommissionTransaction = []string{"id", "bill_no", "uid", "username", "cash_type", "amount", "before_amount", "after_amount", "created_at", "platform_id"}
 )

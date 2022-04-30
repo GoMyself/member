@@ -32,13 +32,13 @@ func (that *LinkController) Insert(ctx *fasthttp.RequestCtx) {
 
 func (that *LinkController) List(ctx *fasthttp.RequestCtx) {
 
-	s, err := model.LinkList(ctx)
+	data, err := model.LinkList(ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
 
-	helper.PrintJson(ctx, true, s)
+	helper.Print(ctx, true, data)
 }
 
 func (that *LinkController) Delete(ctx *fasthttp.RequestCtx) {

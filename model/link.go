@@ -128,20 +128,27 @@ func LinkFindOne(id string) (Link_t, error) {
 	return data, nil
 }
 
-func LinkList(fCtx *fasthttp.RequestCtx) (string, error) {
+func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 
+	var data []Link_t
 	sess, err := MemberInfo(fCtx)
 	if err != nil {
-		return "", err
+		return data, err
 	}
 
 	key := "lk:" + sess.UID
 	res, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
 	if err != nil {
-		return res, pushLog(err, helper.RedisErr)
+		return data, pushLog(err, helper.RedisErr)
 	}
 
-	return res, nil
+	mp := map[string]Link_t{}
+	err = helper.JsonUnmarshal([]byte(res), &mp)
+	if err != nil {
+		return data, pushLog(err, helper.FormatErr)
+	}
+
+	return data, nil
 
 	//t := dialect.From("tbl_member_link")
 	//query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()

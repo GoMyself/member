@@ -118,7 +118,7 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	post("/member/bindemail", memberCtl.BindEmail)
 	// 绑定手机号
 	post("/member/bindphone", memberCtl.BindPhone)
-	// 更新用户信息 （生日 和 性别）
+	// 更新用户信息 （真实姓名/收货地址）
 	post("/member/update", memberCtl.Update)
 	//场馆列表
 	get("/member/platform", memberCtl.Plat)

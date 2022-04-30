@@ -396,15 +396,24 @@ func (that *MemberController) BindPhone(ctx *fasthttp.RequestCtx) {
 func (that *MemberController) Update(ctx *fasthttp.RequestCtx) {
 
 	realname := strings.TrimSpace(string(ctx.PostArgs().Peek("realname")))
-	if !validator.CheckStringVName(realname) {
-		helper.Print(ctx, false, helper.RealNameFMTErr)
+	address := string(ctx.PostArgs().Peek("address"))
+	if realname == "" && address == "" {
+		helper.Print(ctx, false, helper.ParamErr)
 		return
 	}
 
-	address := string(ctx.PostArgs().Peek("address"))
-	if len(strings.Split(address, "|")) != 4 {
-		helper.Print(ctx, false, helper.AddressFMTErr)
-		return
+	if realname != "" {
+		if !validator.CheckStringVName(realname) {
+			helper.Print(ctx, false, helper.RealNameFMTErr)
+			return
+		}
+	}
+
+	if address != "" {
+		if len(strings.Split(address, "|")) != 4 {
+			helper.Print(ctx, false, helper.AddressFMTErr)
+			return
+		}
 	}
 
 	err := model.MemberUpdateName(ctx, realname, address)

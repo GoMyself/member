@@ -605,13 +605,8 @@ func MemberCache(fCtx *fasthttp.RequestCtx, name string) (Member, error) {
 		return m, pushLog(err, helper.RedisErr)
 	}
 
-	num, err := exist.Result()
-	if num == 0 {
+	if exist.Val() == 0 {
 		return m, errors.New(helper.UsernameErr)
-	}
-
-	if rs.Err() != nil {
-		return m, pushLog(rs.Err(), helper.RedisErr)
 	}
 
 	if err = rs.Scan(&m); err != nil {

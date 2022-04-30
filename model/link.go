@@ -20,7 +20,7 @@ type Link_t struct {
 	DJ        string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""` //电竞返水
 	DZ        string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""` //电子返水
 	CP        string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""` //彩票返水
-	CreatedAt uint32 `db:"created_at" json:"created_at" rule:"none" required:"0"`                   //
+	CreatedAt string `db:"created_at" json:"created_at" rule:"none" required:"0"`                   //
 }
 
 func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {

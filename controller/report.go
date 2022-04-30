@@ -12,11 +12,11 @@ type ReportController struct{}
 func (that *ReportController) Report(ctx *fasthttp.RequestCtx) {
 
 	ty := string(ctx.PostArgs().Peek("ty"))
-	_, err := model.AgencyReport(ty, ctx)
+	data, err := model.AgencyReport(ty, ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
 
-	helper.Print(ctx, true, helper.Success)
+	helper.Print(ctx, true, data)
 }

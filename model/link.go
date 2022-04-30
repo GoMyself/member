@@ -20,7 +20,7 @@ type Link_t struct {
 	DJ        string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""` //电竞返水
 	DZ        string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""` //电子返水
 	CP        string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""` //彩票返水
-	CreatedAt uint32 `db:"created_at" json:"created_at" rule:"none" required:"0"`                   //
+	CreatedAt string `db:"created_at" json:"created_at" rule:"none" required:"0"`                   //
 }
 
 func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
@@ -128,21 +128,38 @@ func LinkFindOne(id string) (Link_t, error) {
 	return data, nil
 }
 
-func LinkList(ctx *fasthttp.RequestCtx) ([]Link_t, error) {
+func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 
 	var data []Link_t
-
-	sess, err := MemberInfo(ctx)
+	sess, err := MemberInfo(fCtx)
 	if err != nil {
 		return data, err
 	}
 
-	t := dialect.From("tbl_member_link")
-	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()
-	err = meta.MerchantDB.Select(&data, query)
-	if err != nil && err != sql.ErrNoRows {
-		return data, pushLog(err, helper.DBErr)
+	key := "lk:" + sess.UID
+	res, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
+	if err != nil {
+		return data, pushLog(err, helper.RedisErr)
+	}
+
+	mp := map[string]Link_t{}
+	err = helper.JsonUnmarshal([]byte(res), &mp)
+	if err != nil {
+		return data, pushLog(err, helper.FormatErr)
+	}
+
+	for _, v := range mp {
+		data = append(data, v)
 	}
 
 	return data, nil
+
+	//t := dialect.From("tbl_member_link")
+	//query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()
+	//err = meta.MerchantDB.Select(&data, query)
+	//if err != nil && err != sql.ErrNoRows {
+	//	return data, pushLog(err, helper.DBErr)
+	//}
+
+	//return data, nil
 }

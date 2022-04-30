@@ -56,12 +56,14 @@ type MBBalance struct {
 type MemberInfos struct {
 	UID           string `db:"uid" json:"uid" redis:"uid"`
 	Username      string `db:"username" json:"username" redis:"username"`
-	RealnameHash  uint64 `db:"realname_hash" json:"realname_hash" redis:"realname_hash"`
-	EmailHash     uint64 `db:"email_hash" json:"email_hash" redis:"email_hash"`
-	PhoneHash     uint64 `db:"phone_hash" json:"phone_hash" redis:"phone_hash"`
+	RealnameHash  string `db:"realname_hash" json:"realname_hash" redis:"realname_hash"`
+	EmailHash     string `db:"email_hash" json:"email_hash" redis:"email_hash"`
+	PhoneHash     string `db:"phone_hash" json:"phone_hash" redis:"phone_hash"`
+	ZaloHash      string `db:"zalo_hash" json:"zalo_hash" redis:"zalo_hash"`
+	Address       string `db:"address" json:"address" redis:"address"`
 	CreatedAt     uint32 `db:"created_at" json:"created_at" redis:"created_at"`
 	BankcardTotal int    `db:"bankcard_total" json:"bankcard_total" redis:"bankcard_total"`
-	Level         int    `db:"level" json:"level" redis:"level"` //等级
+	Level         int    `db:"level" json:"level" redis:"level"`
 }
 
 type MemberInfosData struct {
@@ -69,6 +71,7 @@ type MemberInfosData struct {
 	RealName string `json:"real_name"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
+	Zalo     string `json:"zalo"`
 }
 
 type BankCard struct {

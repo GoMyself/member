@@ -26,23 +26,24 @@ func (that *LinkController) Insert(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
+
 	helper.Print(ctx, true, helper.Success)
 }
 
 func (that *LinkController) List(ctx *fasthttp.RequestCtx) {
 
-	data, err := model.LinkList(ctx)
+	s, err := model.LinkList(ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
-	helper.Print(ctx, true, data)
+
+	helper.PrintJson(ctx, true, s)
 }
 
 func (that *LinkController) Delete(ctx *fasthttp.RequestCtx) {
 
 	id := string(ctx.QueryArgs().Peek("id"))
-
 	if !helper.CtypeDigit(id) {
 		helper.Print(ctx, false, helper.ParamErr)
 		return
@@ -53,5 +54,6 @@ func (that *LinkController) Delete(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
+
 	helper.Print(ctx, true, helper.Success)
 }

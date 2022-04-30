@@ -136,7 +136,12 @@ func LinkList(fCtx *fasthttp.RequestCtx) (string, error) {
 	}
 
 	key := "lk:" + sess.UID
-	return meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
+	res, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
+	if err != nil {
+		return res, pushLog(err, helper.RedisErr)
+	}
+
+	return res, nil
 
 	//t := dialect.From("tbl_member_link")
 	//query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()

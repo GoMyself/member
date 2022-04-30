@@ -131,7 +131,7 @@ func LinkFindOne(id string) (Link_t, error) {
 func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 
 	var data []Link_t
-	sess, err := MemberInfo(fCtx)
+	sess, err := MemberCache(fCtx, "")
 	if err != nil {
 		return data, err
 	}

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/valyala/fasthttp"
 	"member2/contrib/helper"
 	"member2/contrib/validator"
@@ -26,7 +27,7 @@ func (that *BankcardController) Insert(ctx *fasthttp.RequestCtx) {
 		Username:    string(ctx.UserValue("token").([]byte)),
 		BankBranch:  bankAddress,
 		BankAddress: bankAddress,
-		CreatedAt:   uint64(ctx.Time().Unix()),
+		CreatedAt:   fmt.Sprintf("%d", ctx.Time().Unix()),
 	}
 
 	// 用户绑定银行卡

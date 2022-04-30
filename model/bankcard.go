@@ -103,12 +103,12 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 	if bcd.UID != "" {
 
 		// 正常和冻结的银行卡
-		if bcd.State == 1 || bcd.State == 3 {
+		if bcd.State == "1" || bcd.State == "3" {
 			return errors.New(helper.BankCardExistErr)
 		}
 
 		// 删除状态直接恢复
-		if bcd.State == 2 {
+		if bcd.State == "2" {
 			isDelete = true
 		}
 	}
@@ -242,23 +242,25 @@ func BankcardList(username string) ([]BankcardData, error) {
 	)
 	mb, err := MemberCache(nil, username)
 	if err != nil {
-		return data, err
-	}
-
-	if mb.UID == "" {
 		return data, errors.New(helper.AccessTokenExpires)
 	}
 
-	ex := g.Ex{
-		"username": username,
-		"state":    1,
-		"prefix":   meta.Prefix,
+	key := "lk:" + mb.UID
+	bcs, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
+	if err != nil {
+		return data, pushLog(err, helper.RedisErr)
 	}
-	t := dialect.From("tbl_member_bankcard")
-	query, _, _ := t.Select(colsBankcard...).Where(ex).Order(g.C("created_at").Desc()).ToSQL()
-	err = meta.MerchantDB.Select(&cardList, query)
-	if err != nil && err != sql.ErrNoRows {
-		return data, pushLog(err, helper.DBErr)
+
+	mp := map[string]BankCard{}
+	err = helper.JsonUnmarshal([]byte(bcs), &mp)
+	if err != nil {
+		return data, pushLog(err, helper.FormatErr)
+	}
+
+	for _, v := range mp {
+		if v.State == "1" {
+			cardList = append(cardList, v)
+		}
 	}
 
 	length := len(cardList)
@@ -279,7 +281,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 	recs := schema.Dec_t{
 		Field: "realname",
 		Hide:  true,
-		ID:    cardList[0].UID,
+		ID:    mb.UID,
 	}
 	res = append(res, recs)
 	record, err := rpcGet(res)
@@ -337,7 +339,7 @@ func BankcardDelete(username, bid string) error {
 	}
 
 	// 删除冻结的银行卡，直接删除
-	if data.State == 3 {
+	if data.State == "3" {
 
 		tx, err := meta.MerchantDB.Begin()
 		if err != nil {

@@ -392,7 +392,7 @@ func (that *MemberController) BindPhone(ctx *fasthttp.RequestCtx) {
 	helper.Print(ctx, true, helper.Success)
 }
 
-// 用户绑定手机号
+// 用户绑定zalo号
 func (that *MemberController) BindZalo(ctx *fasthttp.RequestCtx) {
 
 	zalo := string(ctx.PostArgs().Peek("zalo"))

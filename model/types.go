@@ -81,9 +81,9 @@ type BankCard struct {
 	BankAddress  string `db:"bank_address" json:"bank_address"`
 	BankID       string `db:"bank_id" json:"bank_id"`
 	BankBranch   string `db:"bank_branch_name" json:"bank_branch_name"`
-	State        int    `db:"state" json:"state"`
+	State        string `db:"state" json:"state"`
 	BankcardHash string `db:"bank_card_hash" json:"bank_card_hash"`
-	CreatedAt    uint64 `db:"created_at" json:"created_at"`
+	CreatedAt    string `db:"created_at" json:"created_at"`
 }
 
 type BankcardData struct {

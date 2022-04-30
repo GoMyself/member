@@ -401,7 +401,13 @@ func (that *MemberController) Update(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err := model.MemberUpdateName(ctx, realname)
+	address := string(ctx.PostArgs().Peek("address"))
+	if len(strings.Split(address, "|")) != 4 {
+		helper.Print(ctx, false, helper.AddressFMTErr)
+		return
+	}
+
+	err := model.MemberUpdateName(ctx, realname, address)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

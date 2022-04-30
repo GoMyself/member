@@ -893,7 +893,7 @@ func MemberUpdateEmail(sid, code, email string, ctx *fasthttp.RequestCtx) error 
 }
 
 // 用户信息更新
-func MemberUpdateName(ctx *fasthttp.RequestCtx, realName string) error {
+func MemberUpdateName(ctx *fasthttp.RequestCtx, realName, address string) error {
 
 	mb, err := MemberCache(ctx, "")
 	if err != nil {
@@ -928,6 +928,10 @@ func MemberUpdateName(ctx *fasthttp.RequestCtx, realName string) error {
 		record["realname_hash"] = fmt.Sprintf("%d", MurmurHash(realName, 0))
 	}
 
+	if address != "" {
+		record["address"] = address
+	}
+
 	if len(record) == 0 {
 		return errors.New(helper.NoDataUpdate)
 	}
@@ -937,8 +941,11 @@ func MemberUpdateName(ctx *fasthttp.RequestCtx, realName string) error {
 	// 更新会员信息
 	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
 
-	return err
+	return nil
 }
 
 // 检测会员账号是否已存在

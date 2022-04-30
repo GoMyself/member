@@ -43,7 +43,7 @@ func emailCmp(sid, code, ip, address string) error {
 func EmailSend(day, ip, username, address string, flag int) (string, error) {
 
 	id := helper.GenId()
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(nil, username)
 	if err != nil {
 		return id, err
 	}

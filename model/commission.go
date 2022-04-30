@@ -13,12 +13,7 @@ import (
 
 func CommissionDraw(withdrawPwd, sAmount string, fCtx *fasthttp.RequestCtx) error {
 
-	username := string(fCtx.UserValue("token").([]byte))
-	if username == "" {
-		return errors.New(helper.AccessTokenExpires)
-	}
-
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(fCtx, "")
 	if err != nil {
 		return errors.New(helper.AccessTokenExpires)
 	}
@@ -149,17 +144,12 @@ func CommissionDraw(withdrawPwd, sAmount string, fCtx *fasthttp.RequestCtx) erro
 
 func CommissionRation(withdrawPwd, subName, sAmount string, fCtx *fasthttp.RequestCtx) error {
 
-	username := string(fCtx.UserValue("token").([]byte))
-	if username == "" {
-		return errors.New(helper.AccessTokenExpires)
-	}
-
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(fCtx, "")
 	if err != nil {
 		return errors.New(helper.AccessTokenExpires)
 	}
 
-	smb, err := MemberFindOne(subName)
+	smb, err := MemberCache(nil, subName)
 	if err != nil {
 		return errors.New(helper.UsernameErr)
 	}

@@ -16,11 +16,6 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
 	ty := ctx.QueryArgs().GetUintOrZero("ty") //1 站内消息 2 活动消息
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
 
 	if ty > 0 {
 		tys := map[int]bool{
@@ -33,7 +28,7 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	mb, err := model.MemberFindOne(username)
+	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -57,13 +52,7 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 // 站内信已读
 func (that *MessageController) Num(ctx *fasthttp.RequestCtx) {
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-
-	mb, err := model.MemberFindOne(username)
+	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -82,13 +71,7 @@ func (that *MessageController) Num(ctx *fasthttp.RequestCtx) {
 func (that *MessageController) Read(ctx *fasthttp.RequestCtx) {
 
 	id := string(ctx.QueryArgs().Peek("id"))
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-
-	mb, err := model.MemberFindOne(username)
+	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -108,11 +91,6 @@ func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 
 	flag := ctx.QueryArgs().GetUintOrZero("flag") // 1 精确删除 2 删除所有已读
 	ids := string(ctx.QueryArgs().Peek("ids"))
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
 
 	flags := map[int]bool{
 		1: true,
@@ -140,7 +118,7 @@ func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	mb, err := model.MemberFindOne(username)
+	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return

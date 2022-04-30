@@ -273,57 +273,24 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", pushLog(err, helper.DBErr)
 	}
 
-	parentLink, err := LinkFindOne(linkID)
-	if err == nil {
-		query := fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`,`created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-			uid, parentLink.ZR, parentLink.QP, parentLink.TY, parentLink.DJ, parentLink.DZ, createdAt, meta.Prefix)
-		_, err = tx.Exec(query)
-		if err != nil {
-			_ = tx.Rollback()
-			return "", pushLog(err, helper.DBErr)
-		}
-
-		parent, err := MemberFindByUid(parentLink.UID)
+	parent := Member{}
+	// 邀请链接注册，不成功注册在默认代理root下
+	parent, err = regLink(tx, uid, linkID, createdAt)
+	if err != nil {
+		parent, err = regRoot(tx, uid, topId, createdAt)
 		if err != nil {
 			_ = tx.Rollback()
 			return "", err
 		}
-
-		m.ParentUid = parent.UID
-		m.ParentName = parent.Username
-		m.TopUid = parent.TopUid
-		m.TopName = parent.TopName
-		m.AgencyType = parent.AgencyType
-		m.GroupName = parent.GroupName
-	} else {
-
-		rootRebate, err := RebateScale(topId)
-		if err != nil {
-			_ = tx.Rollback()
-			return "", pushLog(err, helper.DBErr)
-		}
-
-		query := fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-			uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, createdAt, meta.Prefix)
-		_, err = tx.Exec(query)
-		if err != nil {
-			_ = tx.Rollback()
-			return "", pushLog(err, helper.DBErr)
-		}
-
-		root, err := MemberFindByUid(topId)
-		if err != nil {
-			_ = tx.Rollback()
-			return "", err
-		}
-
-		m.ParentUid = root.UID
-		m.ParentName = root.Username
-		m.TopUid = root.TopUid
-		m.TopName = root.TopName
-		m.AgencyType = root.AgencyType
-		m.GroupName = root.GroupName
 	}
+
+	m.ParentUid = parent.UID
+	m.ParentName = parent.Username
+	m.TopUid = parent.TopUid
+	m.TopName = parent.TopName
+	m.AgencyType = parent.AgencyType
+	m.GroupName = parent.GroupName
+
 	query, _, _ := dialect.Insert("tbl_members").Rows(&m).ToSQL()
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -384,6 +351,72 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	return id, nil
+}
+
+func regLink(tx *sql.Tx, uid, linkID string, createdAt uint32) (Member, error) {
+
+	m := Member{}
+	p := strings.Split(linkID, ":")
+	if len(p) != 2 {
+		_ = tx.Rollback()
+		return m, errors.New(helper.IDErr)
+	}
+
+	lkKey := "lk:" + p[0]
+	lkRes, err := meta.MerchantRedis.Do(ctx, "JSON.GET", lkKey, ".$"+p[1]).Text()
+	if err == nil {
+		_ = tx.Rollback()
+		return m, pushLog(err, helper.RedisErr)
+	}
+
+	lk := Link_t{}
+	err = helper.JsonUnmarshal([]byte(lkRes), &lk)
+	if err != nil {
+		_ = tx.Rollback()
+		return m, pushLog(err, helper.FormatErr)
+	}
+
+	query := fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`,`created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
+		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, createdAt, meta.Prefix)
+	_, err = tx.Exec(query)
+	if err != nil {
+		_ = tx.Rollback()
+		return m, pushLog(err, helper.DBErr)
+	}
+
+	m, err = MemberFindByUid(lk.UID)
+	if err != nil {
+		_ = tx.Rollback()
+		return m, err
+	}
+
+	return m, nil
+}
+
+func regRoot(tx *sql.Tx, uid, topId string, createdAt uint32) (Member, error) {
+
+	m := Member{}
+	rootRebate, err := RebateScale(topId)
+	if err != nil {
+		_ = tx.Rollback()
+		return m, pushLog(err, helper.DBErr)
+	}
+
+	query := fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
+		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, createdAt, meta.Prefix)
+	_, err = tx.Exec(query)
+	if err != nil {
+		_ = tx.Rollback()
+		return m, pushLog(err, helper.DBErr)
+	}
+
+	m, err = MemberFindByUid(topId)
+	if err != nil {
+		_ = tx.Rollback()
+		return m, err
+	}
+
+	return m, nil
 }
 
 func MemberVerify(id, str string) bool {

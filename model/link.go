@@ -128,21 +128,22 @@ func LinkFindOne(id string) (Link_t, error) {
 	return data, nil
 }
 
-func LinkList(ctx *fasthttp.RequestCtx) ([]Link_t, error) {
+func LinkList(fCtx *fasthttp.RequestCtx) (string, error) {
 
-	var data []Link_t
-
-	sess, err := MemberInfo(ctx)
+	sess, err := MemberInfo(fCtx)
 	if err != nil {
-		return data, err
+		return "", err
 	}
 
-	t := dialect.From("tbl_member_link")
-	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()
-	err = meta.MerchantDB.Select(&data, query)
-	if err != nil && err != sql.ErrNoRows {
-		return data, pushLog(err, helper.DBErr)
-	}
+	key := "lk:" + sess.UID
+	return meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
 
-	return data, nil
+	//t := dialect.From("tbl_member_link")
+	//query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()
+	//err = meta.MerchantDB.Select(&data, query)
+	//if err != nil && err != sql.ErrNoRows {
+	//	return data, pushLog(err, helper.DBErr)
+	//}
+
+	//return data, nil
 }

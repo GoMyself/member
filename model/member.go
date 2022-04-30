@@ -627,13 +627,8 @@ func MemberCache(fCtx *fasthttp.RequestCtx, name string) (Member, error) {
 		return m, pushLog(err, helper.RedisErr)
 	}
 
-	num, err := exist.Result()
-	if num == 0 {
+	if exist.Val() == 0 {
 		return m, errors.New(helper.UsernameErr)
-	}
-
-	if rs.Err() != nil {
-		return m, pushLog(rs.Err(), helper.RedisErr)
 	}
 
 	if err = rs.Scan(&m); err != nil {
@@ -899,14 +894,20 @@ func MemberUpdateName(ctx *fasthttp.RequestCtx, realName string) error {
 // 检测会员账号是否已存在
 func MemberExist(username string) bool {
 
-	var uid uint64
-	t := dialect.From("tbl_members")
-	query, _, _ := t.Select("uid").Where(g.Ex{"username": username, "prefix": meta.Prefix}).ToSQL()
-	err := meta.MerchantDB.Get(&uid, query)
-	if err == sql.ErrNoRows {
+	ex := meta.MerchantRedis.Exists(ctx, username).Val()
+
+	if ex == 0 {
 		return false
 	}
-
+	/*
+		var uid uint64
+		t := dialect.From("tbl_members")
+		query, _, _ := t.Select("uid").Where(g.Ex{"username": username, "prefix": meta.Prefix}).ToSQL()
+		err := meta.MerchantDB.Get(&uid, query)
+		if err == sql.ErrNoRows {
+			return false
+		}
+	*/
 	return true
 }
 

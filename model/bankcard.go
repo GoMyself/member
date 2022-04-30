@@ -21,12 +21,7 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 		return errors.New(helper.BalanceErr)
 	}
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		return errors.New(helper.AccessTokenExpires)
-	}
-
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(ctx, "")
 	if err != nil {
 		return err
 	}
@@ -178,7 +173,7 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 	}
 
 	// 会员银行卡插入加锁
-	key = fmt.Sprintf("bc:%s", username)
+	key = fmt.Sprintf("bc:%s", mb.Username)
 	err = Lock(key)
 	if err != nil {
 		return err
@@ -245,7 +240,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 		data     []BankcardData
 		cardList []BankCard
 	)
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(nil, username)
 	if err != nil {
 		return data, err
 	}
@@ -313,7 +308,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 func BankcardDelete(username, bid string) error {
 
 	// 获取会员真实姓名
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(nil, username)
 	if err != nil {
 		return err
 	}

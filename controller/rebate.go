@@ -10,14 +10,8 @@ type RebateController struct{}
 
 func (that *RebateController) Scale(ctx *fasthttp.RequestCtx) {
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-
-	mb, err := model.MemberFindOne(username)
-	if username == "" {
+	mb, err := model.MemberCache(ctx, "")
+	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}

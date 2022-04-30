@@ -119,7 +119,7 @@ func MemberLogin(vid, code, username, password, ip, device, deviceNo string, las
 		return "", fmt.Errorf("code|%d", errTimes)
 	}
 
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(nil, username)
 	if err != nil {
 		return "", errors.New(helper.UserNotExist)
 	}
@@ -583,6 +583,44 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 	return res, nil
 }
 
+// 通过用户名获取用户在redis中的数据
+func MemberCache(fCtx *fasthttp.RequestCtx, name string) (Member, error) {
+
+	m := Member{}
+	if name == "" {
+		name = string(fCtx.UserValue("token").([]byte))
+		if name == "" {
+			return m, errors.New(helper.UsernameErr)
+		}
+	}
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	defer pipe.Close()
+
+	exist := pipe.Exists(ctx, name)
+	rs := pipe.HMGet(ctx, name, fieldsMember...)
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return m, pushLog(err, helper.RedisErr)
+	}
+
+	num, err := exist.Result()
+	if num == 0 {
+		return m, errors.New(helper.UsernameErr)
+	}
+
+	if rs.Err() != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
+	}
+
+	if err = rs.Scan(&m); err != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
+	}
+
+	return m, nil
+}
+
 // 查询用户单条数据
 func MemberFindOne(name string) (Member, error) {
 
@@ -623,12 +661,7 @@ func MemberFindByUid(uid string) (Member, error) {
 // 更新用户密码
 func MemberPasswordUpdate(ty int, sid, code, old, password string, ctx *fasthttp.RequestCtx) error {
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		return errors.New(helper.AccessTokenExpires)
-	}
-
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(ctx, "")
 	if err != nil {
 		return err
 	}
@@ -710,12 +743,7 @@ func MemberUpdatePhone(phone string, ctx *fasthttp.RequestCtx) error {
 		return errors.New(helper.PhoneExist)
 	}
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		return errors.New(helper.AccessTokenExpires)
-	}
-
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(ctx, "")
 	if err != nil {
 		return err
 	}
@@ -761,12 +789,7 @@ func MemberUpdateEmail(sid, code, email string, ctx *fasthttp.RequestCtx) error 
 		return errors.New(helper.EmailExist)
 	}
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		return errors.New(helper.AccessTokenExpires)
-	}
-
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(ctx, "")
 	if err != nil {
 		return err
 	}
@@ -805,12 +828,7 @@ func MemberUpdateEmail(sid, code, email string, ctx *fasthttp.RequestCtx) error 
 // 用户信息更新
 func MemberUpdateName(ctx *fasthttp.RequestCtx, realName string) error {
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		return errors.New(helper.AccessTokenExpires)
-	}
-
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(ctx, "")
 	if err != nil {
 		return err
 	}
@@ -884,7 +902,7 @@ func MemberForgetPwd(username, pwd, email, ip, sid, code string) error {
 		return err
 	}
 
-	mb, err := MemberFindOne(username)
+	mb, err := MemberCache(nil, username)
 	if err != nil {
 		return err
 	}

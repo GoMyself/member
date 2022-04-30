@@ -190,13 +190,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 	sdz := string(ctx.PostArgs().Peek("dz"))
 	scp := string(ctx.PostArgs().Peek("cp"))
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-
-	mb, err := model.MemberFindOne(username)
+	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -289,13 +283,7 @@ func (that *MemberController) Captcha(ctx *fasthttp.RequestCtx) {
 // 检查提款密码
 func (that *MemberController) CheckPwd(ctx *fasthttp.RequestCtx) {
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-
-	mb, err := model.MemberFindOne(username)
+	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
@@ -537,20 +525,13 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 	sdj := string(ctx.PostArgs().Peek("dj"))
 	sdz := string(ctx.PostArgs().Peek("dz"))
 
-	username := string(ctx.UserValue("token").([]byte))
-	if username == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-
-	//username := "jasper01"
-	mb, err := model.MemberFindOne(username)
+	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}
 
-	child, err := model.MemberFindOne(subName)
+	child, err := model.MemberCache(nil, subName)
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return

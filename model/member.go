@@ -565,7 +565,9 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 			return res, errors.New(helper.GetRPCErr)
 		}
 
-		res.RealName = record[0].Res
+		if len(record) == 1 {
+			res.RealName = record[0].Res
+		}
 	}
 
 	if res.MemberInfos.PhoneHash != "0" {
@@ -581,7 +583,9 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 			return res, errors.New(helper.GetRPCErr)
 		}
 
-		res.Phone = record[0].Res
+		if len(record) == 1 {
+			res.Phone = record[0].Res
+		}
 	}
 
 	if res.MemberInfos.EmailHash != "0" {
@@ -597,7 +601,9 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 			return res, errors.New(helper.GetRPCErr)
 		}
 
-		res.Email = record[0].Res
+		if len(record) == 1 {
+			res.Email = record[0].Res
+		}
 	}
 
 	if res.MemberInfos.ZaloHash != "0" {
@@ -613,7 +619,9 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 			return res, errors.New(helper.GetRPCErr)
 		}
 
-		res.Zalo = record[0].Res
+		if len(record) == 1 {
+			res.Zalo = record[0].Res
+		}
 	}
 
 	return res, nil

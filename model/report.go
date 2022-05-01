@@ -10,17 +10,17 @@ import (
 )
 
 type ReportAgency struct {
-	BetAmount         float64 `json:"bet_amount,omitempty" db:"bet_amount"`
-	Deposit           float64 `json:"deposit,omitempty" db:"deposit"`
-	Withdraw          float64 `json:"withdraw,omitempty" db:"withdraw"`
-	BetMemCount       int64   `json:"bet_mem_count,omitempty" db:"bet_mem_count"`
-	FirstDepositCount int64   `json:"first_deposit_count,omitempty" db:"first_deposit_count"`
-	RegistCount       int64   `json:"regist_count,omitempty" db:"regist_count"`
-	MemCount          int64   `json:"mem_count,omitempty" db:"mem_count"`
-	Rebate            float64 `json:"rebate,omitempty" db:"rebate"`
-	NetAmount         float64 `json:"net_amount,omitempty" db:"net_amount"`
-	DividendAmount    float64 `json:"dividend_amount,omitempty" db:"dividend_amount"`
-	BalanceTotal      float64 `json:"balance_total,omitempty" db:"balance_total"`
+	BetAmount         float64 `json:"bet_amount" db:"bet_amount"`
+	Deposit           float64 `json:"deposit" db:"deposit"`
+	Withdraw          float64 `json:"withdraw" db:"withdraw"`
+	BetMemCount       int64   `json:"bet_mem_count" db:"bet_mem_count"`
+	FirstDepositCount int64   `json:"first_deposit_count" db:"first_deposit_count"`
+	RegistCount       int64   `json:"regist_count" db:"regist_count"`
+	MemCount          int64   `json:"mem_count" db:"mem_count"`
+	Rebate            float64 `json:"rebate" db:"rebate"`
+	NetAmount         float64 `json:"net_amount" db:"net_amount"`
+	DividendAmount    float64 `json:"dividend_amount" db:"dividend_amount"`
+	BalanceTotal      float64 `json:"balance_total" db:"balance_total"`
 }
 
 func AgencyReport(ty string, fCtx *fasthttp.RequestCtx) (ReportAgency, error) {

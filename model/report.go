@@ -60,7 +60,6 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx) (ReportAgency, error) {
 
 	query, _, _ := dialect.From("tbl_report_agency").Where(and).
 		Select(
-			"uid",
 			g.C("bet_amount").As("bet_amount"),                   //投注金额
 			g.C("deposit_amount").As("deposit"),                  //充值金额
 			g.C("withdrawal_amount").As("withdraw"),              //提现金额
@@ -72,7 +71,7 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx) (ReportAgency, error) {
 			g.C("company_net_amount").As("net_amount"),           //输赢
 			g.C("dividend_amount").As("dividend_amount"),         //活动礼金
 			g.C("balance_total").As("balance_total"),             //团队余额
-		).GroupBy("uid").
+		).
 		ToSQL()
 	err = meta.ReportDB.Get(&data, query)
 	if err != nil && err != sql.ErrNoRows {

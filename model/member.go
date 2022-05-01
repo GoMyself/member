@@ -856,7 +856,7 @@ func MemberUpdateZalo(zalo string, ctx *fasthttp.RequestCtx) error {
 
 	zaloHash := fmt.Sprintf("%d", MurmurHash(zalo, 0))
 	ex := g.Ex{
-		"phone_hash": zaloHash,
+		"zalo_hash": zaloHash,
 	}
 	if MemberBindCheck(ex) {
 		return errors.New(helper.ZaloExist)

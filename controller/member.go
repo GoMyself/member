@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -28,12 +29,12 @@ type MemberRegParam struct {
 
 // 修改用户密码参数
 type forgetPassword struct {
-	Username  string `rule:"alnum" min:"5" max:"14" msg:"username error" name:"username"`
+	Username  string `rule:"none" msg:"username error" name:"username"`
 	Sid       string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
-	Code      string `json:"code" name:"code" rule:"alnum" min:"2" max:"8" msg:"code error"`
-	Phone     string `rule:"alnum" msg:"phone error" name:"phone"`
-	Password1 string `rule:"upwd" name:"password1" min:"8" max:"20" msg:"password error"`
-	Password2 string `rule:"upwd" name:"password2" min:"8" max:"20" msg:"reset_password error"`
+	Code      string `json:"code" name:"code" rule:"none" msg:"code error"`
+	Phone     string `rule:"none" msg:"phone error" name:"phone"`
+	Password1 string `rule:"upwd" name:"password1" msg:"password error"`
+	Password2 string `rule:"upwd" name:"password2" msg:"reset_password error"`
 }
 
 // 绑定邮箱
@@ -340,6 +341,8 @@ func (that *MemberController) ForgetPassword(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, false, helper.ParamErr)
 		return
 	}
+
+	fmt.Println(params)
 
 	if params.Password1 != params.Password2 {
 		helper.Print(ctx, false, helper.PasswordInconsistent)

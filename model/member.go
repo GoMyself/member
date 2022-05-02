@@ -547,80 +547,37 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 		return res, errors.New(helper.AccessTokenExpires)
 	}
 
-	/*
-		if res.MemberInfos.RealnameHash != "0" {
+	encRes := []string{}
+	if res.MemberInfos.RealnameHash != "0" {
 
-			recs := schema.Dec_t{
-				Field: "realname",
-				Hide:  true,
-				ID:    res.MemberInfos.UID,
-			}
-			var rpcRes []schema.Dec_t
-			rpcRes = append(rpcRes, recs)
-			record, err := rpcGet(rpcRes)
-			if err != nil {
-				return res, errors.New(helper.GetRPCErr)
-			}
+		encRes = append(encRes, "realname")
+	}
 
-			if len(record) == 1 {
-				res.RealName = record[0].Res
-			}
-		}
+	if res.MemberInfos.PhoneHash != "0" {
 
-		if res.MemberInfos.PhoneHash != "0" {
-			recs := schema.Dec_t{
-				Field: "phone",
-				Hide:  true,
-				ID:    res.MemberInfos.UID,
-			}
-			var rpcRes []schema.Dec_t
-			rpcRes = append(rpcRes, recs)
-			record, err := rpcGet(rpcRes)
-			if err != nil {
-				return res, errors.New(helper.GetRPCErr)
-			}
+		encRes = append(encRes, "phone")
+	}
 
-			if len(record) == 1 {
-				res.Phone = record[0].Res
-			}
-		}
+	if res.MemberInfos.EmailHash != "0" {
 
-		if res.MemberInfos.EmailHash != "0" {
-			recs := schema.Dec_t{
-				Field: "email",
-				Hide:  true,
-				ID:    res.MemberInfos.UID,
-			}
-			var rpcRes []schema.Dec_t
-			rpcRes = append(rpcRes, recs)
-			record, err := rpcGet(rpcRes)
-			if err != nil {
-				return res, errors.New(helper.GetRPCErr)
-			}
+		encRes = append(encRes, "email")
+	}
 
-			if len(record) == 1 {
-				res.Email = record[0].Res
-			}
-		}
+	if res.MemberInfos.ZaloHash != "0" {
 
-		if res.MemberInfos.ZaloHash != "0" {
-			recs := schema.Dec_t{
-				Field: "zalo",
-				Hide:  true,
-				ID:    res.MemberInfos.UID,
-			}
-			var rpcRes []schema.Dec_t
-			rpcRes = append(rpcRes, recs)
-			record, err := rpcGet(rpcRes)
-			if err != nil {
-				return res, errors.New(helper.GetRPCErr)
-			}
+		encRes = append(encRes, "zalo")
+	}
 
-			if len(record) == 1 {
-				res.Zalo = record[0].Res
-			}
-		}
-	*/
+	recs, err := grpc_t.Decrypt(res.MemberInfos.UID, true, encRes)
+	if err != nil {
+		return res, errors.New(helper.UpdateRPCErr)
+	}
+
+	res.Zalo = recs["zalo"]
+	res.RealName = recs["realname"]
+	res.Phone = recs["phone"]
+	res.Email = recs["email"]
+
 	return res, nil
 }
 

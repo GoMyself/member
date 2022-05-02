@@ -1,16 +1,16 @@
 package model
 
 import (
-	"bitbucket.org/nwf2013/schema"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	"github.com/jordan-wright/email"
-	"lukechampine.com/frand"
 	"member2/contrib/helper"
 	"net/smtp"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/jordan-wright/email"
+	"lukechampine.com/frand"
 )
 
 func emailCmp(sid, code, ip, address string) error {
@@ -58,19 +58,13 @@ func EmailSend(day, ip, username, address string, flag int) (string, error) {
 			return id, errors.New(helper.UsernameEmailMismatch)
 		}
 	} else if flag == EmailModifyPassword {
-		arg := []schema.Dec_t{
-			{Field: "email", Hide: false, ID: mb.UID},
-		}
-		resp, err := rpcGet(arg)
+
+		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"email"})
 		if err != nil {
 			return "", errors.New(helper.GetRPCErr)
 		}
 
-		if resp[0].Err != "" {
-			return "", pushLog(errors.New(resp[0].Err), helper.ServerErr)
-		}
-
-		address = resp[0].Res
+		address = recs["email"]
 	}
 
 	from := fmt.Sprintf("%s Gaming <%sgm@gmail.com>", meta.Email.Name, meta.Email.Name)

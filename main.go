@@ -53,9 +53,7 @@ func main() {
 	mt.Email.Account = cfg.Email.Account
 	mt.Email.Password = cfg.Email.Password
 
-	rpc := conn.InitRpc(cfg.RPC)
-
-	model.Constructor(mt, rpc)
+	model.Constructor(mt, cfg.RPC)
 	session.New(mt.MerchantRedis, cfg.Prefix)
 	tdlog.New(cfg.Td.Servers, cfg.Td.Username, cfg.Td.Password)
 

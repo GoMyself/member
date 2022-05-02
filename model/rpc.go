@@ -1,24 +1,10 @@
 package model
 
-import (
-	"bitbucket.org/nwf2013/schema"
-	"fmt"
-	"github.com/valyala/fastjson"
-)
-
-type rpcResult struct {
-	Err string `json:"err"`
-	Res string `json:"res"`
-}
-
 /*
-https://github.com/francoispqt/gojay
-*/
-
 func rpcSet(data []schema.Enc_t, isUpdate bool) ([]string, error) {
 
 	method := "Encrypt"
-	recs     := []string{}
+	recs := []string{}
 	var p fastjson.Parser
 
 	if isUpdate {
@@ -32,7 +18,6 @@ func rpcSet(data []schema.Enc_t, isUpdate bool) ([]string, error) {
 		return recs, err
 	}
 
-
 	v, err := p.ParseBytes(res.([]byte))
 	if err != nil {
 		return recs, err
@@ -45,10 +30,12 @@ func rpcSet(data []schema.Enc_t, isUpdate bool) ([]string, error) {
 	for _, val := range value {
 		recs = append(recs, val.String())
 	}
-	return  recs, err
+	return recs, err
 }
 
 func rpcInsert(data []schema.Enc_t) ([]string, error) {
+
+	client := core.NewClient(rpcconn)
 
 	return rpcSet(data, false)
 }
@@ -78,11 +65,13 @@ func rpcGet(data []schema.Dec_t) ([]rpcResult, error) {
 	}
 	for _, val := range value {
 		r := rpcResult{
-			Err : string(val.GetStringBytes("err")),
-			Res : string(val.GetStringBytes("res")),
+			Err: string(val.GetStringBytes("err")),
+			Res: string(val.GetStringBytes("res")),
 		}
 		results = append(results, r)
 	}
 
 	return results, nil
 }
+
+*/

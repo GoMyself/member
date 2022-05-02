@@ -6,12 +6,15 @@ import (
 	"member2/contrib/helper"
 	"member2/contrib/tdlog"
 	"member2/contrib/tracerr"
-
-	"github.com/fluent/fluent-logger-golang/fluent"
 	"time"
 
-	"bitbucket.org/nwf2013/schema"
+	"github.com/fluent/fluent-logger-golang/fluent"
+	"github.com/hprose/hprose-golang/v3/rpc/core"
+	rpchttp "github.com/hprose/hprose-golang/v3/rpc/http"
+	. "github.com/hprose/hprose-golang/v3/rpc/http/fasthttp"
+
 	"errors"
+
 	g "github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	"github.com/go-redis/redis/v8"
@@ -30,6 +33,13 @@ type log_t struct {
 	Content string `json:"content" msg:"content"`
 }
 
+var grpc_t struct {
+	View       func(uid, field string) ([]string, error)
+	Encrypt    func(uid string, data [][]string) error
+	Decrypt    func(uid string, hide bool, field []string) (map[string]string, error)
+	DecryptAll func(uids []string, hide bool, field []string) (map[string]map[string]string, error)
+}
+
 type MetaTable struct {
 	Zlog              *fluent.Fluent
 	MerchantRedis     *redis.Client
@@ -46,6 +56,7 @@ type MetaTable struct {
 	MinioUploadUrl    string
 	MinioImagesBucket string
 	MinioJsonBucket   string
+	RpcConn           string
 }
 
 var (
@@ -70,26 +81,23 @@ type Email struct {
 	Password string
 }
 
-func Constructor(mt *MetaTable, c *gorpc.Client) {
+func Constructor(mt *MetaTable, rpcconn string) {
 
 	meta = mt
+	meta.RpcConn = rpcconn
 	if meta.Lang == "cn" {
 		loc, _ = time.LoadLocation("Asia/Shanghai")
 	} else if meta.Lang == "vn" || meta.Lang == "th" {
 		loc, _ = time.LoadLocation("Asia/Bangkok")
 	}
 
-	d := gorpc.NewDispatcher()
-	d.AddFunc("Encrypt", func(data []schema.Enc_t) []byte { return nil })
-	d.AddFunc("Decrypt", func(data []schema.Dec_t) []byte { return nil })
-	d.AddFunc("History", func(data *schema.Res_t) string { return "" })
+	rpchttp.RegisterHandler()
+	RegisterTransport()
 
-	gorpc.RegisterType([]schema.Enc_t{})
-	gorpc.RegisterType([]schema.Dec_t{})
-	gorpc.RegisterType(&schema.Res_t{})
+	client := core.NewClient(rpcconn)
+	//client.Use(log.Plugin)
 
-	meta.Grpc = d.NewFuncClient(c)
-
+	client.UseService(&grpc_t)
 }
 
 func MurmurHash(str string, seed uint32) uint64 {

@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"strconv"
 	"time"
 
-	"bitbucket.org/nwf2013/schema"
+	"github.com/go-redis/redis/v8"
+
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/valyala/fasthttp"
 
@@ -61,21 +61,14 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 		return errors.New(helper.BankcardBan)
 	}
 
-	var encRes []schema.Enc_t
 	if phone == "" {
-		var res []schema.Dec_t
-		recs := schema.Dec_t{
-			Field: "phone",
-			Hide:  false,
-			ID:    mb.UID,
-		}
 
-		res = append(res, recs)
-		phoneRes, err := rpcGet(res)
-		if err != nil && phoneRes[0].Err == "" {
+		phoneRes, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
+		if err != nil {
 			return errors.New(helper.GetRPCErr)
 		}
-		phone = phoneRes[0].Res
+
+		phone = phoneRes["phone"]
 	}
 
 	// 判断验证码
@@ -120,19 +113,15 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 	record := g.Record{
 		"bankcard_total": g.L("bankcard_total+1"),
 	}
+
+	encRes := [][]string{}
 	// 会员未绑定真实姓名，更新第一次绑定银行卡的真实姓名到会员信息
 	if mb.RealnameHash == "0" {
 		// 第一次新增银行卡判断真实姓名是否为越南文
 		if !validator.CheckStringVName(realname) {
 			return errors.New(helper.RealNameFMTErr)
 		}
-
-		recs := schema.Enc_t{
-			Field: "realname",
-			Value: realname,
-			ID:    mb.UID,
-		}
-		encRes = append(encRes, recs)
+		encRes = append(encRes, []string{"realname", realname})
 
 		realNameHash := fmt.Sprintf("%d", MurmurHash(realname, 0))
 		// 会员信息更新真实姓名和真实姓名hash
@@ -141,22 +130,13 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 
 	// 会员未绑定手机号，更新手机号和手机号hash
 	if phone != "" && mb.PhoneHash == "0" {
-		recs := schema.Enc_t{
-			Field: "phone",
-			Value: phone,
-			ID:    mb.UID,
-		}
-		encRes = append(encRes, recs)
+		encRes = append(encRes, []string{"phone", phone})
 		record["phone_hash"] = fmt.Sprintf("%d", MurmurHash(phone, 0))
 	}
 
-	recs := schema.Enc_t{
-		Field: "bankcard",
-		Value: bankcardNo,
-		ID:    data.ID,
-	}
-	encRes = append(encRes, recs)
-	_, err = rpcInsert(encRes)
+	encRes = append(encRes, []string{"bankcard" + data.ID, bankcardNo})
+
+	err = grpc_t.Encrypt(mb.UID, encRes)
 	if err != nil {
 		return errors.New(helper.UpdateRPCErr)
 	}
@@ -273,42 +253,34 @@ func BankcardList(username string) ([]BankcardData, error) {
 		return data, nil
 	}
 
-	var res []schema.Dec_t
+	encRes := []string{}
 	for _, v := range cardList {
-		recs := schema.Dec_t{
-			Field: "bankcard",
-			Hide:  true,
-			ID:    v.ID,
-		}
-		res = append(res, recs)
+		encRes = append(encRes, "bankcard"+v.ID)
 	}
 
-	recs := schema.Dec_t{
-		Field: "realname",
-		Hide:  true,
-		ID:    mb.UID,
-	}
-	res = append(res, recs)
-	record, err := rpcGet(res)
+	encRes = append(encRes, "realname")
+	record, err := grpc_t.Decrypt(mb.UID, true, encRes)
 	if err != nil {
 		return data, errors.New(helper.GetRPCErr)
 	}
 
-	rpcLen := len(record)
-	// 会员段返回解密银行卡真实姓名和银行卡号
-	for k, v := range cardList {
-		card := record[k].Res
-		if rpcLen > k && record[k].Err == "" {
-			card = record[k].Res
+	fmt.Println("record = ", record)
+	/*
+		rpcLen := len(record)
+		// 会员段返回解密银行卡真实姓名和银行卡号
+		for k, v := range cardList {
+			card := record[k].Res
+			if rpcLen > k && record[k].Err == "" {
+				card = record[k].Res
+			}
+			realName := ""
+			if rpcLen > length && record[length].Err == "" {
+				realName = record[length].Res
+			}
+			val := BankcardData{BankCard: v, RealName: realName, Bankcard: card}
+			data = append(data, val)
 		}
-		realName := ""
-		if rpcLen > length && record[length].Err == "" {
-			realName = record[length].Res
-		}
-		val := BankcardData{BankCard: v, RealName: realName, Bankcard: card}
-		data = append(data, val)
-	}
-
+	*/
 	return data, nil
 }
 

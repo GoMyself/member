@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/wI2L/jettison"
 	"member2/contrib/helper"
 	"member2/contrib/session"
 	"member2/contrib/tdlog"
@@ -13,9 +12,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/wI2L/jettison"
+
 	"github.com/doug-martin/goqu/v9/exp"
 
-	"bitbucket.org/nwf2013/schema"
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/go-redis/redis/v8"
 	"github.com/valyala/fasthttp"
@@ -338,16 +338,12 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		fmt.Printf("zlog error : %v data : %#v\n", err, l)
 	}
 
-	var res []schema.Enc_t
-	recs := schema.Enc_t{
-		Field: "phone",
-		Value: phone,
-		ID:    m.UID,
-	}
-	res = append(res, recs)
-	_, err = rpcInsert(res)
+	encRes := [][]string{}
+
+	encRes = append(encRes, []string{"phone", phone})
+	err = grpc_t.Encrypt(m.UID, encRes)
 	if err != nil {
-		fmt.Printf("rpcInsert error : %v data : %#v\n", err, recs)
+		return "", errors.New(helper.GetRPCErr)
 	}
 
 	return id, nil
@@ -551,79 +547,80 @@ func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 		return res, errors.New(helper.AccessTokenExpires)
 	}
 
-	if res.MemberInfos.RealnameHash != "0" {
+	/*
+		if res.MemberInfos.RealnameHash != "0" {
 
-		recs := schema.Dec_t{
-			Field: "realname",
-			Hide:  true,
-			ID:    res.MemberInfos.UID,
-		}
-		var rpcRes []schema.Dec_t
-		rpcRes = append(rpcRes, recs)
-		record, err := rpcGet(rpcRes)
-		if err != nil {
-			return res, errors.New(helper.GetRPCErr)
-		}
+			recs := schema.Dec_t{
+				Field: "realname",
+				Hide:  true,
+				ID:    res.MemberInfos.UID,
+			}
+			var rpcRes []schema.Dec_t
+			rpcRes = append(rpcRes, recs)
+			record, err := rpcGet(rpcRes)
+			if err != nil {
+				return res, errors.New(helper.GetRPCErr)
+			}
 
-		if len(record) == 1 {
-			res.RealName = record[0].Res
-		}
-	}
-
-	if res.MemberInfos.PhoneHash != "0" {
-		recs := schema.Dec_t{
-			Field: "phone",
-			Hide:  true,
-			ID:    res.MemberInfos.UID,
-		}
-		var rpcRes []schema.Dec_t
-		rpcRes = append(rpcRes, recs)
-		record, err := rpcGet(rpcRes)
-		if err != nil {
-			return res, errors.New(helper.GetRPCErr)
+			if len(record) == 1 {
+				res.RealName = record[0].Res
+			}
 		}
 
-		if len(record) == 1 {
-			res.Phone = record[0].Res
-		}
-	}
+		if res.MemberInfos.PhoneHash != "0" {
+			recs := schema.Dec_t{
+				Field: "phone",
+				Hide:  true,
+				ID:    res.MemberInfos.UID,
+			}
+			var rpcRes []schema.Dec_t
+			rpcRes = append(rpcRes, recs)
+			record, err := rpcGet(rpcRes)
+			if err != nil {
+				return res, errors.New(helper.GetRPCErr)
+			}
 
-	if res.MemberInfos.EmailHash != "0" {
-		recs := schema.Dec_t{
-			Field: "email",
-			Hide:  true,
-			ID:    res.MemberInfos.UID,
-		}
-		var rpcRes []schema.Dec_t
-		rpcRes = append(rpcRes, recs)
-		record, err := rpcGet(rpcRes)
-		if err != nil {
-			return res, errors.New(helper.GetRPCErr)
-		}
-
-		if len(record) == 1 {
-			res.Email = record[0].Res
-		}
-	}
-
-	if res.MemberInfos.ZaloHash != "0" {
-		recs := schema.Dec_t{
-			Field: "zalo",
-			Hide:  true,
-			ID:    res.MemberInfos.UID,
-		}
-		var rpcRes []schema.Dec_t
-		rpcRes = append(rpcRes, recs)
-		record, err := rpcGet(rpcRes)
-		if err != nil {
-			return res, errors.New(helper.GetRPCErr)
+			if len(record) == 1 {
+				res.Phone = record[0].Res
+			}
 		}
 
-		if len(record) == 1 {
-			res.Zalo = record[0].Res
-		}
-	}
+		if res.MemberInfos.EmailHash != "0" {
+			recs := schema.Dec_t{
+				Field: "email",
+				Hide:  true,
+				ID:    res.MemberInfos.UID,
+			}
+			var rpcRes []schema.Dec_t
+			rpcRes = append(rpcRes, recs)
+			record, err := rpcGet(rpcRes)
+			if err != nil {
+				return res, errors.New(helper.GetRPCErr)
+			}
 
+			if len(record) == 1 {
+				res.Email = record[0].Res
+			}
+		}
+
+		if res.MemberInfos.ZaloHash != "0" {
+			recs := schema.Dec_t{
+				Field: "zalo",
+				Hide:  true,
+				ID:    res.MemberInfos.UID,
+			}
+			var rpcRes []schema.Dec_t
+			rpcRes = append(rpcRes, recs)
+			record, err := rpcGet(rpcRes)
+			if err != nil {
+				return res, errors.New(helper.GetRPCErr)
+			}
+
+			if len(record) == 1 {
+				res.Zalo = record[0].Res
+			}
+		}
+	*/
 	return res, nil
 }
 
@@ -752,18 +749,12 @@ func MemberPasswordUpdate(ty int, sid, code, old, password string, ctx *fasthttp
 		}
 
 		ip := helper.FromRequest(ctx)
-		recs := schema.Dec_t{
-			Field: "email",
-			Hide:  false,
-			ID:    mb.UID,
-		}
-		var rpcRes []schema.Dec_t
-		rpcRes = append(rpcRes, recs)
-		record, err := rpcGet(rpcRes)
+
+		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"email"})
 		if err != nil {
 			return errors.New(helper.GetRPCErr)
 		}
-		address := record[0].Res
+		address := recs["email"]
 
 		err = emailCmp(sid, code, ip, address)
 		if err != nil {
@@ -831,14 +822,9 @@ func MemberUpdatePhone(phone string, ctx *fasthttp.RequestCtx) error {
 		return errors.New(helper.PhoneBindAlreadyErr)
 	}
 
-	var res []schema.Enc_t
-	recs := schema.Enc_t{
-		Field: "phone",
-		Value: phone,
-		ID:    mb.UID,
-	}
-	res = append(res, recs)
-	_, err = rpcInsert(res)
+	encRes := [][]string{}
+	encRes = append(encRes, []string{"phone", phone})
+	err = grpc_t.Encrypt(mb.UID, encRes)
 	if err != nil {
 		return errors.New(helper.UpdateRPCErr)
 	}
@@ -880,14 +866,9 @@ func MemberUpdateZalo(zalo string, ctx *fasthttp.RequestCtx) error {
 		return errors.New(helper.ZaloBindAlreadyErr)
 	}
 
-	var res []schema.Enc_t
-	recs := schema.Enc_t{
-		Field: "zalo",
-		Value: zalo,
-		ID:    mb.UID,
-	}
-	res = append(res, recs)
-	_, err = rpcInsert(res)
+	encRes := [][]string{}
+	encRes = append(encRes, []string{"zalo", zalo})
+	err = grpc_t.Encrypt(mb.UID, encRes)
 	if err != nil {
 		return errors.New(helper.UpdateRPCErr)
 	}
@@ -930,14 +911,9 @@ func MemberUpdateEmail(sid, code, email string, ctx *fasthttp.RequestCtx) error 
 		return err
 	}
 
-	var res []schema.Enc_t
-	recs := schema.Enc_t{
-		Field: "email",
-		Value: email,
-		ID:    mb.UID,
-	}
-	res = append(res, recs)
-	_, err = rpcInsert(res)
+	encRes := [][]string{}
+	encRes = append(encRes, []string{"email", email})
+	err = grpc_t.Encrypt(mb.UID, encRes)
 	if err != nil {
 		return errors.New(helper.UpdateRPCErr)
 	}
@@ -979,14 +955,9 @@ func MemberUpdateName(ctx *fasthttp.RequestCtx, realName, address string) error 
 			return errors.New(helper.RealNameFMTErr)
 		}
 
-		var res []schema.Enc_t
-		recs := schema.Enc_t{
-			Field: "realname",
-			Value: realName,
-			ID:    mb.UID,
-		}
-		res = append(res, recs)
-		_, err = rpcInsert(res)
+		encRes := [][]string{}
+		encRes = append(encRes, []string{"realname", realName})
+		err = grpc_t.Encrypt(mb.UID, encRes)
 		if err != nil {
 			return errors.New(helper.UpdateRPCErr)
 		}

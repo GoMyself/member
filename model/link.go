@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"member2/contrib/helper"
 
 	g "github.com/doug-martin/goqu/v9"
@@ -138,8 +139,12 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 
 	key := "lk:" + sess.UID
 	res, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
-	if err != nil {
+	if err != nil && err != redis.Nil {
 		return data, pushLog(err, helper.RedisErr)
+	}
+
+	if err == redis.Nil {
+		return data, nil
 	}
 
 	mp := map[string]Link_t{}

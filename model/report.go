@@ -47,7 +47,8 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx) (ReportAgency, error) {
 		startAt = helper.MonthTST(helper.MonthTST(0, loc).Unix()-1, loc).Unix()
 		reportType = 4
 	default:
-
+		startAt = helper.DayTST(0, loc).Unix()
+		reportType = 2
 	}
 	// 获取统计数据
 	and := g.And(
@@ -73,10 +74,12 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx) (ReportAgency, error) {
 			g.C("balance_total").As("balance_total"),             //团队余额
 		).
 		ToSQL()
+	fmt.Println(query)
 	err = meta.ReportDB.Get(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println(err.Error())
 		return data, pushLog(err, helper.DBErr)
 	}
+	fmt.Println(data)
 	return data, nil
 }

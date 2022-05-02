@@ -169,7 +169,7 @@ func BankcardInsert(ctx *fasthttp.RequestCtx, phone, sid, code, realname, bankca
 		"bank_id":          data.BankID,
 		"bank_branch_name": data.BankAddress,
 		"bank_card_hash":   cardNoHash,
-		"created_at":       fmt.Sprintf("%d", data.CreatedAt),
+		"created_at":       data.CreatedAt,
 	}
 
 	// 会员银行卡插入加锁

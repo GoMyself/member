@@ -1,10 +1,11 @@
 package controller
 
 import (
-	g "github.com/doug-martin/goqu/v9"
-	"github.com/shopspring/decimal"
 	"strconv"
 	"strings"
+
+	g "github.com/doug-martin/goqu/v9"
+	"github.com/shopspring/decimal"
 
 	"member2/contrib/helper"
 	"member2/contrib/validator"
@@ -48,7 +49,7 @@ type MemberAutoTransferParam struct {
 
 func (that *MemberController) Token(ctx *fasthttp.RequestCtx) {
 
-	m, err := model.MemberInfo(ctx)
+	m, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

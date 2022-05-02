@@ -13,6 +13,30 @@ import (
 	"lukechampine.com/frand"
 )
 
+func phoneCmp(sid, code, ip, phone string) error {
+
+	if sid == "" && code == "" {
+		return nil
+	}
+
+	key := phone + ip + sid
+	val, err := meta.MerchantRedis.Get(ctx, key).Result()
+	if err != nil && err != redis.Nil {
+		return errors.New(helper.ServerErr)
+	}
+
+	if err != nil && err == redis.Nil {
+		return errors.New(helper.PhoneVerificationErr)
+	}
+
+	if val != code {
+		return errors.New(helper.PhoneVerificationErr)
+	}
+
+	meta.MerchantRedis.Unlink(ctx, key)
+	return nil
+}
+
 func emailCmp(sid, code, ip, address string) error {
 
 	if sid == "" && code == "" {

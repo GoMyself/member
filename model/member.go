@@ -963,9 +963,9 @@ func MemberExist(username string) bool {
 }
 
 //会员忘记密码
-func MemberForgetPwd(username, pwd, email, ip, sid, code string) error {
+func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 
-	err := emailCmp(sid, code, ip, email)
+	err := phoneCmp(sid, code, ip, phone)
 	if err != nil {
 		return err
 	}
@@ -979,9 +979,9 @@ func MemberForgetPwd(username, pwd, email, ip, sid, code string) error {
 		return errors.New(helper.UsernameErr)
 	}
 
-	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
-	if emailHash != mb.EmailHash {
-		return errors.New(helper.UsernameEmailMismatch)
+	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
+	if phoneHash != mb.PhoneHash {
+		return errors.New(helper.UsernamePhoneMismatch)
 	}
 
 	record := g.Record{

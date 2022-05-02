@@ -31,7 +31,7 @@ type forgetPassword struct {
 	Username  string `rule:"alnum" min:"5" max:"14" msg:"username error" name:"username"`
 	Sid       string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
 	Code      string `json:"code" name:"code" rule:"alnum" min:"2" max:"8" msg:"code error"`
-	Addr      string `rule:"alnum" msg:"addr error" name:"addr"`
+	Phone     string `rule:"alnum" msg:"phone error" name:"phone"`
 	Password1 string `rule:"upwd" name:"password1" min:"8" max:"20" msg:"password error"`
 	Password2 string `rule:"upwd" name:"password2" min:"8" max:"20" msg:"reset_password error"`
 }
@@ -347,7 +347,7 @@ func (that *MemberController) ForgetPassword(ctx *fasthttp.RequestCtx) {
 	}
 
 	ip := helper.FromRequest(ctx)
-	err = model.MemberForgetPwd(params.Username, params.Password1, params.Addr, ip, params.Sid, params.Code)
+	err = model.MemberForgetPwd(params.Username, params.Password1, params.Phone, ip, params.Sid, params.Code)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

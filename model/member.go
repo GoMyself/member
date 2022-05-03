@@ -274,10 +274,11 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	parent := Member{}
+	var query string
 	// 邀请链接注册，不成功注册在默认代理root下
-	parent, err = regLink(tx, uid, linkID, createdAt)
+	parent, query, err = regLink(uid, linkID, createdAt)
 	if err == nil {
-		parent, err = regRoot(tx, uid, topId, createdAt)
+		parent, query, err = regRoot(uid, topId, createdAt)
 		if err != nil {
 			_ = tx.Rollback()
 			return "", err
@@ -291,7 +292,14 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	m.AgencyType = parent.AgencyType
 	m.GroupName = parent.GroupName
 
-	query, _, _ := dialect.Insert("tbl_members").Rows(&m).ToSQL()
+	// 插入返水记录
+	_, err = tx.Exec(query)
+	if err != nil {
+		_ = tx.Rollback()
+		return "", pushLog(err, helper.DBErr)
+	}
+
+	query, _, _ = dialect.Insert("tbl_members").Rows(&m).ToSQL()
 	_, err = tx.Exec(query)
 	if err != nil {
 		_ = tx.Rollback()
@@ -349,65 +357,56 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	return id, nil
 }
 
-func regLink(tx *sql.Tx, uid, linkID string, createdAt uint32) (Member, error) {
+func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
 
 	m := Member{}
+	var query string
 	p := strings.Split(linkID, ":")
 	if len(p) != 2 {
-		return m, errors.New(helper.IDErr)
+		return m, query, errors.New(helper.IDErr)
 	}
 
 	lkKey := "lk:" + p[0]
 	lkRes, err := meta.MerchantRedis.Do(ctx, "JSON.GET", lkKey, ".$"+p[1]).Text()
 	if err == nil {
-		return m, pushLog(err, helper.RedisErr)
+		return m, query, pushLog(err, helper.RedisErr)
 	}
 
 	lk := Link_t{}
 	err = helper.JsonUnmarshal([]byte(lkRes), &lk)
 	if err != nil {
-		return m, pushLog(err, helper.FormatErr)
-	}
-
-	query := fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`,`created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, createdAt, meta.Prefix)
-	_, err = tx.Exec(query)
-	if err != nil {
-		return m, pushLog(err, helper.DBErr)
+		return m, query, pushLog(err, helper.FormatErr)
 	}
 
 	m, err = MemberFindByUid(lk.UID)
 	if err != nil {
-		return m, err
+		return m, query, err
 	}
 
-	return m, nil
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`,`created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
+		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, createdAt, meta.Prefix)
+
+	return m, query, nil
 }
 
-func regRoot(tx *sql.Tx, uid, topId string, createdAt uint32) (Member, error) {
+func regRoot(uid, topId string, createdAt uint32) (Member, string, error) {
 
 	m := Member{}
+	var query string
 	rootRebate, err := RebateScale(topId)
 	if err != nil {
-		_ = tx.Rollback()
-		return m, pushLog(err, helper.DBErr)
-	}
-
-	query := fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, createdAt, meta.Prefix)
-	_, err = tx.Exec(query)
-	if err != nil {
-		_ = tx.Rollback()
-		return m, pushLog(err, helper.DBErr)
+		return m, query, pushLog(err, helper.DBErr)
 	}
 
 	m, err = MemberFindByUid(topId)
 	if err != nil {
-		_ = tx.Rollback()
-		return m, err
+		return m, query, err
 	}
 
-	return m, nil
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
+		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, createdAt, meta.Prefix)
+
+	return m, query, nil
 }
 
 func MemberVerify(id, str string) bool {

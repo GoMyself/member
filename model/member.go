@@ -277,7 +277,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	var query string
 	// 邀请链接注册，不成功注册在默认代理root下
 	parent, query, err = regLink(uid, linkID, createdAt)
-	if err == nil {
+	if err != nil {
 		parent, query, err = regRoot(uid, topId, createdAt)
 		if err != nil {
 			_ = tx.Rollback()

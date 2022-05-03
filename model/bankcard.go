@@ -42,9 +42,11 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		return err
 	}
 
-	recs, err := grpc_t.Decrypt(mb.UID, true, []string{"phone"})
+	recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
 	if recs["phone"] != phone {
-		return errors.New(helper.PhoneVerificationErr)
+		fmt.Println("phone = ", phone)
+		fmt.Println("recs phone = ", recs["phone"])
+		//return errors.New(helper.PhoneVerificationErr)
 	}
 
 	member_ex := g.Ex{
@@ -74,7 +76,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		"bank_id":          data.BankID,
 		"bank_branch_name": data.BankAddress,
 		"bank_card_hash":   fmt.Sprintf("%d", MurmurHash(bankcardNo, 0)),
-		"created_at":       fmt.Sprintf("%d", data.CreatedAt),
+		"created_at":       data.CreatedAt,
 	}
 
 	encRes = append(encRes, []string{"bankcard" + data.ID, bankcardNo})
@@ -99,6 +101,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	_, err = tx.Exec(queryInsert)
 	if err != nil {
 		_ = tx.Rollback()
+		fmt.Println("queryInsert = ", queryInsert)
 		return pushLog(err, helper.DBErr)
 	}
 
@@ -107,11 +110,13 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	_, err = tx.Exec(queryUpdate)
 	if err != nil {
 		_ = tx.Rollback()
+		fmt.Println("queryUpdate = ", queryUpdate)
 		return pushLog(err, helper.DBErr)
 	}
 
 	err = tx.Commit()
 	if err != nil {
+		fmt.Println("tx.Commit = ", err.Error())
 		return pushLog(err, helper.DBErr)
 	}
 
@@ -135,7 +140,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 		return data, errors.New(helper.AccessTokenExpires)
 	}
 
-	key := "lk:" + mb.UID
+	key := "cbc:" + mb.Username
 	bcs, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
 	if err != nil && err != redis.Nil {
 		return data, errors.New(helper.RedisErr)

@@ -276,7 +276,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	parent := Member{}
 	// 邀请链接注册，不成功注册在默认代理root下
 	parent, err = regLink(tx, uid, linkID, createdAt)
-	if err != nil {
+	if err == nil {
 		parent, err = regRoot(tx, uid, topId, createdAt)
 		if err != nil {
 			_ = tx.Rollback()
@@ -354,21 +354,18 @@ func regLink(tx *sql.Tx, uid, linkID string, createdAt uint32) (Member, error) {
 	m := Member{}
 	p := strings.Split(linkID, ":")
 	if len(p) != 2 {
-		_ = tx.Rollback()
 		return m, errors.New(helper.IDErr)
 	}
 
 	lkKey := "lk:" + p[0]
 	lkRes, err := meta.MerchantRedis.Do(ctx, "JSON.GET", lkKey, ".$"+p[1]).Text()
 	if err == nil {
-		_ = tx.Rollback()
 		return m, pushLog(err, helper.RedisErr)
 	}
 
 	lk := Link_t{}
 	err = helper.JsonUnmarshal([]byte(lkRes), &lk)
 	if err != nil {
-		_ = tx.Rollback()
 		return m, pushLog(err, helper.FormatErr)
 	}
 
@@ -376,13 +373,11 @@ func regLink(tx *sql.Tx, uid, linkID string, createdAt uint32) (Member, error) {
 		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, createdAt, meta.Prefix)
 	_, err = tx.Exec(query)
 	if err != nil {
-		_ = tx.Rollback()
 		return m, pushLog(err, helper.DBErr)
 	}
 
 	m, err = MemberFindByUid(lk.UID)
 	if err != nil {
-		_ = tx.Rollback()
 		return m, err
 	}
 

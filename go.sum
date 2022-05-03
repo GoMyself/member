@@ -1,5 +1,3 @@
-bitbucket.org/nwf2013/schema v0.0.0-20210601104355-f8329e4edddd h1:jOsV9wLUc91NEJ8owhachA2uyM8hLBx0An8BE3WbW8o=
-bitbucket.org/nwf2013/schema v0.0.0-20210601104355-f8329e4edddd/go.mod h1:Cffa9/W9F9AtlMOHbxoSVfvVT/xb/C3SlC6S5MyQKlY=
 cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
 cloud.google.com/go v0.38.0/go.mod h1:990N+gfupTy94rShfmMCWGDn0LpTmnzTp2qbd1dvSRU=
 cloud.google.com/go v0.44.1/go.mod h1:iSa0KzasP4Uvy3f1mN/7PiObzGgflwredwwASm/v6AU=

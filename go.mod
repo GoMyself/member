@@ -7,7 +7,6 @@ replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.5
 replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 
 require (
-	bitbucket.org/nwf2013/schema v0.0.0-20210601104355-f8329e4edddd
 	github.com/buaazp/fasthttprouter v0.1.1
 	github.com/doug-martin/goqu/v9 v9.18.0
 	github.com/fluent/fluent-logger-golang v1.9.0

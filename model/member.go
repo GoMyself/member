@@ -512,8 +512,6 @@ func MemberCaptcha() ([]byte, string, error) {
 	id := helper.GenId()
 	text := meta.MerchantRedis.RPopLPush(ctx, "captcha", "captcha").Val()
 
-	fmt.Println("text = ", text)
-
 	pipe := meta.MerchantRedis.TxPipeline()
 	defer pipe.Close()
 
@@ -521,8 +519,6 @@ func MemberCaptcha() ([]byte, string, error) {
 	pipe.SetNX(ctx, id, text, 120*time.Second)
 
 	_, err := pipe.Exec(ctx)
-
-	fmt.Println("pipe.Exec(ctx) 1 = ", err)
 
 	if err != nil {
 		return nil, id, errors.New(helper.RedisErr)

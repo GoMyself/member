@@ -48,6 +48,17 @@ type MemberAutoTransferParam struct {
 	Status string `rule:"none" name:"status"`
 }
 
+func (that *MemberController) Info(ctx *fasthttp.RequestCtx) {
+
+	m, err := model.MemberInfo(ctx)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+
+	helper.Print(ctx, true, m)
+}
+
 func (that *MemberController) Token(ctx *fasthttp.RequestCtx) {
 
 	m, err := model.MemberCache(ctx, "")

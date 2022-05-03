@@ -528,11 +528,11 @@ func MemberCaptcha() ([]byte, string, error) {
 }
 
 // 返回用户信息，会员端使用
-func MemberInfo(ctx *fasthttp.RequestCtx) (MemberInfosData, error) {
+func MemberInfo(fctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 
 	var err error
 	res := MemberInfosData{}
-	res.MemberInfos, err = memberInfoCache(ctx)
+	res.MemberInfos, err = memberInfoCache(fctx)
 	if err != nil {
 		return res, errors.New(helper.AccessTokenExpires)
 	}

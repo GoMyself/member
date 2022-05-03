@@ -96,6 +96,7 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 
 	// 会员信息
 	get("/member/token", memberCtl.Token)
+	get("/member/info", memberCtl.Info)
 	// 检测会员账号是否可用
 	get("/member/available", memberCtl.Available)
 	// 会员验证码
@@ -135,8 +136,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	post("/member/bankcard/insert", bankCtl.Insert)
 	//查询银行卡
 	get("/member/bankcard/list", bankCtl.List)
-	//删除银行卡
-	get("/member/bankcard/delete", bankCtl.Delete)
 
 	// 获取广告页
 	get("/member/banner", bannerCtl.Images)

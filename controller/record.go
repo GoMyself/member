@@ -23,8 +23,9 @@ func (that *RecordController) Game(ctx *fasthttp.RequestCtx) {
 	ty := ctx.QueryArgs().GetUintOrZero("ty")                 // 1直属下级
 	playerName := string(ctx.QueryArgs().Peek("player_name")) //下级会员名
 
-	user, err := model.MemberInfo(ctx)
+	user, err := model.MemberCache(ctx, "")
 	if err != nil {
+		//fmt.Println("Game MemberInfo err = ", err.Error())
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
 	}
@@ -68,7 +69,7 @@ func (that *RecordController) Transfer(ctx *fasthttp.RequestCtx) {
 	if pageSize == 0 {
 		pageSize = 10
 	}
-	user, err := model.MemberInfo(ctx)
+	user, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
@@ -92,7 +93,7 @@ func (that *RecordController) Transaction(ctx *fasthttp.RequestCtx) {
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
 
-	user, err := model.MemberInfo(ctx)
+	user, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
@@ -116,7 +117,7 @@ func (that *RecordController) Trade(ctx *fasthttp.RequestCtx) {
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
 
-	user, err := model.MemberInfo(ctx)
+	user, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
@@ -140,7 +141,7 @@ func (that *RecordController) CommissionRecord(ctx *fasthttp.RequestCtx) {
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
 
-	user, err := model.MemberInfo(ctx)
+	user, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
@@ -187,7 +188,7 @@ func (that *RecordController) TradeDetail(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	user, err := model.MemberInfo(ctx)
+	user, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return

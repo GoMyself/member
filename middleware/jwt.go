@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"errors"
-	"fmt"
 	"member2/contrib/session"
 
 	"github.com/valyala/fasthttp"
@@ -11,7 +10,7 @@ import (
 func CheckTokenMiddleware(ctx *fasthttp.RequestCtx) error {
 
 	path := string(ctx.Path())
-	fmt.Println("request path:" + path)
+	//fmt.Println("request path:" + path)
 	allows := map[string]bool{
 		"/member/tree":               true,
 		"/member/ip":                 true,

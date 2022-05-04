@@ -22,15 +22,6 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		return err
 	}
 
-	// 判断卡号是否存在
-	//bankcardHash := MurmurHash(bankcardNo, 0)
-
-	//判断卡号是否存在
-	err = BankCardExistRedis(bankcardNo)
-	if err != nil {
-		return err
-	}
-
 	// 判断会员银行卡数目
 	if mb.BankcardTotal >= 3 {
 		return errors.New(helper.MaxThreeBankCard)
@@ -42,9 +33,11 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		return err
 	}
 
-	recs, err := grpc_t.Decrypt(mb.UID, true, []string{"phone"})
+	recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
 	if recs["phone"] != phone {
-		return errors.New(helper.PhoneVerificationErr)
+		fmt.Println("phone = ", phone)
+		fmt.Println("recs phone = ", recs["phone"])
+		//return errors.New(helper.PhoneVerificationErr)
 	}
 
 	member_ex := g.Ex{
@@ -53,6 +46,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	member_record := g.Record{
 		"bankcard_total": g.L("bankcard_total+1"),
 	}
+
 	// 会员未绑定真实姓名，更新第一次绑定银行卡的真实姓名到会员信息
 	if mb.RealnameHash == "0" {
 		// 第一次新增银行卡判断真实姓名是否为越南语
@@ -74,7 +68,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		"bank_id":          data.BankID,
 		"bank_branch_name": data.BankAddress,
 		"bank_card_hash":   fmt.Sprintf("%d", MurmurHash(bankcardNo, 0)),
-		"created_at":       fmt.Sprintf("%d", data.CreatedAt),
+		"created_at":       data.CreatedAt,
 	}
 
 	encRes = append(encRes, []string{"bankcard" + data.ID, bankcardNo})
@@ -99,6 +93,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	_, err = tx.Exec(queryInsert)
 	if err != nil {
 		_ = tx.Rollback()
+		fmt.Println("queryInsert = ", queryInsert)
 		return pushLog(err, helper.DBErr)
 	}
 
@@ -107,11 +102,13 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	_, err = tx.Exec(queryUpdate)
 	if err != nil {
 		_ = tx.Rollback()
+		fmt.Println("queryUpdate = ", queryUpdate)
 		return pushLog(err, helper.DBErr)
 	}
 
 	err = tx.Commit()
 	if err != nil {
+		fmt.Println("tx.Commit = ", err.Error())
 		return pushLog(err, helper.DBErr)
 	}
 
@@ -121,6 +118,20 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		return errors.New(helper.UpdateRPCErr)
 	}
 
+	value, err := helper.JsonMarshal(bankcard_record)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	key := "cbc:" + mb.Username
+	path := fmt.Sprintf(".$%s", data.ID)
+
+	pipe := meta.MerchantRedis.Pipeline()
+	pipe.Do(ctx, "JSON.SET", key, path, string(value))
+	pipe.Do(ctx, "CF.ADD", "bankcard_exist", bankcardNo)
+	pipe.Exec(ctx)
+	pipe.Close()
 	return nil
 }
 
@@ -135,7 +146,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 		return data, errors.New(helper.AccessTokenExpires)
 	}
 
-	key := "lk:" + mb.UID
+	key := "cbc:" + mb.Username
 	bcs, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
 	if err != nil && err != redis.Nil {
 		return data, errors.New(helper.RedisErr)

@@ -558,15 +558,20 @@ func MemberInfo(fctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 		encRes = append(encRes, "zalo")
 	}
 
-	recs, err := grpc_t.Decrypt(res.MemberInfos.UID, true, encRes)
-	if err != nil {
-		return res, errors.New(helper.UpdateRPCErr)
-	}
+	if len(encRes) > 0 {
+		recs, err := grpc_t.Decrypt(res.MemberInfos.UID, true, encRes)
+		if err != nil {
 
-	res.Zalo = recs["zalo"]
-	res.RealName = recs["realname"]
-	res.Phone = recs["phone"]
-	res.Email = recs["email"]
+			//fmt.Println("MemberInfo res.MemberInfos.UID = ", res.MemberInfos.UID)
+			//fmt.Println("MemberInfo grpc_t.Decrypt err = ", err.Error())
+			return res, errors.New(helper.UpdateRPCErr)
+		}
+
+		res.Zalo = recs["zalo"]
+		res.RealName = recs["realname"]
+		res.Phone = recs["phone"]
+		res.Email = recs["email"]
+	}
 
 	return res, nil
 }

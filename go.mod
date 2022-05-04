@@ -1,6 +1,6 @@
 module member2
 
-go 1.17
+go 1.18
 
 replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.5
 
@@ -14,6 +14,7 @@ require (
 	github.com/hprose/hprose-golang/v3 v3.0.8
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
+	github.com/json-iterator/go v1.1.12
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/shopspring/decimal v1.3.1
 	github.com/spaolacci/murmur3 v1.1.0
@@ -38,7 +39,6 @@ require (
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect

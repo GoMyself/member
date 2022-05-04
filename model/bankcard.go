@@ -55,6 +55,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	member_record := g.Record{
 		"bankcard_total": g.L("bankcard_total+1"),
 	}
+
 	// 会员未绑定真实姓名，更新第一次绑定银行卡的真实姓名到会员信息
 	if mb.RealnameHash == "0" {
 		// 第一次新增银行卡判断真实姓名是否为越南语
@@ -124,6 +125,20 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	if err != nil {
 		fmt.Println("grpc_t.Encrypt = ", err)
 		return errors.New(helper.UpdateRPCErr)
+	}
+
+	value, err := helper.JsonMarshal(bankcard_record)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	key := "cbc:" + mb.Username
+	path := fmt.Sprintf(".$%s", data.ID)
+
+	err = meta.MerchantRedis.Do(ctx, "JSON.SET", key, path, string(value)).Err()
+	if err != nil {
+		return errors.New(helper.RedisErr)
 	}
 
 	return nil

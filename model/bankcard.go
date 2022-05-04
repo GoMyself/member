@@ -22,15 +22,6 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		return err
 	}
 
-	// 判断卡号是否存在
-	//bankcardHash := MurmurHash(bankcardNo, 0)
-
-	//判断卡号是否存在
-	err = BankCardExistRedis(bankcardNo)
-	if err != nil {
-		return err
-	}
-
 	// 判断会员银行卡数目
 	if mb.BankcardTotal >= 3 {
 		return errors.New(helper.MaxThreeBankCard)
@@ -136,11 +127,11 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	key := "cbc:" + mb.Username
 	path := fmt.Sprintf(".$%s", data.ID)
 
-	err = meta.MerchantRedis.Do(ctx, "JSON.SET", key, path, string(value)).Err()
-	if err != nil {
-		return errors.New(helper.RedisErr)
-	}
-
+	pipe := meta.MerchantRedis.Pipeline()
+	pipe.Do(ctx, "JSON.SET", key, path, string(value))
+	pipe.Do(ctx, "CF.ADD", "bankcard_exist", bankcardNo)
+	pipe.Exec(ctx)
+	pipe.Close()
 	return nil
 }
 

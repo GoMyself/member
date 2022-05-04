@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wI2L/jettison"
-
 	"github.com/doug-martin/goqu/v9/exp"
 
 	g "github.com/doug-martin/goqu/v9"
@@ -54,7 +52,7 @@ func MemberAmount(ctx *fasthttp.RequestCtx) (string, error) {
 		Commission: m.Commission,
 		LockAmount: m.LockAmount,
 	}
-	data, err := jettison.Marshal(mb)
+	data, err := helper.JsonMarshal(mb)
 	if err != nil {
 		return "", errors.New(helper.FormatErr)
 	}

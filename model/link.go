@@ -21,6 +21,7 @@ type Link_t struct {
 	DJ        string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""` //电竞返水
 	DZ        string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""` //电子返水
 	CP        string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""` //彩票返水
+	FC        string `name:"fc" db:"fc" json:"fc" rule:"float" required:"1" min:"3" max:"3" msg:""` //斗鸡返水
 	CreatedAt string `db:"created_at" json:"created_at" rule:"none" required:"0"`                   //
 }
 
@@ -32,13 +33,15 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	dj, _ := decimal.NewFromString(data.DJ)
 	dz, _ := decimal.NewFromString(data.DZ)
 	cp, _ := decimal.NewFromString(data.CP)
+	fc, _ := decimal.NewFromString(data.FC)
 
 	zr = zr.Truncate(1)
 	qp = qp.Truncate(1)
 	ty = ty.Truncate(1)
 	dj = dj.Truncate(1)
 	dz = dz.Truncate(1)
-	cp = dz.Truncate(1)
+	cp = cp.Truncate(1)
+	fc = fc.Truncate(1)
 
 	sess, err := MemberInfo(ctx)
 	if err != nil {
@@ -68,6 +71,9 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	if cp.GreaterThan(own.CP) || cp.IsNegative() {
 		return errors.New(helper.RebateOutOfRange)
 	}
+	if fc.GreaterThan(own.FC) || fc.IsNegative() {
+		return errors.New(helper.RebateOutOfRange)
+	}
 
 	recs := g.Record{
 		"id":         data.ID,
@@ -79,6 +85,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		"dj":         dj.StringFixed(1),
 		"dz":         dz.StringFixed(1),
 		"cp":         cp.StringFixed(1),
+		"fc":         fc.StringFixed(1),
 		"prefix":     meta.Prefix,
 	}
 
@@ -120,7 +127,7 @@ func LinkFindOne(id string) (Link_t, error) {
 	}
 
 	t := dialect.From("tbl_member_link")
-	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"id": id, "prefix": meta.Prefix}).Limit(1).ToSQL()
+	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "fc", "created_at").Where(g.Ex{"id": id, "prefix": meta.Prefix}).Limit(1).ToSQL()
 	err := meta.MerchantDB.Get(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		return data, pushLog(err, helper.DBErr)

@@ -1081,6 +1081,7 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].QP = rb.QP
 			data.D[i].DZ = rb.DZ
 			data.D[i].CP = rb.CP
+			data.D[i].FC = rb.FC
 		}
 	}
 
@@ -1271,6 +1272,8 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 		"qp": mr.QP,
 		"dj": mr.DJ,
 		"dz": mr.DZ,
+		"cp": mr.CP,
+		"fc": mr.FC,
 	}
 	query, _, _ := dialect.Update("tbl_member_rebate_info").Set(&recd).Where(subEx).ToSQL()
 	_, err = tx.Exec(query)

@@ -202,6 +202,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 	sdj := string(ctx.PostArgs().Peek("dj"))
 	sdz := string(ctx.PostArgs().Peek("dz"))
 	scp := string(ctx.PostArgs().Peek("cp"))
+	sfc := string(ctx.PostArgs().Peek("fc"))
 
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
@@ -251,6 +252,12 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	fc, err := decimal.NewFromString(sfc) //下级会员斗鸡返水比例
+	if err != nil || fc.IsNegative() || fc.GreaterThan(parent.FC) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
 	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -268,6 +275,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		DJ: dj.StringFixed(1),
 		DZ: dz.StringFixed(1),
 		CP: cp.StringFixed(1),
+		FC: fc.StringFixed(1),
 	}
 	createdAt := uint32(ctx.Time().Unix())
 	// 添加下级代理
@@ -567,6 +575,8 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 	sqp := string(ctx.PostArgs().Peek("qp"))
 	sdj := string(ctx.PostArgs().Peek("dj"))
 	sdz := string(ctx.PostArgs().Peek("dz"))
+	scp := string(ctx.PostArgs().Peek("cp"))
+	sfc := string(ctx.PostArgs().Peek("fc"))
 
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
@@ -621,6 +631,18 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	cp, err := decimal.NewFromString(scp) //下级会员彩票返水比例
+	if err != nil || cp.IsNegative() || cp.GreaterThan(parent.CP) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
+	fc, err := decimal.NewFromString(sfc) //下级会员斗鸡返水比例
+	if err != nil || fc.IsNegative() || fc.GreaterThan(parent.FC) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
 	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -639,6 +661,8 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 		QP: qp.StringFixed(1),
 		DJ: dj.StringFixed(1),
 		DZ: dz.StringFixed(1),
+		CP: cp.StringFixed(1),
+		FC: fc.StringFixed(1),
 	}
 	// 添加下级代理
 	err = model.MemberUpdateInfo(child, password, mr)

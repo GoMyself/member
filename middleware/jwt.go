@@ -21,7 +21,7 @@ func CheckTokenMiddleware(ctx *fasthttp.RequestCtx) error {
 		"/member/platform":           true,
 		"/member/nav":                true,
 		"/member/slot/list":          true,
-		"/member/forgetpassword":     true,
+		"/member/password/forget":    true,
 		"/member/available":          true,
 		"/member/captcha":            true,
 		"/member/reg":                true,

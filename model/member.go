@@ -681,32 +681,32 @@ func MemberFindByUid(uid string) (Member, error) {
 }
 
 // 更新用户密码
-func MemberPasswordUpdate(ty int, sid, code, old, password string, ctx *fasthttp.RequestCtx) error {
+func MemberPasswordUpdate(ty int, sid, code, old, password string, fctx *fasthttp.RequestCtx) error {
 
-	mb, err := MemberCache(ctx, "")
+	mb, err := MemberCache(fctx, "")
 	if err != nil {
 		return err
 	}
 
 	// 邮箱 有绑定
-	if ty == 1 && mb.EmailHash != "0" {
-		if sid == "" || !validator.CheckStringDigit(sid) {
+	if ty == 1 && mb.PhoneHash != "0" {
+		if !helper.CtypeDigit(sid) {
 			return errors.New(helper.ParamErr)
 		}
 
-		if code == "" || !validator.CheckStringAlnum(code) || !validator.CheckStringLength(code, 2, 8) {
+		if !helper.CtypeDigit(code) {
 			return errors.New(helper.ParamErr)
 		}
 
-		ip := helper.FromRequest(ctx)
+		ip := helper.FromRequest(fctx)
 
-		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"email"})
+		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
 		if err != nil {
 			return errors.New(helper.GetRPCErr)
 		}
-		address := recs["email"]
+		address := recs["phone"]
 
-		err = emailCmp(sid, code, ip, address)
+		err = phoneCmp(sid, code, ip, address)
 		if err != nil {
 			return err
 		}

@@ -206,15 +206,21 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(fmt.Sprintf("%s,%s", helper.IpBanErr, ip))
 	}
 
-	//检查手机是否已经存在
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
-	ex := g.Ex{
-		"phone_hash": phoneHash,
-	}
-	if MemberBindCheck(ex) {
+	phone_exist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "phone_exist", phone).Val()
+	if phone_exist == "1" {
 		return "", errors.New(helper.PhoneExist)
 	}
-
+	/*
+		//检查手机是否已经存在
+		phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
+		ex := g.Ex{
+			"phone_hash": phoneHash,
+		}
+		if MemberBindCheck(ex) {
+			return "", errors.New(helper.PhoneExist)
+		}
+	*/
 	// web/h5不检查设备号黑名单
 	if _, ok = WebDevices[device]; !ok {
 
@@ -352,6 +358,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.GetRPCErr)
 	}
 
+	meta.MerchantRedis.Do(ctx, "CF.ADD", "phone_exist", phone).Err()
 	return id, nil
 }
 
@@ -599,12 +606,8 @@ func memberInfoCache(fCtx *fasthttp.RequestCtx) (MemberInfos, error) {
 		return m, errors.New(helper.UsernameErr)
 	}
 
-	if rs.Err() != nil {
-		return m, pushLog(rs.Err(), helper.RedisErr)
-	}
-
 	if err = rs.Scan(&m); err != nil {
-		return m, pushLog(rs.Err(), helper.RedisErr)
+		return m, pushLog(err, helper.RedisErr)
 	}
 
 	return m, nil

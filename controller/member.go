@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -29,12 +28,11 @@ type MemberRegParam struct {
 
 // 修改用户密码参数
 type forgetPassword struct {
-	Username  string `rule:"none" msg:"username error" name:"username"`
-	Sid       string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
-	Code      string `json:"code" name:"code" rule:"none" msg:"code error"`
-	Phone     string `rule:"none" msg:"phone error" name:"phone"`
-	Password1 string `rule:"upwd" name:"password1" msg:"password error"`
-	Password2 string `rule:"upwd" name:"password2" msg:"reset_password error"`
+	Username string `rule:"alnum" msg:"username error" name:"username"`
+	Sid      string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
+	Code     string `json:"code" name:"code" rule:"digit" msg:"code error"`
+	Phone    string `rule:"digit" msg:"phone error" name:"phone"`
+	Password string `rule:"upwd" name:"password" msg:"password error"`
 }
 
 // 绑定邮箱
@@ -361,15 +359,10 @@ func (that *MemberController) ForgetPassword(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	fmt.Println(params)
-
-	if params.Password1 != params.Password2 {
-		helper.Print(ctx, false, helper.PasswordInconsistent)
-		return
-	}
+	//fmt.Println(params)
 
 	ip := helper.FromRequest(ctx)
-	err = model.MemberForgetPwd(params.Username, params.Password1, params.Phone, ip, params.Sid, params.Code)
+	err = model.MemberForgetPwd(params.Username, params.Password, params.Phone, ip, params.Sid, params.Code)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

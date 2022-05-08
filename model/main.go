@@ -43,6 +43,7 @@ var grpc_t struct {
 type MetaTable struct {
 	Zlog              *fluent.Fluent
 	MerchantRedis     *redis.Client
+	MerchantRedisRead *redis.Client
 	MerchantDB        *sqlx.DB
 	ReportDB          *sqlx.DB
 	Grpc              *gorpc.DispatcherClient
@@ -53,10 +54,6 @@ type MetaTable struct {
 	EsPrefix          string
 	PullPrefix        string
 	Lang              string
-	MinioUploadUrl    string
-	MinioImagesBucket string
-	MinioJsonBucket   string
-	RpcConn           string
 }
 
 var (
@@ -84,7 +81,6 @@ type Email struct {
 func Constructor(mt *MetaTable, rpcconn string) {
 
 	meta = mt
-	meta.RpcConn = rpcconn
 	if meta.Lang == "cn" {
 		loc, _ = time.LoadLocation("Asia/Shanghai")
 	} else if meta.Lang == "vn" || meta.Lang == "th" {

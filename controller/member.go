@@ -22,8 +22,9 @@ type MemberRegParam struct {
 	Name       string `rule:"uname" name:"username" min:"5" max:"14" msg:"username error"`
 	DeviceNo   string `rule:"none" name:"device_no"`
 	Password   string `rule:"upwd" name:"password" min:"8" max:"20" msg:"password error"`
-	Phone      string `rule:"none" name:"phone"`
-	VerifyCode string `rule:"none" name:"verify_code"`
+	Phone      string `rule:"digit" name:"phone"`
+	Sid        string `json:"sid" name:"sid" rule:"digit" msg:"sid error"`
+	VerifyCode string `rule:"digit" name:"verify_code"`
 }
 
 // 修改用户密码参数
@@ -153,10 +154,11 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	ip := helper.FromRequest(ctx)
 	day := ctx.Time().Format("0102")
 	if param.VerifyCode != "6666" {
-		smsFlag, err := model.CheckSmsCaptcha(param.Phone, day, param.VerifyCode)
 
+		smsFlag, err := model.CheckSmsCaptcha(ip, param.Sid, param.Phone, day, param.VerifyCode)
 		if err != nil || !smsFlag {
 			helper.Print(ctx, false, helper.PhoneVerificationErr)
 			return
@@ -177,7 +179,6 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ip := helper.FromRequest(ctx)
 	// 注册地址 去除域名前缀
 	uid, err := model.MemberReg(i, param.Name, param.Password, ip, param.DeviceNo, param.RegUrl, param.LinkID, param.Phone, createdAt)
 	if err != nil {

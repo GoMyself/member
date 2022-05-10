@@ -41,19 +41,19 @@ var grpc_t struct {
 }
 
 type MetaTable struct {
-	Zlog              *fluent.Fluent
-	MerchantRedis     *redis.Client
-	MerchantRedisRead *redis.Client
-	MerchantDB        *sqlx.DB
-	ReportDB          *sqlx.DB
-	Grpc              *gorpc.DispatcherClient
-	ES                *elastic.Client
-	AutoCommission    bool
-	Email             Email
-	Prefix            string
-	EsPrefix          string
-	PullPrefix        string
-	Lang              string
+	Zlog          *fluent.Fluent
+	MerchantRedis *redis.Client
+	//MerchantRedisRead *redis.Client
+	MerchantDB     *sqlx.DB
+	ReportDB       *sqlx.DB
+	Grpc           *gorpc.DispatcherClient
+	ES             *elastic.Client
+	AutoCommission bool
+	Email          Email
+	Prefix         string
+	EsPrefix       string
+	PullPrefix     string
+	Lang           string
 }
 
 var (

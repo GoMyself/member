@@ -138,11 +138,9 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	if param.LinkID != "" {
-		if !validator.CheckStringDigit(param.LinkID) {
-			helper.Print(ctx, false, helper.IDErr)
-			return
-		}
+	if !validator.CheckStringDigit(param.LinkID) {
+		helper.Print(ctx, false, helper.IDErr)
+		return
 	}
 
 	if len(param.Phone) < 1 {

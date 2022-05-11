@@ -277,6 +277,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", pushLog(err, helper.DBErr)
 	}
 
+	fmt.Println("regLink id : ", linkID)
 	parent := Member{}
 	var query string
 	// 邀请链接注册，不成功注册在默认代理root下
@@ -436,6 +437,7 @@ func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
 		return m, query, pushLog(err, helper.FormatErr)
 	}
 
+	fmt.Println("regLink :", lk)
 	m, err = MemberFindByUid(lk.UID)
 	if err != nil {
 		return m, query, err

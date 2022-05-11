@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -23,18 +22,18 @@ type MemberRegParam struct {
 	Name       string `rule:"uname" name:"username" min:"5" max:"14" msg:"username error"`
 	DeviceNo   string `rule:"none" name:"device_no"`
 	Password   string `rule:"upwd" name:"password" min:"8" max:"20" msg:"password error"`
-	Phone      string `rule:"none" name:"phone"`
-	VerifyCode string `rule:"none" name:"verify_code"`
+	Phone      string `rule:"digit" name:"phone"`
+	Sid        string `json:"sid" name:"sid" rule:"digit" msg:"sid error"`
+	VerifyCode string `rule:"digit" name:"verify_code"`
 }
 
 // 修改用户密码参数
 type forgetPassword struct {
-	Username  string `rule:"none" msg:"username error" name:"username"`
-	Sid       string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
-	Code      string `json:"code" name:"code" rule:"none" msg:"code error"`
-	Phone     string `rule:"none" msg:"phone error" name:"phone"`
-	Password1 string `rule:"upwd" name:"password1" msg:"password error"`
-	Password2 string `rule:"upwd" name:"password2" msg:"reset_password error"`
+	Username string `rule:"alnum" msg:"username error" name:"username"`
+	Sid      string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
+	Code     string `json:"code" name:"code" rule:"digit" msg:"code error"`
+	Phone    string `rule:"digit" msg:"phone error" name:"phone"`
+	Password string `rule:"upwd" name:"password" msg:"password error"`
 }
 
 // 绑定邮箱
@@ -153,10 +152,11 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	ip := helper.FromRequest(ctx)
 	day := ctx.Time().Format("0102")
 	if param.VerifyCode != "6666" {
-		smsFlag, err := model.CheckSmsCaptcha(param.Phone, day, param.VerifyCode)
 
+		smsFlag, err := model.CheckSmsCaptcha(ip, param.Sid, param.Phone, day, param.VerifyCode)
 		if err != nil || !smsFlag {
 			helper.Print(ctx, false, helper.PhoneVerificationErr)
 			return
@@ -177,7 +177,6 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	ip := helper.FromRequest(ctx)
 	// 注册地址 去除域名前缀
 	uid, err := model.MemberReg(i, param.Name, param.Password, ip, param.DeviceNo, param.RegUrl, param.LinkID, param.Phone, createdAt)
 	if err != nil {
@@ -200,6 +199,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 	sdj := string(ctx.PostArgs().Peek("dj"))
 	sdz := string(ctx.PostArgs().Peek("dz"))
 	scp := string(ctx.PostArgs().Peek("cp"))
+	sfc := string(ctx.PostArgs().Peek("fc"))
 
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
@@ -249,6 +249,12 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	fc, err := decimal.NewFromString(sfc) //下级会员斗鸡返水比例
+	if err != nil || fc.IsNegative() || fc.GreaterThan(parent.FC) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
 	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -266,6 +272,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		DJ: dj.StringFixed(1),
 		DZ: dz.StringFixed(1),
 		CP: cp.StringFixed(1),
+		FC: fc.StringFixed(1),
 	}
 	createdAt := uint32(ctx.Time().Unix())
 	// 添加下级代理
@@ -351,15 +358,10 @@ func (that *MemberController) ForgetPassword(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	fmt.Println(params)
-
-	if params.Password1 != params.Password2 {
-		helper.Print(ctx, false, helper.PasswordInconsistent)
-		return
-	}
+	//fmt.Println(params)
 
 	ip := helper.FromRequest(ctx)
-	err = model.MemberForgetPwd(params.Username, params.Password1, params.Phone, ip, params.Sid, params.Code)
+	err = model.MemberForgetPwd(params.Username, params.Password, params.Phone, ip, params.Sid, params.Code)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -565,6 +567,8 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 	sqp := string(ctx.PostArgs().Peek("qp"))
 	sdj := string(ctx.PostArgs().Peek("dj"))
 	sdz := string(ctx.PostArgs().Peek("dz"))
+	scp := string(ctx.PostArgs().Peek("cp"))
+	sfc := string(ctx.PostArgs().Peek("fc"))
 
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
@@ -619,6 +623,18 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	cp, err := decimal.NewFromString(scp) //下级会员彩票返水比例
+	if err != nil || cp.IsNegative() || cp.GreaterThan(parent.CP) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
+	fc, err := decimal.NewFromString(sfc) //下级会员斗鸡返水比例
+	if err != nil || fc.IsNegative() || fc.GreaterThan(parent.FC) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
 	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -637,6 +653,8 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 		QP: qp.StringFixed(1),
 		DJ: dj.StringFixed(1),
 		DZ: dz.StringFixed(1),
+		CP: cp.StringFixed(1),
+		FC: fc.StringFixed(1),
 	}
 	// 添加下级代理
 	err = model.MemberUpdateInfo(child, password, mr)

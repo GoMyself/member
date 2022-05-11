@@ -15,25 +15,23 @@ import (
 
 func phoneCmp(sid, code, ip, phone string) error {
 
-	if sid == "" && code == "" {
-		return nil
-	}
-
 	key := phone + ip + sid
+
+	fmt.Println("phoneCmp key = ", key)
+
 	val, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
 		return errors.New(helper.ServerErr)
 	}
 
-	if err != nil && err == redis.Nil {
-		return errors.New(helper.PhoneVerificationErr)
-	}
+	fmt.Println("val = ", val)
+	fmt.Println("code = ", code)
 
 	if val != code {
 		return errors.New(helper.PhoneVerificationErr)
 	}
 
-	meta.MerchantRedis.Unlink(ctx, key)
+	meta.MerchantRedis.Unlink(ctx, key).Err()
 	return nil
 }
 

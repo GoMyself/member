@@ -110,11 +110,11 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 会员余额信息 中心钱包和锁定钱包
 	get("/member/balance", memberCtl.Balance)
 	// 检测提款密码
-	get("/member/checkpassword", memberCtl.CheckPwd)
+	get("/member/password/check", memberCtl.CheckPwd)
 	// 用户忘记密码
-	post("/member/forgetpassword", memberCtl.ForgetPassword)
+	post("/member/password/forget", memberCtl.ForgetPassword)
 	// 用户修改密码
-	post("/member/updatepassword", memberCtl.UpdatePassword)
+	post("/member/password/update", memberCtl.UpdatePassword)
 	// 绑定邮箱
 	post("/member/bindemail", memberCtl.BindEmail)
 	// 绑定手机号

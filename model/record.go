@@ -3,13 +3,14 @@ package model
 import (
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	"github.com/olivere/elastic/v7"
-	"github.com/shopspring/decimal"
 	"member2/contrib/helper"
 	"member2/contrib/validator"
 	"strings"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	"github.com/olivere/elastic/v7"
+	"github.com/shopspring/decimal"
 )
 
 type trade struct {
@@ -553,14 +554,19 @@ func recordTradeAdjust(uid string, flag, page, pageSize int, startAt, endAt int6
 	return data, nil
 }
 
-func CheckSmsCaptcha(phone, day, code string) (bool, error) {
+func CheckSmsCaptcha(ip, sid, phone, day, code string) (bool, error) {
 
-	key := fmt.Sprintf("SMS%s%s", phone, day)
+	key := phone + ip + sid
 	val, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
 		return false, errors.New(helper.CaptchaErr)
 	}
 
+	/*
+		fmt.Println("CheckSmsCaptcha key = ", key)
+		fmt.Println("CheckSmsCaptcha val = ", val)
+		fmt.Println("CheckSmsCaptcha code = ", code)
+	*/
 	if code == val {
 		return true, nil
 	}

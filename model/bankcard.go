@@ -202,13 +202,15 @@ func BankCardExistRedis(bankcardNo string) error {
 		return errors.New(helper.RedisErr)
 	}
 
-	if val, ok := ex1_temp.Val().(string); ok && val == "1" {
+	ex1 := ex1_temp.Val()
+	ex2 := ex2_temp.Val()
+
+	if v, ok := ex1.(int64); ok && v == 1 {
 		return errors.New(helper.BankCardExistErr)
 	}
 
-	if val, ok := ex2_temp.Val().(string); ok && val == "1" {
+	if v, ok := ex2.(int64); ok && v == 1 {
 		return errors.New(helper.BankcardBan)
 	}
-
 	return nil
 }

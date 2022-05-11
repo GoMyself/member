@@ -206,15 +206,21 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(fmt.Sprintf("%s,%s", helper.IpBanErr, ip))
 	}
 
-	//检查手机是否已经存在
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
-	ex := g.Ex{
-		"phone_hash": phoneHash,
-	}
-	if MemberBindCheck(ex) {
+	phone_exist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "phone_exist", phone).Val()
+	if phone_exist == "1" {
 		return "", errors.New(helper.PhoneExist)
 	}
-
+	/*
+		//检查手机是否已经存在
+		phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
+		ex := g.Ex{
+			"phone_hash": phoneHash,
+		}
+		if MemberBindCheck(ex) {
+			return "", errors.New(helper.PhoneExist)
+		}
+	*/
 	// web/h5不检查设备号黑名单
 	if _, ok = WebDevices[device]; !ok {
 
@@ -361,6 +367,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.GetRPCErr)
 	}
 
+	meta.MerchantRedis.Do(ctx, "CF.ADD", "phone_exist", phone).Err()
 	return id, nil
 }
 
@@ -652,12 +659,8 @@ func memberInfoCache(fCtx *fasthttp.RequestCtx) (MemberInfos, error) {
 		return m, errors.New(helper.UsernameErr)
 	}
 
-	if rs.Err() != nil {
-		return m, pushLog(rs.Err(), helper.RedisErr)
-	}
-
 	if err = rs.Scan(&m); err != nil {
-		return m, pushLog(rs.Err(), helper.RedisErr)
+		return m, pushLog(err, helper.RedisErr)
 	}
 
 	return m, nil
@@ -734,32 +737,32 @@ func MemberFindByUid(uid string) (Member, error) {
 }
 
 // 更新用户密码
-func MemberPasswordUpdate(ty int, sid, code, old, password string, ctx *fasthttp.RequestCtx) error {
+func MemberPasswordUpdate(ty int, sid, code, old, password string, fctx *fasthttp.RequestCtx) error {
 
-	mb, err := MemberCache(ctx, "")
+	mb, err := MemberCache(fctx, "")
 	if err != nil {
 		return err
 	}
 
 	// 邮箱 有绑定
-	if ty == 1 && mb.EmailHash != "0" {
-		if sid == "" || !validator.CheckStringDigit(sid) {
+	if ty == 1 && mb.PhoneHash != "0" {
+		if !helper.CtypeDigit(sid) {
 			return errors.New(helper.ParamErr)
 		}
 
-		if code == "" || !validator.CheckStringAlnum(code) || !validator.CheckStringLength(code, 2, 8) {
+		if !helper.CtypeDigit(code) {
 			return errors.New(helper.ParamErr)
 		}
 
-		ip := helper.FromRequest(ctx)
+		ip := helper.FromRequest(fctx)
 
-		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"email"})
+		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
 		if err != nil {
 			return errors.New(helper.GetRPCErr)
 		}
-		address := recs["email"]
+		address := recs["phone"]
 
-		err = emailCmp(sid, code, ip, address)
+		err = phoneCmp(sid, code, ip, address)
 		if err != nil {
 			return err
 		}
@@ -1134,6 +1137,7 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].QP = rb.QP
 			data.D[i].DZ = rb.DZ
 			data.D[i].CP = rb.CP
+			data.D[i].FC = rb.FC
 		}
 	}
 
@@ -1324,6 +1328,8 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 		"qp": mr.QP,
 		"dj": mr.DJ,
 		"dz": mr.DZ,
+		"cp": mr.CP,
+		"fc": mr.FC,
 	}
 	query, _, _ := dialect.Update("tbl_member_rebate_info").Set(&recd).Where(subEx).ToSQL()
 	_, err = tx.Exec(query)

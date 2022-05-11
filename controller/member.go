@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -136,6 +137,8 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, false, helper.ParamErr)
 		return
 	}
+
+	fmt.Println("Reg param : ", param)
 
 	if !validator.CheckStringDigit(param.LinkID) {
 		helper.Print(ctx, false, helper.IDErr)

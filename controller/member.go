@@ -131,6 +131,7 @@ func (that *MemberController) Login(ctx *fasthttp.RequestCtx) {
 
 func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 
+	fmt.Println("Reg args : ", ctx.PostArgs())
 	param := MemberRegParam{}
 	err := validator.Bind(ctx, &param)
 	if err != nil {

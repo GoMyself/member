@@ -135,6 +135,7 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 	param := MemberRegParam{}
 	err := validator.Bind(ctx, &param)
 	if err != nil {
+		fmt.Println("Reg error : ", err)
 		helper.Print(ctx, false, helper.ParamErr)
 		return
 	}

@@ -207,8 +207,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
-	phone_exist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "phone_exist", phone).Val()
-	if phone_exist == "1" {
+	phoneExist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "phoneExist", phone).Val()
+	if phoneExist == "1" {
 		return "", errors.New(helper.PhoneExist)
 	}
 	/*
@@ -281,8 +281,16 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	parent := Member{}
 	var query string
 	// 邀请链接注册，不成功注册在默认代理root下
-	parent, query, err = regLink(uid, linkID, createdAt)
-	if err != nil {
+	if linkID != "" {
+		parent, query, err = regLink(uid, linkID, createdAt)
+		if err != nil {
+			parent, query, err = regRoot(uid, topId, createdAt)
+			if err != nil {
+				_ = tx.Rollback()
+				return "", err
+			}
+		}
+	} else {
 		parent, query, err = regRoot(uid, topId, createdAt)
 		if err != nil {
 			_ = tx.Rollback()
@@ -368,7 +376,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.GetRPCErr)
 	}
 
-	meta.MerchantRedis.Do(ctx, "CF.ADD", "phone_exist", phone).Err()
+	meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
 	return id, nil
 }
 

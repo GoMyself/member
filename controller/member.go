@@ -141,12 +141,13 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 	}
 
 	fmt.Println("Reg param : ", param)
-
-	if !validator.CheckStringDigit(param.LinkID) {
-		helper.Print(ctx, false, helper.IDErr)
-		return
+	if param.LinkID != "" {
+		if !validator.CheckStringDigit(param.LinkID) {
+			helper.Print(ctx, false, helper.IDErr)
+			return
+		}
 	}
-
+	
 	if len(param.Phone) < 1 {
 		helper.Print(ctx, false, helper.PhoneFMTErr)
 		return

@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -138,6 +139,7 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 	}
 
 	if param.LinkID != "" {
+		param.LinkID, _ = url.QueryUnescape(param.LinkID)
 		links := strings.Split(param.LinkID, "|")
 		if len(links) != 2 {
 			helper.Print(ctx, false, helper.IDErr)

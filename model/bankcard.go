@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -8,10 +9,47 @@ import (
 
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fastjson"
 
 	"member2/contrib/helper"
 	"member2/contrib/validator"
 )
+
+func BankcardUpdateCache(username string) {
+
+	var data []BankCard
+
+	ex := g.Ex{
+		"prefix":   meta.Prefix,
+		"username": username,
+		"state":    "1",
+	}
+
+	t := dialect.From("tbl_member_bankcard")
+	query, _, _ := t.Select(colsBankcard...).Where(ex).Order(g.C("created_at").Desc()).ToSQL()
+
+	err := meta.MerchantDB.Select(&data, query)
+	if err != nil && err != sql.ErrNoRows {
+		fmt.Println("BankcardUpdateCache err = ", err)
+		return
+	}
+
+	key := "cbc:" + username
+
+	pipe := meta.MerchantRedis.Pipeline()
+	pipe.Del(ctx, key)
+	if len(data) > 0 {
+
+		value, err := helper.JsonMarshal(data)
+		if err == nil {
+			pipe.Set(ctx, key, string(value), 0).Err()
+			//fmt.Println("JSON.SET err = ", err)
+		}
+	}
+
+	pipe.Exec(ctx)
+	pipe.Close()
+}
 
 func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo string, data BankCard) error {
 
@@ -118,20 +156,9 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		return errors.New(helper.UpdateRPCErr)
 	}
 
-	value, err := helper.JsonMarshal(bankcard_record)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
+	BankcardUpdateCache(mb.Username)
+	meta.MerchantRedis.Do(ctx, "CF.ADD", "bankcard_exist", bankcardNo).Err()
 
-	key := "cbc:" + mb.Username
-	path := fmt.Sprintf(".$%s", data.ID)
-
-	pipe := meta.MerchantRedis.Pipeline()
-	pipe.Do(ctx, "JSON.SET", key, path, string(value))
-	pipe.Do(ctx, "CF.ADD", "bankcard_exist", bankcardNo)
-	pipe.Exec(ctx)
-	pipe.Close()
 	return nil
 }
 
@@ -150,24 +177,33 @@ func BankcardList(username string) ([]BankcardData, error) {
 		return data, nil
 	}
 	key := "cbc:" + mb.Username
-	bcs, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
+	bcs, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
 		return data, errors.New(helper.RedisErr)
 	}
 
+	fmt.Println("bcs = ", bcs)
 	if err == redis.Nil {
 		return data, nil
 	}
 
-	res := map[string]BankCard{}
-	err = helper.JsonUnmarshal([]byte(bcs), &res)
-	if err != nil {
-		return data, errors.New(helper.FormatErr)
+	root, err := fastjson.MustParse(bcs).Array()
+	if err == redis.Nil {
+		return data, err
 	}
 
-	for _, val := range res {
-		cardList = append(cardList, val)
+	for _, val := range root {
+		res := BankCard{}
+		res.ID = string(val.GetStringBytes("id"))
+		res.UID = string(val.GetStringBytes("uid"))
+		res.Username = string(val.GetStringBytes("username"))
+		res.BankID = string(val.GetStringBytes("bank_id"))
+		res.BankAddress = string(val.GetStringBytes("bank_address"))
+		res.BankBranch = string(val.GetStringBytes("bank_branch_name"))
+
+		cardList = append(cardList, res)
 	}
+	root = nil
 
 	length := len(cardList)
 	if length == 0 {

@@ -428,7 +428,7 @@ func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
 
 	m := Member{}
 	var query string
-	p := strings.Split(linkID, ":")
+	p := strings.Split(linkID, "|")
 	if len(p) != 2 {
 		return m, query, errors.New(helper.IDErr)
 	}

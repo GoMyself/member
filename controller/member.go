@@ -138,7 +138,7 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 	}
 
 	if param.LinkID != "" {
-		links := strings.Split(param.LinkID, ":")
+		links := strings.Split(param.LinkID, "|")
 		if len(links) != 2 {
 			helper.Print(ctx, false, helper.IDErr)
 			return

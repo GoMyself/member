@@ -951,7 +951,7 @@ func MemberUpdateEmail(sid, code, email string, ctx *fasthttp.RequestCtx) error 
 }
 
 // 用户信息更新
-func MemberUpdateName(ctx *fasthttp.RequestCtx, realName, address string) error {
+func MemberUpdateName(ctx *fasthttp.RequestCtx, birth, realName, address string) error {
 
 	mb, err := MemberCache(ctx, "")
 	if err != nil {
@@ -959,6 +959,15 @@ func MemberUpdateName(ctx *fasthttp.RequestCtx, realName, address string) error 
 	}
 
 	record := g.Record{}
+	if birth != "" {
+		t, err := time.Parse("2006-01-02", birth)
+		if err != nil {
+			return errors.New(helper.TimeTypeErr)
+		}
+
+		record["birth"] = fmt.Sprintf("%d", t.Unix())
+		record["birth_hash"] = fmt.Sprintf("%d", MurmurHash(birth, 0))
+	}
 
 	//会员填写真实姓名后，不允许更新真实姓名
 	if realName != "" { // 传入用户真实姓名  需要修改

@@ -1,12 +1,11 @@
 package controller
 
 import (
+	g "github.com/doug-martin/goqu/v9"
+	"github.com/shopspring/decimal"
 	"net/url"
 	"strconv"
 	"strings"
-
-	g "github.com/doug-martin/goqu/v9"
-	"github.com/shopspring/decimal"
 
 	"member2/contrib/helper"
 	"member2/contrib/validator"
@@ -435,6 +434,7 @@ func (that *MemberController) BindZalo(ctx *fasthttp.RequestCtx) {
 // 更新用户信息
 func (that *MemberController) Update(ctx *fasthttp.RequestCtx) {
 
+	birth := string(ctx.PostArgs().Peek("birth"))
 	realname := strings.TrimSpace(string(ctx.PostArgs().Peek("realname")))
 	address := string(ctx.PostArgs().Peek("address"))
 	if realname == "" && address == "" {
@@ -456,7 +456,7 @@ func (that *MemberController) Update(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	err := model.MemberUpdateName(ctx, realname, address)
+	err := model.MemberUpdateName(ctx, birth, realname, address)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

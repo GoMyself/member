@@ -146,6 +146,9 @@ func BankcardList(username string) ([]BankcardData, error) {
 		return data, errors.New(helper.AccessTokenExpires)
 	}
 
+	if mb.BankcardTotal == 0 {
+		return data, nil
+	}
 	key := "cbc:" + mb.Username
 	bcs, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
 	if err != nil && err != redis.Nil {

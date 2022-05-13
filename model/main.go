@@ -63,7 +63,6 @@ var (
 
 	dialect          = g.Dialect("mysql")
 	colsMember       = helper.EnumFields(Member{})
-	colsMemberInfos  = helper.EnumFields(MemberInfos{})
 	colsBankcard     = helper.EnumFields(BankCard{})
 	colsMemberRebate = helper.EnumFields(MemberRebate{})
 	fieldsMember     = helper.EnumRedisFields(Member{})

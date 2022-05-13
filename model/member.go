@@ -435,7 +435,7 @@ func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
 
 	lkKey := "lk:" + p[0]
 	lkRes, err := meta.MerchantRedis.Do(ctx, "JSON.GET", lkKey, ".$"+p[1]).Text()
-	if err == nil {
+	if err != nil {
 		return m, query, pushLog(err, helper.RedisErr)
 	}
 

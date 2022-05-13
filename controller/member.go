@@ -437,7 +437,7 @@ func (that *MemberController) Update(ctx *fasthttp.RequestCtx) {
 	birth := string(ctx.PostArgs().Peek("birth"))
 	realname := strings.TrimSpace(string(ctx.PostArgs().Peek("realname")))
 	address := string(ctx.PostArgs().Peek("address"))
-	if realname == "" && address == "" {
+	if realname == "" && address == "" && birth == "" {
 		helper.Print(ctx, false, helper.ParamErr)
 		return
 	}

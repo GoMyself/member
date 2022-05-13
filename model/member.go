@@ -451,8 +451,8 @@ func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
 		return m, query, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`,`created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, createdAt, meta.Prefix)
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `created_at`, `prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s');",
+		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, lk.CP, lk.FC, createdAt, meta.Prefix)
 
 	return m, query, nil
 }
@@ -471,8 +471,8 @@ func regRoot(uid, topId string, createdAt uint32) (Member, string, error) {
 		return m, query, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, createdAt, meta.Prefix)
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s');",
+		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, rootRebate.CP, rootRebate.FC, createdAt, meta.Prefix)
 
 	return m, query, nil
 }

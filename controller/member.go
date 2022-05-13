@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -131,23 +130,28 @@ func (that *MemberController) Login(ctx *fasthttp.RequestCtx) {
 
 func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 
-	fmt.Println("Reg args : ", ctx.PostArgs())
 	param := MemberRegParam{}
 	err := validator.Bind(ctx, &param)
 	if err != nil {
-		fmt.Println("Reg error : ", err)
 		helper.Print(ctx, false, helper.ParamErr)
 		return
 	}
 
-	fmt.Println("Reg param : ", param)
 	if param.LinkID != "" {
-		if !validator.CheckStringDigit(param.LinkID) {
+		links := strings.Split(param.LinkID, ":")
+		if len(links) != 2 {
 			helper.Print(ctx, false, helper.IDErr)
 			return
 		}
+
+		for _, v := range links {
+			if !validator.CheckStringDigit(v) {
+				helper.Print(ctx, false, helper.IDErr)
+				return
+			}
+		}
 	}
-	
+
 	if len(param.Phone) < 1 {
 		helper.Print(ctx, false, helper.PhoneFMTErr)
 		return

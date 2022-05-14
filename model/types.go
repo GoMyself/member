@@ -11,6 +11,7 @@ type Member struct {
 	PhoneHash          string `db:"phone_hash" json:"phone_hash" redis:"phone_hash"`                               //电话号码哈希
 	ZaloHash           string `db:"zalo_hash" json:"zalo_hash" redis:"zalo_hash"`                                  //zalo哈希
 	Prefix             string `db:"prefix" json:"prefix" redis:"prefix"`                                           //站点前缀
+	Tester             string `db:"tester" json:"tester" redis:"tester"`                                           //1正式 0测试
 	WithdrawPwd        uint64 `db:"withdraw_pwd" json:"withdraw_pwd" redis:"withdraw_pwd"`                         //取款密码哈希
 	Regip              string `db:"regip" json:"regip" redis:"regip"`                                              //注册IP
 	RegDevice          string `db:"reg_device" json:"reg_device" redis:"reg_device"`                               //注册设备号

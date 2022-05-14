@@ -300,6 +300,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		}
 	}
 
+	m.Tester = parent.Tester
 	m.ParentUid = parent.UID
 	m.ParentName = parent.Username
 	m.TopUid = parent.TopUid

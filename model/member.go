@@ -708,8 +708,7 @@ func MemberCache(fCtx *fasthttp.RequestCtx, name string) (Member, error) {
 	if err = rs.Scan(&m); err != nil {
 		return m, pushLog(rs.Err(), helper.RedisErr)
 	}
-
-	fmt.Println("MemberCache:", m)
+	
 	return m, nil
 }
 

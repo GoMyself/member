@@ -249,6 +249,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		UID:                uid,
 		Username:           userName,
 		Password:           fmt.Sprintf("%d", MurmurHash(password, createdAt)),
+		Birth:              "0",
+		BirthHash:          "0",
 		PhoneHash:          phoneHash,
 		EmailHash:          "0",
 		RealnameHash:       "0",

@@ -188,8 +188,8 @@ func BankcardList(username string) ([]BankcardData, error) {
 	}
 
 	root, err := fastjson.MustParse(bcs).Array()
-	if err == redis.Nil {
-		return data, err
+	if err != nil {
+		return data, nil
 	}
 
 	for _, val := range root {

@@ -40,9 +40,9 @@ type Game struct {
 	VnAlias    string `db:"vn_alias" json:"vn_alias"`       // 越南别名,
 }
 
-func MemberAmount(ctx *fasthttp.RequestCtx) (string, error) {
+func MemberAmount(fctx *fasthttp.RequestCtx) (string, error) {
 
-	m, err := MemberCache(ctx, "")
+	m, err := MemberCache(fctx, "")
 	if err != nil {
 		return "", errors.New(helper.AccessTokenExpires)
 	}
@@ -60,38 +60,40 @@ func MemberAmount(ctx *fasthttp.RequestCtx) (string, error) {
 	return string(data), nil
 }
 
-func MemberLogin(vid, code, username, password, ip, device, deviceNo string, lastLoginAt uint32) (string, error) {
+func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, device, deviceNo string) (string, error) {
 
-	// 检查ip黑名单
-	idx := MurmurHash(ip, 0) % 10
-	key := fmt.Sprintf("bl:ip%d", idx)
-	ok, err := meta.MerchantRedis.SIsMember(ctx, key, ip).Result()
-	if err != nil {
-		return "", pushLog(err, helper.RedisErr)
-	}
+	/*
+		// 检查ip黑名单
+		idx := MurmurHash(ip, 0) % 10
+		key := fmt.Sprintf("bl:ip%d", idx)
+		ok, err := meta.MerchantRedis.SIsMember(ctx, key, ip).Result()
+		if err != nil {
+			return "", pushLog(err, helper.RedisErr)
+		}
 
-	if ok {
-		return "", errors.New(fmt.Sprintf("%s,%s", helper.IpBanErr, ip))
+		if ok {
+			return "", errors.New(fmt.Sprintf("%s,%s", helper.IpBanErr, ip))
+		}
+	*/
+
+	ts := fctx.Time()
+	ip_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "ip_blacklist", ip).Val()
+	if v, ok := ip_blacklist_ex.(int64); ok && v == 1 {
+		return "", errors.New(helper.IpBanErr)
 	}
 
 	// web/h5不检查设备号黑名单
 	if device != "24" && device != "25" {
 
 		// 检查设备号黑名单
-		idx = MurmurHash(deviceNo, 0) % 10
-		key = fmt.Sprintf("bl:dev%d", idx)
-		ok, err = meta.MerchantRedis.SIsMember(ctx, key, deviceNo).Result()
-		if err != nil {
-			return "", pushLog(err, helper.RedisErr)
-		}
-
-		if ok {
+		device_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "device_blacklist", deviceNo).Val()
+		if v, ok := device_blacklist_ex.(int64); ok && v == 1 {
 			return "", errors.New(helper.DeviceBanErr)
 		}
 	}
 
 	// 处理会员输入错误密码逻辑
-	key = fmt.Sprintf("MPE:%s", username)
+	key := fmt.Sprintf("MPE:%s", username)
 	errTimes, err := meta.MerchantRedis.Get(ctx, key).Int64()
 	if err != nil && err != redis.Nil {
 		return "", errors.New(helper.RedisErr)
@@ -139,7 +141,7 @@ func MemberLogin(vid, code, username, password, ip, device, deviceNo string, las
 	ex := g.Ex{"uid": mb.UID}
 	record := g.Record{
 		"last_login_ip":     ip,
-		"last_login_at":     lastLoginAt,
+		"last_login_at":     ts.In(loc).Unix(),
 		"last_login_device": deviceNo,
 		"last_login_source": device,
 	}
@@ -151,32 +153,54 @@ func MemberLogin(vid, code, username, password, ip, device, deviceNo string, las
 		return "", err
 	}
 
-	log := map[string]string{
-		"username":  mb.Username,
-		"ip":        ip,
-		"device":    device,
-		"device_no": deviceNo,
-		"parents":   mb.ParentName,
-	}
-	err = tdlog.WriteLog("member_login_log", log)
-	if err != nil {
-		fmt.Printf("member write member_login_log error : [%s]/n", err.Error())
-	}
-
-	l := MemberLoginLog{
-		Username: username,
-		IPS:      ip,
-		Device:   device,
-		DeviceNo: deviceNo,
-		Date:     lastLoginAt,
-		Parents:  mb.ParentName,
-		Prefix:   meta.Prefix,
-	}
-	err = meta.Zlog.Post(esPrefixIndex("memberlogin"), l)
-	if err != nil {
-		fmt.Printf("zlog error : %v data : %#v\n", err, l)
+	data := g.Record{
+		"prefix":      meta.Prefix,
+		"username":    username,
+		"ip":          ip,
+		"device":      device,
+		"device_no":   deviceNo,
+		"top_uid":     mb.TopUid,
+		"top_name":    mb.TopName,
+		"parent_uid":  mb.ParentUid,
+		"parent_name": mb.ParentName,
+		"ts":          ts.In(loc).UnixMilli(),
+		"create_at":   ts.In(loc).Unix(),
 	}
 
+	query, _, _ = dialect.Insert("member_login_log").Rows(&data).ToSQL()
+	//fmt.Println(query)
+	_, err = meta.MerchantTD.Exec(query)
+	if err != nil {
+		fmt.Println("insert SMS = ", err.Error())
+	}
+
+	/*
+		log := map[string]string{
+			"username":  mb.Username,
+			"ip":        ip,
+			"device":    device,
+			"device_no": deviceNo,
+			"parents":   mb.ParentName,
+		}
+		err = tdlog.WriteLog("member_login_log", log)
+		if err != nil {
+			fmt.Printf("member write member_login_log error : [%s]/n", err.Error())
+		}
+
+		l := MemberLoginLog{
+			Username: username,
+			IPS:      ip,
+			Device:   device,
+			DeviceNo: deviceNo,
+			Date:     lastLoginAt,
+			Parents:  mb.ParentName,
+			Prefix:   meta.Prefix,
+		}
+		err = meta.Zlog.Post(esPrefixIndex("memberlogin"), l)
+		if err != nil {
+			fmt.Printf("zlog error : %v data : %#v\n", err, l)
+		}
+	*/
 	sid, err := session.Set([]byte(username), mb.UID)
 	if err != nil {
 		return "", errors.New(helper.SessionErr)
@@ -708,7 +732,7 @@ func MemberCache(fCtx *fasthttp.RequestCtx, name string) (Member, error) {
 	if err = rs.Scan(&m); err != nil {
 		return m, pushLog(rs.Err(), helper.RedisErr)
 	}
-	
+
 	return m, nil
 }
 

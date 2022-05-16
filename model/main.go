@@ -46,6 +46,7 @@ type MetaTable struct {
 	//MerchantRedisRead *redis.Client
 	MerchantDB     *sqlx.DB
 	ReportDB       *sqlx.DB
+	MerchantTD     *sqlx.DB
 	Grpc           *gorpc.DispatcherClient
 	ES             *elastic.Client
 	AutoCommission bool
@@ -148,6 +149,7 @@ func pullPrefixIndex(index string) string {
 }
 
 func Close() {
+	meta.MerchantTD.Close()
 	_ = meta.MerchantDB.Close()
 	_ = meta.MerchantRedis.Close()
 }

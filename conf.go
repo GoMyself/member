@@ -39,9 +39,9 @@ type conf struct {
 		} `json:"bet"`
 	} `json:"db"`
 	Td struct {
-		Servers  []string `json:"servers"`
-		Username string   `json:"username"`
-		Password string   `json:"password"`
+		Addr        string `json:"addr"`
+		MaxIdleConn int    `json:"max_idle_conn"`
+		MaxOpenConn int    `json:"max_open_conn"`
 	} `json:"td"`
 	Zlog struct {
 		Host string `json:"host"`

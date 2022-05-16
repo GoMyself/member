@@ -6,7 +6,6 @@ import (
 	"member2/contrib/apollo"
 	"member2/contrib/conn"
 	"member2/contrib/session"
-	"member2/contrib/tdlog"
 	"member2/middleware"
 	"member2/model"
 	"member2/router"
@@ -45,6 +44,8 @@ func main() {
 	mt.PullPrefix = cfg.PullPrefix
 	mt.AutoCommission = cfg.AutoCommission
 	mt.Zlog = conn.InitFluentd(cfg.Zlog.Host, cfg.Zlog.Port)
+
+	mt.MerchantTD = conn.InitTD(cfg.Td.Addr, cfg.Td.MaxIdleConn, cfg.Td.MaxOpenConn)
 	mt.MerchantDB = conn.InitDB(cfg.Db.Master.Addr, cfg.Db.Master.MaxIdleConn, cfg.Db.Master.MaxOpenConn)
 	mt.ReportDB = conn.InitDB(cfg.Db.Report.Addr, cfg.Db.Report.MaxIdleConn, cfg.Db.Report.MaxOpenConn)
 	mt.MerchantRedis = conn.InitRedisSentinel(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.Sentinel, cfg.Redis.Db)
@@ -56,7 +57,7 @@ func main() {
 
 	model.Constructor(mt, cfg.RPC)
 	session.New(mt.MerchantRedis, cfg.Prefix)
-	tdlog.New(cfg.Td.Servers, cfg.Td.Username, cfg.Td.Password)
+	//tdlog.New(cfg.Td.Servers, cfg.Td.Username, cfg.Td.Password)
 
 	//id := helper.GenId()
 	//fmt.Println(id)

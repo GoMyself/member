@@ -1,11 +1,12 @@
 package controller
 
 import (
-	g "github.com/doug-martin/goqu/v9"
-	"github.com/shopspring/decimal"
 	"net/url"
 	"strconv"
 	"strings"
+
+	g "github.com/doug-martin/goqu/v9"
+	"github.com/shopspring/decimal"
 
 	"member2/contrib/helper"
 	"member2/contrib/validator"
@@ -112,7 +113,7 @@ func (that *MemberController) Login(ctx *fasthttp.RequestCtx) {
 
 	ip := helper.FromRequest(ctx)
 	username = strings.ToLower(username)
-	id, err := model.MemberLogin(vid, code, username, password, ip, device, deviceNo, uint32(ctx.Time().Unix()))
+	id, err := model.MemberLogin(ctx, vid, code, username, password, ip, device, deviceNo)
 	if err != nil {
 		if err.Error() == helper.Blocked || err.Error() == helper.UserNotExist ||
 			err.Error() == helper.DeviceBanErr || strings.Contains(err.Error(), helper.IpBanErr) {

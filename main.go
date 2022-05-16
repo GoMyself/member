@@ -43,13 +43,15 @@ func main() {
 	mt.EsPrefix = cfg.EsPrefix
 	mt.PullPrefix = cfg.PullPrefix
 	mt.AutoCommission = cfg.AutoCommission
-	mt.Zlog = conn.InitFluentd(cfg.Zlog.Host, cfg.Zlog.Port)
+	//mt.Zlog = conn.InitFluentd(cfg.Zlog.Host, cfg.Zlog.Port)
 
 	mt.MerchantTD = conn.InitTD(cfg.Td.Addr, cfg.Td.MaxIdleConn, cfg.Td.MaxOpenConn)
 	mt.MerchantDB = conn.InitDB(cfg.Db.Master.Addr, cfg.Db.Master.MaxIdleConn, cfg.Db.Master.MaxOpenConn)
 	mt.ReportDB = conn.InitDB(cfg.Db.Report.Addr, cfg.Db.Report.MaxIdleConn, cfg.Db.Report.MaxOpenConn)
 	mt.MerchantRedis = conn.InitRedisSentinel(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.Sentinel, cfg.Redis.Db)
 	//mt.MerchantRedisRead = conn.InitRedisSentinelRead(cfg.Redis.Addr, cfg.Redis.Password, cfg.Redis.Sentinel, cfg.Redis.Db)
+
+	mt.Program = os.Args[0]
 	mt.ES = conn.InitES(cfg.Es.Host, cfg.Es.Username, cfg.Es.Password)
 	mt.Email.Name = cfg.Email.Name
 	mt.Email.Account = cfg.Email.Account

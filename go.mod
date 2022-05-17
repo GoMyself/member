@@ -18,6 +18,7 @@ require (
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/shopspring/decimal v1.3.1
 	github.com/spaolacci/murmur3 v1.1.0
+	github.com/taosdata/driver-go/v2 v2.0.1-0.20220512023129-15f5b9c4b11c
 	github.com/valyala/fasthttp v1.34.0
 	github.com/valyala/fastjson v1.6.3
 	github.com/valyala/gorpc v0.0.0-20160519171614-908281bef774
@@ -36,7 +37,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.9 // indirect
@@ -49,7 +49,6 @@ require (
 	github.com/philhofer/fwd v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/taosdata/driver-go/v2 v2.0.1-0.20220512023129-15f5b9c4b11c // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
@@ -71,7 +70,6 @@ require (
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
-	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/goccy/go-json v0.9.5
 	github.com/google/btree v1.0.1 // indirect

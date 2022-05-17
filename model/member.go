@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"member2/contrib/helper"
 	"member2/contrib/session"
-	"member2/contrib/tdlog"
 	"member2/contrib/validator"
-	"strconv"
 	"strings"
 	"time"
 
@@ -270,32 +268,33 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	lastLoginSource := device
 	uid := helper.GenId()
 	m := Member{
-		UID:                uid,
-		Username:           userName,
-		Password:           fmt.Sprintf("%d", MurmurHash(password, createdAt)),
-		Birth:              "0",
-		BirthHash:          "0",
-		PhoneHash:          phoneHash,
-		EmailHash:          "0",
-		RealnameHash:       "0",
-		ZaloHash:           "0",
-		Prefix:             meta.Prefix,
-		State:              1,
-		Regip:              ip,
-		RegDevice:          deviceNo,
-		RegUrl:             regUrl,
-		CreatedAt:          createdAt,
-		LastLoginIp:        ip,
-		LastLoginAt:        createdAt,
-		SourceId:           sourceID,
-		FirstDepositAmount: "0.000",
-		FirstBetAmount:     "0.000",
-		Balance:            "0.000",
-		LockAmount:         "0.000",
-		Commission:         "0.000",
-		LastLoginDevice:    deviceNo,
-		LastLoginSource:    lastLoginSource,
-		Level:              1,
+		UID:                 uid,
+		Username:            userName,
+		Password:            fmt.Sprintf("%d", MurmurHash(password, createdAt)),
+		Birth:               "0",
+		BirthHash:           "0",
+		PhoneHash:           phoneHash,
+		EmailHash:           "0",
+		RealnameHash:        "0",
+		ZaloHash:            "0",
+		Prefix:              meta.Prefix,
+		State:               1,
+		Regip:               ip,
+		RegDevice:           deviceNo,
+		RegUrl:              regUrl,
+		CreatedAt:           createdAt,
+		LastLoginIp:         ip,
+		LastLoginAt:         createdAt,
+		SourceId:            sourceID,
+		FirstDepositAmount:  "0.000",
+		FirstBetAmount:      "0.000",
+		SecondDepositAmount: "0.000",
+		Balance:             "0.000",
+		LockAmount:          "0.000",
+		Commission:          "0.000",
+		LastLoginDevice:     deviceNo,
+		LastLoginSource:     lastLoginSource,
+		Level:               1,
 	}
 
 	tx, err := meta.MerchantDB.Begin() // 开启事务
@@ -369,32 +368,33 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.SessionErr)
 	}
 
-	log := map[string]string{
-		"username":  username,
-		"ip":        ip,
-		"device":    fmt.Sprintf("%d", device),
-		"device_no": deviceNo,
-		"parents":   m.ParentName,
-	}
-	err = tdlog.WriteLog("member_login_log", log)
-	if err != nil {
-		fmt.Printf("member write member_login_log error : [%s]/n", err.Error())
-	}
+	/*
+		log := map[string]string{
+			"username":  username,
+			"ip":        ip,
+			"device":    fmt.Sprintf("%d", device),
+			"device_no": deviceNo,
+			"parents":   m.ParentName,
+		}
+		err = tdlog.WriteLog("member_login_log", log)
+		if err != nil {
+			fmt.Printf("member write member_login_log error : [%s]/n", err.Error())
+		}
 
-	l := MemberLoginLog{
-		Username: userName,
-		IPS:      ip,
-		Device:   strconv.Itoa(device),
-		DeviceNo: deviceNo,
-		Date:     createdAt,
-		Parents:  m.ParentName,
-		Prefix:   meta.Prefix,
-	}
-	err = meta.Zlog.Post(esPrefixIndex("memberlogin"), l)
-	if err != nil {
-		fmt.Printf("zlog error : %v data : %#v\n", err, l)
-	}
-
+		l := MemberLoginLog{
+			Username: userName,
+			IPS:      ip,
+			Device:   strconv.Itoa(device),
+			DeviceNo: deviceNo,
+			Date:     createdAt,
+			Parents:  m.ParentName,
+			Prefix:   meta.Prefix,
+		}
+		err = meta.Zlog.Post(esPrefixIndex("memberlogin"), l)
+		if err != nil {
+			fmt.Printf("zlog error : %v data : %#v\n", err, l)
+		}
+	*/
 	encRes := [][]string{}
 
 	encRes = append(encRes, []string{"phone", phone})

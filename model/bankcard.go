@@ -71,13 +71,22 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		return err
 	}
 
-	recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
+	recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone", "realname"})
 	if recs["phone"] != phone {
 		fmt.Println("phone = ", phone)
 		fmt.Println("recs phone = ", recs["phone"])
 		//return errors.New(helper.PhoneVerificationErr)
 	}
 
+	/*
+		header := map[string]string{}
+		postbody := fmt.Sprintf("{\"bankCard\":\"%s\", \"name\":\"%s\", \"bankCode\":\"%s\"}", bankcardNo, recs["realname"], "VPBank")
+
+		statusBody, statusCode, err := helper.HttpDoTimeout([]byte(postbody), "POST", "http://34.142.195.249:8090/bank/check/create", header, 6*time.Second)
+		fmt.Println("statusBody = ", string(statusBody))
+		fmt.Println("statusCode = ", statusCode)
+		fmt.Println("statusCode err = ", err)
+	*/
 	memberEx := g.Ex{
 		"uid": mb.UID,
 	}
@@ -179,7 +188,8 @@ func BankcardList(username string) ([]BankcardData, error) {
 	key := "cbc:" + mb.Username
 	bcs, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
-		return data, errors.New(helper.RedisErr)
+		//fmt.Println("BankcardList GET err = ", err.Error())
+		return data, pushLog(err, helper.RedisErr)
 	}
 
 	if err == redis.Nil {

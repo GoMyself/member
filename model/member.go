@@ -215,17 +215,12 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, phone string, createdAt uint32) (string, error) {
 
 	// 检查ip黑名单
-	idx := MurmurHash(ip, 0) % 10
-	key := fmt.Sprintf("bl:ip%d", idx)
+
 	topId := "4722355249852325"
 
-	ok, err := meta.MerchantRedis.SIsMember(ctx, key, ip).Result()
-	if err != nil {
-		return "", pushLog(err, helper.RedisErr)
-	}
-
-	if ok {
-		return "", errors.New(fmt.Sprintf("%s,%s", helper.IpBanErr, ip))
+	ip_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "ip_blacklist", ip).Val()
+	if v, ok := ip_blacklist_ex.(int64); ok && v == 1 {
+		return "", errors.New(helper.IpBanErr)
 	}
 
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
@@ -244,17 +239,12 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		}
 	*/
 	// web/h5不检查设备号黑名单
-	if _, ok = WebDevices[device]; !ok {
+	if _, ok := WebDevices[device]; !ok {
 
 		// 检查设备号黑名单
-		idx = MurmurHash(deviceNo, 0) % 10
-		key = fmt.Sprintf("bl:dev%d", idx)
-		ok, err = meta.MerchantRedis.SIsMember(ctx, key, deviceNo).Result()
-		if err != nil {
-			return "", pushLog(err, helper.RedisErr)
-		}
-
-		if ok {
+		// 检查设备号黑名单
+		device_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "device_blacklist", deviceNo).Val()
+		if v, ok := device_blacklist_ex.(int64); ok && v == 1 {
 			return "", errors.New(helper.DeviceBanErr)
 		}
 	}

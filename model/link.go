@@ -1,7 +1,6 @@
 package model
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"member2/contrib/helper"
@@ -14,19 +13,19 @@ import (
 )
 
 type Link_t struct {
-	ID               string `db:"id" json:"id" required:"0"`                                                                               //
-	UID              string `db:"uid" json:"uid" required:"0"`                                                                             //
-	ZR               string `name:"zr" db:"zr" json:"zr" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //真人返水
-	QP               string `name:"qp" db:"qp" json:"qp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //棋牌返水
-	TY               string `name:"ty" db:"ty" json:"ty" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //体育返水
-	DJ               string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //电竞返水
-	DZ               string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //电子返水
-	CP               string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //彩票返水
-	FC               string `name:"fc" db:"fc" json:"fc" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //斗鸡返水
-	BY               string `name:"by" db:"by" json:"by" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //捕鱼返水
-	CGHighRebate     string `name:"cg_high_rebate" db:"cg_high_rebate" json:"fc" rule:"float" required:"1" min:"3" max:"5" msg:""`         //斗鸡返水
-	CGOfficialRebate string `name:"cg_official_rebate" db:"cg_official_rebate" json:"fc" rule:"float" required:"1" min:"3" max:"5" msg:""` //斗鸡返水
-	CreatedAt        string `db:"created_at" json:"created_at" rule:"none" required:"0"`                                                   //
+	ID               string `db:"id" json:"id" required:"0"`                                                                                               //
+	UID              string `db:"uid" json:"uid" required:"0"`                                                                                             //
+	ZR               string `name:"zr" db:"zr" json:"zr" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //真人返水
+	QP               string `name:"qp" db:"qp" json:"qp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //棋牌返水
+	TY               string `name:"ty" db:"ty" json:"ty" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //体育返水
+	DJ               string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //电竞返水
+	DZ               string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //电子返水
+	CP               string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //彩票返水
+	FC               string `name:"fc" db:"fc" json:"fc" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //斗鸡返水
+	BY               string `name:"by" db:"by" json:"by" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //捕鱼返水
+	CGHighRebate     string `name:"cg_high_rebate" db:"cg_high_rebate" json:"cg_high_rebate" rule:"float" required:"1" min:"3" max:"5" msg:""`             //斗鸡返水
+	CGOfficialRebate string `name:"cg_official_rebate" db:"cg_official_rebate" json:"cg_official_rebate" rule:"float" required:"1" min:"3" max:"5" msg:""` //斗鸡返水
+	CreatedAt        string `db:"created_at" json:"created_at" rule:"none" required:"0"`                                                                   //
 }
 
 func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
@@ -39,6 +38,8 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	cp, _ := decimal.NewFromString(data.CP)
 	fc, _ := decimal.NewFromString(data.FC)
 	by, _ := decimal.NewFromString(data.BY)
+	cgHighRebate, _ := decimal.NewFromString(data.CGHighRebate)
+	cgOfficialRebate, _ := decimal.NewFromString(data.CGOfficialRebate)
 
 	zr = zr.Truncate(1)
 	qp = qp.Truncate(1)
@@ -48,6 +49,8 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	cp = cp.Truncate(1)
 	fc = fc.Truncate(1)
 	by = by.Truncate(1)
+	cgHighRebate = cgHighRebate.Truncate(1)
+	cgOfficialRebate = cgOfficialRebate.Truncate(1)
 
 	sess, err := MemberInfo(ctx)
 	if err != nil {
@@ -83,19 +86,28 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	if by.GreaterThan(own.BY) || by.IsNegative() {
 		return errors.New(helper.RebateOutOfRange)
 	}
+	if cgOfficialRebate.GreaterThan(own.CGOfficialRebate) || cgOfficialRebate.IsNegative() {
+		return errors.New(helper.RebateOutOfRange)
+	}
+	if cgHighRebate.GreaterThan(own.CGHighRebate) || cgHighRebate.IsNegative() {
+		return errors.New(helper.RebateOutOfRange)
+	}
 
 	recs := g.Record{
-		"id":         data.ID,
-		"uid":        sess.UID,
-		"created_at": data.CreatedAt,
-		"zr":         zr.StringFixed(1),
-		"qp":         qp.StringFixed(1),
-		"ty":         ty.StringFixed(1),
-		"dj":         dj.StringFixed(1),
-		"dz":         dz.StringFixed(1),
-		"cp":         cp.StringFixed(1),
-		"fc":         fc.StringFixed(1),
-		"prefix":     meta.Prefix,
+		"id":                 data.ID,
+		"uid":                sess.UID,
+		"created_at":         data.CreatedAt,
+		"zr":                 zr.StringFixed(1),
+		"qp":                 qp.StringFixed(1),
+		"ty":                 ty.StringFixed(1),
+		"dj":                 dj.StringFixed(1),
+		"dz":                 dz.StringFixed(1),
+		"cp":                 cp.StringFixed(1),
+		"fc":                 fc.StringFixed(1),
+		"by":                 by.StringFixed(1),
+		"cg_high_rebate":     cgOfficialRebate.StringFixed(1),
+		"cg_official_rebate": cgHighRebate.StringFixed(1),
+		"prefix":             meta.Prefix,
 	}
 
 	query, _, _ := dialect.Insert("tbl_member_link").Rows(recs).ToSQL()
@@ -128,23 +140,6 @@ func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
 	return nil
 }
 
-func LinkFindOne(id string) (Link_t, error) {
-
-	data := Link_t{}
-	if id == "" {
-		return data, errors.New(helper.IDErr)
-	}
-
-	t := dialect.From("tbl_member_link")
-	query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "fc", "created_at").Where(g.Ex{"id": id, "prefix": meta.Prefix}).Limit(1).ToSQL()
-	err := meta.MerchantDB.Get(&data, query)
-	if err != nil && err != sql.ErrNoRows {
-		return data, pushLog(err, helper.DBErr)
-	}
-
-	return data, nil
-}
-
 func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 
 	var data []Link_t
@@ -174,13 +169,4 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 	}
 
 	return data, nil
-
-	//t := dialect.From("tbl_member_link")
-	//query, _, _ := t.Select("id", "uid", "zr", "qp", "ty", "dj", "dz", "cp", "created_at").Where(g.Ex{"uid": sess.UID, "prefix": meta.Prefix}).ToSQL()
-	//err = meta.MerchantDB.Select(&data, query)
-	//if err != nil && err != sql.ErrNoRows {
-	//	return data, pushLog(err, helper.DBErr)
-	//}
-
-	//return data, nil
 }

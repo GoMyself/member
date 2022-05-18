@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -360,6 +361,25 @@ func (that *MemberController) UpdatePassword(ctx *fasthttp.RequestCtx) {
 	}
 
 	err := model.MemberPasswordUpdate(ty, sid, code, old, password, ctx)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+
+	helper.Print(ctx, true, helper.Success)
+}
+
+// 用户忘记密码
+func (that *MemberController) Avatar(ctx *fasthttp.RequestCtx) {
+
+	id := ctx.PostArgs().GetUintOrZero("id")
+	if id < 1 || id > 16 {
+		helper.Print(ctx, false, helper.ParamErr)
+		return
+	}
+
+	str := fmt.Sprintf("%d", id)
+	err := model.MemberUpdateAvatar(str, ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"member2/contrib/helper"
 	"member2/contrib/session"
-	"member2/contrib/validator"
 	"strings"
 	"time"
 
@@ -423,6 +422,8 @@ func memberToMap(m Member) map[string]string {
 		"group_name":           m.GroupName,                          //团队名称
 		"agency_type":          fmt.Sprintf("%d", m.AgencyType),      //391团队代理 393普通代理
 		"address":              m.Address,                            //收货地址
+		"tester":               m.Tester,                             //收货地址
+		"avatar":               m.Avatar,                             //收货地址
 	}
 
 	return data
@@ -455,8 +456,8 @@ func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
 		return m, query, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`, `prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, lk.CP, lk.FC, lk.BY, createdAt, meta.Prefix)
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`, `prefix`, `cg_official_rebate`, `cg_high_rebate`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s','%s','%s');",
+		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, lk.CP, lk.FC, lk.BY, createdAt, meta.Prefix, lk.CGOfficialRebate, lk.CGHighRebate)
 
 	return m, query, nil
 }
@@ -475,8 +476,8 @@ func regRoot(uid, topId string, createdAt uint32) (Member, string, error) {
 		return m, query, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s');",
-		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, rootRebate.CP, rootRebate.FC, rootRebate.BY, createdAt, meta.Prefix)
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`,`prefix`,`cg_official_rebate`,`cg_high_rebate`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s');",
+		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, rootRebate.CP, rootRebate.FC, rootRebate.BY, createdAt, meta.Prefix, rootRebate.CGOfficialRebate, rootRebate.CGHighRebate)
 
 	return m, query, nil
 }
@@ -681,11 +682,11 @@ func memberInfoCache(fCtx *fasthttp.RequestCtx) (MemberInfos, error) {
 }
 
 // 通过用户名获取用户在redis中的数据
-func MemberCache(fCtx *fasthttp.RequestCtx, name string) (Member, error) {
+func MemberCache(fctx *fasthttp.RequestCtx, name string) (Member, error) {
 
 	m := Member{}
 	if name == "" {
-		name = string(fCtx.UserValue("token").([]byte))
+		name = string(fctx.UserValue("token").([]byte))
 		if name == "" {
 			return m, errors.New(helper.UsernameErr)
 		}
@@ -748,270 +749,6 @@ func MemberFindByUid(uid string) (Member, error) {
 	}
 
 	return m, nil
-}
-
-// 更新用户密码
-func MemberPasswordUpdate(ty int, sid, code, old, password string, fctx *fasthttp.RequestCtx) error {
-
-	mb, err := MemberCache(fctx, "")
-	if err != nil {
-		return err
-	}
-
-	// 邮箱 有绑定
-	if ty == 1 && mb.PhoneHash != "0" {
-		if !helper.CtypeDigit(sid) {
-			return errors.New(helper.ParamErr)
-		}
-
-		if !helper.CtypeDigit(code) {
-			return errors.New(helper.ParamErr)
-		}
-
-		ip := helper.FromRequest(fctx)
-
-		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
-		if err != nil {
-			return errors.New(helper.GetRPCErr)
-		}
-		address := recs["phone"]
-
-		err = phoneCmp(sid, code, ip, address)
-		if err != nil {
-			return err
-		}
-	}
-
-	pwd := fmt.Sprintf("%d", MurmurHash(password, mb.CreatedAt))
-	// 登录密码修改
-	if ty == 1 {
-		oldPassword := fmt.Sprintf("%d", MurmurHash(old, mb.CreatedAt))
-		// 原始密码是否一致
-		if oldPassword != mb.Password {
-			return errors.New(helper.OldPasswordErr)
-		}
-	} else {
-		if mb.WithdrawPwd != 0 {
-			return errors.New(helper.WithdrawPwdExist)
-		} else if pwd == mb.Password {
-			return errors.New(helper.WPwdCanNotSameWithPwd)
-		}
-	}
-
-	ex := g.Ex{
-		"uid": mb.UID,
-	}
-	record := g.Record{}
-	if ty == 1 {
-		record["password"] = pwd
-	} else {
-		record["withdraw_pwd"] = pwd
-	}
-	// 更新会员信息
-	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
-	_, err = meta.MerchantDB.Exec(query)
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	return nil
-}
-
-// 更新用户手机号
-func MemberUpdatePhone(phone string, ctx *fasthttp.RequestCtx) error {
-
-	if !validator.IsVietnamesePhone(phone) {
-		return errors.New(helper.PhoneFMTErr)
-	}
-
-	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
-	ex := g.Ex{
-		"phone_hash": phoneHash,
-	}
-	if MemberBindCheck(ex) {
-		return errors.New(helper.PhoneExist)
-	}
-
-	mb, err := MemberCache(ctx, "")
-	if err != nil {
-		return err
-	}
-
-	//会员绑定手机号后，不允许更新手机号
-	if mb.PhoneHash != "0" {
-		return errors.New(helper.PhoneBindAlreadyErr)
-	}
-
-	encRes := [][]string{}
-	encRes = append(encRes, []string{"phone", phone})
-	err = grpc_t.Encrypt(mb.UID, encRes)
-	if err != nil {
-		return errors.New(helper.UpdateRPCErr)
-	}
-
-	record := g.Record{
-		"phone_hash": phoneHash,
-	}
-	ex = g.Ex{
-		"uid": mb.UID,
-	}
-	// 更新会员信息
-	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
-	_, err = meta.MerchantDB.Exec(query)
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	return nil
-}
-
-// 更新用户zalo号
-func MemberUpdateZalo(zalo string, ctx *fasthttp.RequestCtx) error {
-
-	zaloHash := fmt.Sprintf("%d", MurmurHash(zalo, 0))
-	ex := g.Ex{
-		"zalo_hash": zaloHash,
-	}
-	if MemberBindCheck(ex) {
-		return errors.New(helper.ZaloExist)
-	}
-
-	mb, err := MemberCache(ctx, "")
-	if err != nil {
-		return err
-	}
-
-	//会员绑定zalo号后，不允许更新zalo号
-	if mb.ZaloHash != "0" {
-		return errors.New(helper.ZaloBindAlreadyErr)
-	}
-
-	encRes := [][]string{}
-	encRes = append(encRes, []string{"zalo", zalo})
-	err = grpc_t.Encrypt(mb.UID, encRes)
-	if err != nil {
-		return errors.New(helper.UpdateRPCErr)
-	}
-
-	record := g.Record{
-		"zalo_hash": zaloHash,
-	}
-	ex = g.Ex{
-		"uid": mb.UID,
-	}
-	// 更新会员信息
-	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
-	_, err = meta.MerchantDB.Exec(query)
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	return nil
-}
-
-// 更新用户信息
-func MemberUpdateEmail(sid, code, email string, ctx *fasthttp.RequestCtx) error {
-
-	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
-	ex := g.Ex{
-		"email_hash": emailHash,
-	}
-	if MemberBindCheck(ex) {
-		return errors.New(helper.EmailExist)
-	}
-
-	mb, err := MemberCache(ctx, "")
-	if err != nil {
-		return err
-	}
-
-	ip := helper.FromRequest(ctx)
-	err = emailCmp(sid, code, ip, email)
-	if err != nil {
-		return err
-	}
-
-	encRes := [][]string{}
-	encRes = append(encRes, []string{"email", email})
-	err = grpc_t.Encrypt(mb.UID, encRes)
-	if err != nil {
-		return errors.New(helper.UpdateRPCErr)
-	}
-
-	record := g.Record{
-		"email_hash": emailHash,
-	}
-	ex = g.Ex{
-		"uid": mb.UID,
-	}
-	// 更新会员信息
-	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
-	_, err = meta.MerchantDB.Exec(query)
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	return nil
-}
-
-// 用户信息更新
-func MemberUpdateName(ctx *fasthttp.RequestCtx, birth, realName, address string) error {
-
-	mb, err := MemberCache(ctx, "")
-	if err != nil {
-		return err
-	}
-
-	record := g.Record{}
-	if birth != "" {
-		t, err := time.Parse("2006-01-02", birth)
-		if err != nil {
-			return errors.New(helper.TimeTypeErr)
-		}
-
-		record["birth"] = fmt.Sprintf("%d", t.Unix())
-		record["birth_hash"] = fmt.Sprintf("%d", MurmurHash(birth, 0))
-	}
-
-	//会员填写真实姓名后，不允许更新真实姓名
-	if realName != "" { // 传入用户真实姓名  需要修改
-
-		if mb.RealnameHash != "0" {
-			return errors.New(helper.RealNameAlreadyBind)
-		}
-
-		if meta.Lang == "vn" && !validator.CheckStringVName(realName) {
-			return errors.New(helper.RealNameFMTErr)
-		}
-
-		encRes := [][]string{}
-		encRes = append(encRes, []string{"realname", realName})
-		err = grpc_t.Encrypt(mb.UID, encRes)
-		if err != nil {
-			return errors.New(helper.UpdateRPCErr)
-		}
-
-		record["realname_hash"] = fmt.Sprintf("%d", MurmurHash(realName, 0))
-	}
-
-	if address != "" {
-		record["address"] = address
-	}
-
-	if len(record) == 0 {
-		return errors.New(helper.NoDataUpdate)
-	}
-	ex := g.Ex{
-		"uid": mb.UID,
-	}
-	// 更新会员信息
-	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
-	_, err = meta.MerchantDB.Exec(query)
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	return nil
 }
 
 // 检测会员账号是否已存在
@@ -1347,14 +1084,17 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 	}
 
 	recd := g.Record{
-		"ty": mr.TY,
-		"zr": mr.ZR,
-		"qp": mr.QP,
-		"dj": mr.DJ,
-		"dz": mr.DZ,
-		"cp": mr.CP,
-		"fc": mr.FC,
-		"by": mr.BY,
+
+		"by":                 mr.BY,
+		"ty":                 mr.TY,
+		"zr":                 mr.ZR,
+		"qp":                 mr.QP,
+		"dj":                 mr.DJ,
+		"dz":                 mr.DZ,
+		"cp":                 mr.CP,
+		"fc":                 mr.FC,
+		"cg_official_rebate": mr.CGOfficialRebate,
+		"cg_high_rebate":     mr.CGHighRebate,
 	}
 	query, _, _ := dialect.Update("tbl_member_rebate_info").Set(&recd).Where(subEx).ToSQL()
 	_, err = tx.Exec(query)

@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"member2/contrib/helper"
+
+	"github.com/go-redis/redis/v8"
 
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/shopspring/decimal"
@@ -13,17 +14,19 @@ import (
 )
 
 type Link_t struct {
-	ID        string `db:"id" json:"id" required:"0"`                                               //
-	UID       string `db:"uid" json:"uid" required:"0"`                                             //
-	ZR        string `name:"zr" db:"zr" json:"zr" rule:"float" required:"1" min:"3" max:"3" msg:""` //真人返水
-	QP        string `name:"qp" db:"qp" json:"qp" rule:"float" required:"1" min:"3" max:"3" msg:""` //棋牌返水
-	TY        string `name:"ty" db:"ty" json:"ty" rule:"float" required:"1" min:"3" max:"3" msg:""` //体育返水
-	DJ        string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""` //电竞返水
-	DZ        string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""` //电子返水
-	CP        string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""` //彩票返水
-	FC        string `name:"fc" db:"fc" json:"fc" rule:"float" required:"1" min:"3" max:"3" msg:""` //斗鸡返水
-	BY        string `name:"by" db:"by" json:"by" rule:"float" required:"1" min:"3" max:"3" msg:""` //捕鱼返水
-	CreatedAt string `db:"created_at" json:"created_at" rule:"none" required:"0"`
+	ID               string `db:"id" json:"id" required:"0"`                                                                               //
+	UID              string `db:"uid" json:"uid" required:"0"`                                                                             //
+	ZR               string `name:"zr" db:"zr" json:"zr" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //真人返水
+	QP               string `name:"qp" db:"qp" json:"qp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //棋牌返水
+	TY               string `name:"ty" db:"ty" json:"ty" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //体育返水
+	DJ               string `name:"dj" db:"dj" json:"dj" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //电竞返水
+	DZ               string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //电子返水
+	CP               string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //彩票返水
+	FC               string `name:"fc" db:"fc" json:"fc" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //斗鸡返水
+	BY               string `name:"by" db:"by" json:"by" rule:"float" required:"1" min:"3" max:"3" msg:""`                                 //捕鱼返水
+	CGHighRebate     string `name:"cg_high_rebate" db:"cg_high_rebate" json:"fc" rule:"float" required:"1" min:"3" max:"5" msg:""`         //斗鸡返水
+	CGOfficialRebate string `name:"cg_official_rebate" db:"cg_official_rebate" json:"fc" rule:"float" required:"1" min:"3" max:"5" msg:""` //斗鸡返水
+	CreatedAt        string `db:"created_at" json:"created_at" rule:"none" required:"0"`                                                   //
 }
 
 func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {

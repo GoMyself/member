@@ -132,6 +132,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 编辑会员密码，返水
 	post("/member/rebate/update", memberCtl.UpdateRebate)
 
+	get("/member/avatar/update", memberCtl.Avatar)
+
 	//新增银行卡
 	post("/member/bankcard/insert", bankCtl.Insert)
 	//查询银行卡

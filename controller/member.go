@@ -372,7 +372,8 @@ func (that *MemberController) UpdatePassword(ctx *fasthttp.RequestCtx) {
 // 用户忘记密码
 func (that *MemberController) Avatar(ctx *fasthttp.RequestCtx) {
 
-	id := ctx.PostArgs().GetUintOrZero("id")
+	id := ctx.QueryArgs().GetUintOrZero("id")
+
 	if id < 1 || id > 16 {
 		helper.Print(ctx, false, helper.ParamErr)
 		return

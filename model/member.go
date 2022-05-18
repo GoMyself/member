@@ -468,8 +468,8 @@ func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
 		return m, query, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `created_at`, `prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s');",
-		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, lk.CP, lk.FC, createdAt, meta.Prefix)
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`, `prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s');",
+		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, lk.CP, lk.FC, lk.BY, createdAt, meta.Prefix)
 
 	return m, query, nil
 }
@@ -488,8 +488,8 @@ func regRoot(uid, topId string, createdAt uint32) (Member, string, error) {
 		return m, query, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s');",
-		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, rootRebate.CP, rootRebate.FC, createdAt, meta.Prefix)
+	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`,`prefix`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s');",
+		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, rootRebate.CP, rootRebate.FC, rootRebate.BY, createdAt, meta.Prefix)
 
 	return m, query, nil
 }
@@ -1174,6 +1174,7 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].DZ = rb.DZ
 			data.D[i].CP = rb.CP
 			data.D[i].FC = rb.FC
+			data.D[i].BY = rb.BY
 		}
 	}
 
@@ -1366,6 +1367,7 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 		"dz": mr.DZ,
 		"cp": mr.CP,
 		"fc": mr.FC,
+		"by": mr.BY,
 	}
 	query, _, _ := dialect.Update("tbl_member_rebate_info").Set(&recd).Where(subEx).ToSQL()
 	_, err = tx.Exec(query)

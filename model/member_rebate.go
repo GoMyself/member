@@ -15,6 +15,7 @@ type MemberRebateResult_t struct {
 	DJ decimal.Decimal
 	CP decimal.Decimal
 	FC decimal.Decimal
+	BY decimal.Decimal
 }
 
 func RebateScale(uid string) (MemberRebate, error) {
@@ -50,6 +51,7 @@ func MemberRebateFindOne(uid string) (MemberRebateResult_t, error) {
 	res.DZ, _ = decimal.NewFromString(data.DZ)
 	res.CP, _ = decimal.NewFromString(data.CP)
 	res.FC, _ = decimal.NewFromString(data.FC)
+	res.BY, _ = decimal.NewFromString(data.BY)
 
 	res.ZR = res.ZR.Truncate(1)
 	res.QP = res.QP.Truncate(1)
@@ -58,6 +60,7 @@ func MemberRebateFindOne(uid string) (MemberRebateResult_t, error) {
 	res.DZ = res.DZ.Truncate(1)
 	res.CP = res.CP.Truncate(1)
 	res.FC = res.FC.Truncate(1)
+	res.BY = res.BY.Truncate(1)
 
 	return res, nil
 }

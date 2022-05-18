@@ -107,6 +107,7 @@ type MemberRebate struct {
 	DZ        string `db:"dz" json:"dz"` //电游返水
 	CP        string `db:"cp" json:"cp"` //彩票返水
 	FC        string `db:"fc" json:"fc"` //斗鸡返水
+	BY        string `db:"by" json:"by"` //捕鱼返水
 	CreatedAt uint32 `db:"created_at" json:"created_at"`
 	Prefix    string `db:"prefix" json:"prefix"`
 }
@@ -451,6 +452,7 @@ type MemberListCol struct {
 	DZ        string  `json:"dz" db:"dz"`
 	CP        string  `json:"cp" db:"cp"`
 	FC        string  `json:"fc" db:"fc"`
+	BY        string  `json:"by" db:"by"`
 }
 
 type MemberAggData struct {

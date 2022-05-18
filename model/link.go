@@ -22,7 +22,8 @@ type Link_t struct {
 	DZ        string `name:"dz" db:"dz" json:"dz" rule:"float" required:"1" min:"3" max:"3" msg:""` //电子返水
 	CP        string `name:"cp" db:"cp" json:"cp" rule:"float" required:"1" min:"3" max:"3" msg:""` //彩票返水
 	FC        string `name:"fc" db:"fc" json:"fc" rule:"float" required:"1" min:"3" max:"3" msg:""` //斗鸡返水
-	CreatedAt string `db:"created_at" json:"created_at" rule:"none" required:"0"`                   //
+	BY        string `name:"by" db:"by" json:"by" rule:"float" required:"1" min:"3" max:"3" msg:""` //捕鱼返水
+	CreatedAt string `db:"created_at" json:"created_at" rule:"none" required:"0"`
 }
 
 func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
@@ -34,6 +35,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	dz, _ := decimal.NewFromString(data.DZ)
 	cp, _ := decimal.NewFromString(data.CP)
 	fc, _ := decimal.NewFromString(data.FC)
+	by, _ := decimal.NewFromString(data.BY)
 
 	zr = zr.Truncate(1)
 	qp = qp.Truncate(1)
@@ -42,6 +44,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	dz = dz.Truncate(1)
 	cp = cp.Truncate(1)
 	fc = fc.Truncate(1)
+	by = by.Truncate(1)
 
 	sess, err := MemberInfo(ctx)
 	if err != nil {
@@ -72,6 +75,9 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		return errors.New(helper.RebateOutOfRange)
 	}
 	if fc.GreaterThan(own.FC) || fc.IsNegative() {
+		return errors.New(helper.RebateOutOfRange)
+	}
+	if by.GreaterThan(own.BY) || by.IsNegative() {
 		return errors.New(helper.RebateOutOfRange)
 	}
 

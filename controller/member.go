@@ -212,6 +212,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 	sdz := string(ctx.PostArgs().Peek("dz"))
 	scp := string(ctx.PostArgs().Peek("cp"))
 	sfc := string(ctx.PostArgs().Peek("fc"))
+	sby := string(ctx.PostArgs().Peek("by"))
 
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
@@ -267,6 +268,12 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	by, err := decimal.NewFromString(sby) //下级会员斗鸡返水比例
+	if err != nil || by.IsNegative() || by.GreaterThan(parent.BY) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
 	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -285,6 +292,7 @@ func (that *MemberController) Insert(ctx *fasthttp.RequestCtx) {
 		DZ: dz.StringFixed(1),
 		CP: cp.StringFixed(1),
 		FC: fc.StringFixed(1),
+		BY: by.StringFixed(1),
 	}
 	createdAt := uint32(ctx.Time().Unix())
 	// 添加下级代理
@@ -582,6 +590,7 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 	sdz := string(ctx.PostArgs().Peek("dz"))
 	scp := string(ctx.PostArgs().Peek("cp"))
 	sfc := string(ctx.PostArgs().Peek("fc"))
+	sby := string(ctx.PostArgs().Peek("by"))
 
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
@@ -648,6 +657,12 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	by, err := decimal.NewFromString(sby) //下级会员捕鱼返水比例
+	if err != nil || by.IsNegative() || by.GreaterThan(parent.BY) {
+		helper.Print(ctx, false, helper.RebateOutOfRange)
+		return
+	}
+
 	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
@@ -668,6 +683,7 @@ func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 		DZ: dz.StringFixed(1),
 		CP: cp.StringFixed(1),
 		FC: fc.StringFixed(1),
+		BY: fc.StringFixed(1),
 	}
 	// 添加下级代理
 	err = model.MemberUpdateInfo(child, password, mr)

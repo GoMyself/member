@@ -271,6 +271,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		LastLoginDevice:     deviceNo,
 		LastLoginSource:     lastLoginSource,
 		Level:               1,
+		//Tester: ,
+		Avatar: "0",
 	}
 
 	tx, err := meta.MerchantDB.Begin() // 开启事务
@@ -533,6 +535,8 @@ func MemberInsert(parent Member, username, password, remark string, createdAt ui
 		LockAmount:         "0.000",
 		Commission:         "0.000",
 		Remarks:            remark,
+		Avatar:             "0",
+		Tester:             parent.Tester,
 	}
 
 	tx, err := meta.MerchantDB.Begin() // 开启事务

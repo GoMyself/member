@@ -911,7 +911,7 @@ func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page
 
 	ex["report_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 	ex["report_type"] = 2 //  1投注时间2结算时间3投注时间月报4结算时间月报
-
+	ex["data_type"] = 1
 	number := 0
 	if page == 1 {
 
@@ -999,6 +999,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 		"report_time": g.Op{"between": exp.NewRangeVal(startAt, endAt)},
 		"uid":         ids,
 		"report_type": 2, // 1投注时间2结算时间3投注时间月报4结算时间月报
+		"data_type":   1,
 	}
 	and := g.And(ex, g.C("uid").Neq(g.C("parent_uid")))
 	query, _, _ = dialect.From("tbl_report_agency").Where(and).
@@ -1048,6 +1049,7 @@ func MemberAgg(username string) (MemberAggData, error) {
 		"username":    username,
 		"report_time": reportTime.Unix(),
 		"report_type": 4,
+		"data_type":   1,
 	}
 
 	query, _, _ := dialect.From("tbl_report_agency").Select("mem_count", "regist_count", "active_count").Where(ex).Limit(1).ToSQL()

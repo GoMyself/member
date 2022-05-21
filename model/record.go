@@ -23,6 +23,7 @@ type trade struct {
 	Amount       string `json:"amount"`        //金额
 	CreatedAt    string `json:"created_at"`    //创建时间
 	State        int    `json:"state"`         //0:失败1:成功2:处理中3:脚本确认中4:人工确认中',  只有ty = 2时需要判断
+	Remark       string `json:"remark"`
 }
 
 type TradeData struct {
@@ -325,6 +326,7 @@ func recordTradeWithdraw(flag, page, pageSize int,
 			Amount:       fmt.Sprintf("%.4f", v.Amount),
 			CreatedAt:    fmt.Sprintf("%d", v.CreatedAt),
 			State:        v.State,
+			Remark:       v.WithdrawRemark,
 		}
 
 		data.D = append(data.D, item)

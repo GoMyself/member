@@ -13,8 +13,9 @@ import (
 )
 
 type Link_t struct {
-	ID               string `db:"id" json:"id" required:"0"`                                                                                               //
-	UID              string `db:"uid" json:"uid" required:"0"`                                                                                             //
+	ID               string `db:"id" json:"id" required:"0"`
+	UID              string `db:"uid" json:"uid" required:"0"`
+	Prefix           string `db:"prefix" json:"prefix" required:"0"`
 	ZR               string `name:"zr" db:"zr" json:"zr" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //真人返水
 	QP               string `name:"qp" db:"qp" json:"qp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //棋牌返水
 	TY               string `name:"ty" db:"ty" json:"ty" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //体育返水
@@ -93,28 +94,56 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		return errors.New(helper.RebateOutOfRange)
 	}
 
-	recs := g.Record{
-		"id":                 data.ID,
-		"uid":                sess.UID,
-		"created_at":         data.CreatedAt,
-		"zr":                 zr.StringFixed(1),
-		"qp":                 qp.StringFixed(1),
-		"ty":                 ty.StringFixed(1),
-		"dj":                 dj.StringFixed(1),
-		"dz":                 dz.StringFixed(1),
-		"cp":                 cp.StringFixed(1),
-		"fc":                 fc.StringFixed(1),
-		"by":                 by.StringFixed(1),
-		"cg_high_rebate":     cgOfficialRebate.StringFixed(1),
-		"cg_official_rebate": cgHighRebate.StringFixed(1),
-		"prefix":             meta.Prefix,
+	lk := Link_t{
+		ID:               data.ID,
+		UID:              sess.UID,
+		CreatedAt:        data.CreatedAt,
+		ZR:               zr.StringFixed(1),
+		QP:               qp.StringFixed(1),
+		TY:               ty.StringFixed(1),
+		DJ:               dj.StringFixed(1),
+		DZ:               dz.StringFixed(1),
+		CP:               cp.StringFixed(1),
+		FC:               fc.StringFixed(1),
+		BY:               by.StringFixed(1),
+		CGHighRebate:     cgOfficialRebate.StringFixed(1),
+		CGOfficialRebate: cgHighRebate.StringFixed(1),
+		Prefix:           meta.Prefix,
 	}
-
-	query, _, _ := dialect.Insert("tbl_member_link").Rows(recs).ToSQL()
+	query, _, _ := dialect.Insert("tbl_member_link").Rows(&lk).ToSQL()
 	fmt.Println("query = ", query)
 	_, err = meta.MerchantDB.Exec(query)
 	if err != nil {
 		return pushLog(err, helper.DBErr)
+	}
+
+	key := "lk:" + sess.UID
+	num, err := meta.MerchantRedis.Exists(ctx, key).Result()
+	if err != nil {
+		_ = errors.New(helper.RedisErr)
+		return nil
+	}
+
+	if num > 0 {
+		value, err := helper.JsonMarshal(&lk)
+		if err != nil {
+			_ = errors.New(helper.FormatErr)
+			return nil
+		}
+
+		path := fmt.Sprintf(".$%s", data.ID)
+		meta.MerchantRedis.Do(ctx, "JSON.SET", key, path, string(value))
+	} else {
+		mp := map[string]Link_t{
+			"$" + data.ID: lk,
+		}
+		value, err := helper.JsonMarshal(&mp)
+		if err != nil {
+			_ = errors.New(helper.FormatErr)
+			return nil
+		}
+
+		meta.MerchantRedis.Do(ctx, "JSON.SET", key, ".", string(value))
 	}
 
 	return nil
@@ -137,6 +166,13 @@ func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
 	if err != nil {
 		return pushLog(err, helper.DBErr)
 	}
+
+	key := "lk:" + sess.UID
+	err = meta.MerchantRedis.Do(ctx, "JSON.DEL", key, "$"+id).Err()
+	if err != nil {
+		_ = pushLog(err, helper.DBErr)
+	}
+
 	return nil
 }
 

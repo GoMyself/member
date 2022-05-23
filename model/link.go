@@ -50,8 +50,8 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	cp = cp.Truncate(1)
 	fc = fc.Truncate(1)
 	by = by.Truncate(1)
-	cgHighRebate = cgHighRebate.Truncate(1)
-	cgOfficialRebate = cgOfficialRebate.Truncate(1)
+	cgHighRebate = cgHighRebate.Truncate(2)
+	cgOfficialRebate = cgOfficialRebate.Truncate(2)
 
 	sess, err := MemberInfo(ctx)
 	if err != nil {

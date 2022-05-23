@@ -8,7 +8,7 @@ import (
 
 func VipConfig() string {
 
-	key := fmt.Sprintf("%s:vip", meta.Prefix)
+	key := fmt.Sprintf("%s:vip:config", meta.Prefix)
 	result, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil {
 		return "{}"

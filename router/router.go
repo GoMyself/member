@@ -87,10 +87,17 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	reportCtl := new(controller.ReportController)
 	// 邮件
 	emailCtl := new(controller.EmailController)
+	// vip
+	vipCtl := new(controller.VipController)
 
 	post("/member/link/insert", linkCtl.Insert)
 	get("/member/link/delete", linkCtl.Delete)
 	get("/member/link/list", linkCtl.List)
+
+	// vip配置
+	get("/member/vip/config", vipCtl.Config)
+	// 会员存款流水
+	get("/member/vip/info", vipCtl.Info)
 
 	// 会员信息
 	get("/member/token", memberCtl.Token)

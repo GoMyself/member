@@ -491,3 +491,14 @@ type BalanceTransaction struct {
 	AfterAmount  float64 `json:"after_amount"`
 	Username     string  `json:"username"`
 }
+
+type WaterFlow struct {
+	UID                 string `json:"uid" redis:"uid"`
+	Username            string `json:"username" redis:"username"`
+	IsDowngrade         int    `json:"is_downgrade" redis:"is_downgrade"`                   //是否降级
+	TotalDeposit        string `json:"total_deposit" redis:"total_deposit"`                 //累计存款
+	TotalWaterFlow      string `json:"total_water_flow" redis:"total_water_flow"`           //累计流水
+	ReturnDeposit       string `json:"return_deposit" redis:"return_deposit"`               //回归流水
+	ReturnWaterFlow     string `json:"return_water_flow" redis:"return_water_flow"`         //回归存款
+	RelegationWaterFlow string `json:"relegation_water_flow" redis:"relegation_water_flow"` //保级流水
+}

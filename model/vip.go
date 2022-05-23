@@ -8,7 +8,8 @@ import (
 
 func VipConfig() string {
 
-	result, err := meta.MerchantRedis.Get(ctx, "plat").Result()
+	key := fmt.Sprintf("%s:vip", meta.Prefix)
+	result, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil {
 		return "{}"
 	}
@@ -30,7 +31,7 @@ func VipInfo(mb Member) (WaterFlow, error) {
 	data.UID = mb.UID
 	data.Username = mb.Username
 
-	key := fmt.Sprintf("V:%s", mb.UID)
+	key := fmt.Sprintf("%s:vip:%s", meta.Prefix, mb.UID)
 	rs := meta.MerchantRedis.HMGet(ctx, key, "uid", "username", "is_downgrade",
 		"total_deposit", "total_water_flow", "return_deposit", "return_water_flow", "relegation_water_flow")
 

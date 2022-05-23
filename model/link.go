@@ -87,10 +87,10 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	if by.GreaterThan(own.BY) || by.IsNegative() {
 		return errors.New(helper.RebateOutOfRange)
 	}
-	if cgOfficialRebate.GreaterThan(own.CGOfficialRebate) || cgOfficialRebate.IsNegative() {
+	if cgOfficialRebate.GreaterThan(own.CGOfficialRebate) || cgOfficialRebate.IsNegative() || nine.GreaterThan(cgOfficialRebate) {
 		return errors.New(helper.RebateOutOfRange)
 	}
-	if cgHighRebate.GreaterThan(own.CGHighRebate) || cgHighRebate.IsNegative() {
+	if cgHighRebate.GreaterThan(own.CGHighRebate) || cgHighRebate.IsNegative() || nine.GreaterThan(cgHighRebate) {
 		return errors.New(helper.RebateOutOfRange)
 	}
 
@@ -106,8 +106,8 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		CP:               cp.StringFixed(1),
 		FC:               fc.StringFixed(1),
 		BY:               by.StringFixed(1),
-		CGHighRebate:     cgOfficialRebate.StringFixed(1),
-		CGOfficialRebate: cgHighRebate.StringFixed(1),
+		CGHighRebate:     cgOfficialRebate.StringFixed(2),
+		CGOfficialRebate: cgHighRebate.StringFixed(2),
 		Prefix:           meta.Prefix,
 	}
 	query, _, _ := dialect.Insert("tbl_member_link").Rows(&lk).ToSQL()

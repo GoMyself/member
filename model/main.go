@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"member2/contrib/helper"
 	"member2/contrib/tracerr"
 	"time"
@@ -56,10 +57,10 @@ type MetaTable struct {
 }
 
 var (
-	meta *MetaTable
-	loc  *time.Location
-	ctx  = context.Background()
-
+	meta             *MetaTable
+	loc              *time.Location
+	ctx              = context.Background()
+	nine             = decimal.NewFromFloat(9.00)
 	dialect          = g.Dialect("mysql")
 	colsMember       = helper.EnumFields(Member{})
 	colsBankcard     = helper.EnumFields(BankCard{})

@@ -132,46 +132,6 @@ func (that *RecordController) Trade(ctx *fasthttp.RequestCtx) {
 	helper.Print(ctx, true, data)
 }
 
-// 佣金记录
-func (that *RecordController) CommissionRecord(ctx *fasthttp.RequestCtx) {
-
-	startTime := string(ctx.QueryArgs().Peek("start_time"))
-	endTime := string(ctx.QueryArgs().Peek("end_time"))
-	flag := ctx.QueryArgs().GetUintOrZero("flag") // 0 全部 161	返水 170	下级返水 751	佣金入款 752	佣金提取 753	佣金派发 754	佣金提取退回 755	佣金派发退回
-	page := ctx.QueryArgs().GetUintOrZero("page")
-	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
-
-	user, err := model.MemberCache(ctx, "")
-	if err != nil {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-
-	if flag != 0 {
-		flags := map[int]bool{
-			model.COTransactionSubRebate:  true, // 返水
-			model.COTransactionRebate:     true, // 下级返水
-			model.COTransactionReceive:    true, // 佣金入款
-			model.COTransactionDraw:       true, // 佣金提取
-			model.COTransactionRation:     true, // 佣金派发
-			model.COTransactionDrawBack:   true, // 佣金提取退回
-			model.COTransactionRationBack: true, // 佣金派发退回
-		}
-		if _, ok := flags[flag]; !ok {
-			helper.Print(ctx, false, helper.ParamErr)
-			return
-		}
-	}
-
-	data, err := model.CommissionRecord(user.UID, startTime, endTime, flag, page, pageSize)
-	if err != nil {
-		helper.Print(ctx, false, err.Error())
-		return
-	}
-
-	helper.Print(ctx, true, data)
-}
-
 // 交易记录 详情
 func (that *RecordController) TradeDetail(ctx *fasthttp.RequestCtx) {
 

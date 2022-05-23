@@ -209,6 +209,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 		res.BankID = string(val.GetStringBytes("bank_id"))
 		res.BankAddress = string(val.GetStringBytes("bank_address"))
 		res.BankBranch = string(val.GetStringBytes("bank_branch_name"))
+		res.State = val.GetInt("state")
 
 		cardList = append(cardList, res)
 	}

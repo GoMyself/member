@@ -961,7 +961,6 @@ func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page
 	}
 
 	offset := (page - 1) * pageSize
-	and := g.And(ex, g.C("uid").Neq(g.C("parent_uid")))
 	query, _, _ := dialect.From("tbl_report_agency").Select(
 		"uid",
 		"username",
@@ -971,7 +970,7 @@ func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page
 		g.SUM("rebate_amount").As("rebate"),
 		g.SUM("company_net_amount").As("net_amount"),
 	).GroupBy("uid").
-		Where(and).
+		Where(ex).
 		Offset(uint(offset)).
 		Limit(uint(pageSize)).
 		Order(orderBy).
@@ -1025,8 +1024,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 		"report_type": 2, // 1投注时间2结算时间3投注时间月报4结算时间月报
 		"data_type":   1,
 	}
-	and := g.And(ex, g.C("uid").Neq(g.C("parent_uid")))
-	query, _, _ = dialect.From("tbl_report_agency").Where(and).
+	query, _, _ = dialect.From("tbl_report_agency").Where(ex).
 		Select(
 			"uid",
 			"username",

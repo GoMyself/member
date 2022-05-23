@@ -31,7 +31,7 @@ func VipInfo(mb Member) (WaterFlow, error) {
 	data.UID = mb.UID
 	data.Username = mb.Username
 
-	key := fmt.Sprintf("%s:vip:%s", meta.Prefix, mb.UID)
+	key := fmt.Sprintf("%s:vip:%s", meta.Prefix, mb.Username)
 	rs := meta.MerchantRedis.HMGet(ctx, key, "uid", "username", "is_downgrade",
 		"total_deposit", "total_water_flow", "return_deposit", "return_water_flow", "relegation_water_flow")
 

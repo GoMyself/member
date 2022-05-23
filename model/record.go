@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/olivere/elastic/v7"
-	"github.com/shopspring/decimal"
 )
 
 type trade struct {
@@ -455,35 +454,29 @@ func recordTradeRebate(flag, page, pageSize int, uid string, startAt, endAt int6
 	data := TradeData{}
 	query := elastic.NewBoolQuery()
 
-	agg := elastic.NewSumAggregation().Field("amount")
-
 	query.Must(
 		elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt),
 		elastic.NewTermQuery("uid", uid),
+		elastic.NewBoolQuery().Should(
+			elastic.NewTermQuery("cash_type", 161),
+			elastic.NewTermQuery("cash_type", 170),
+		),
 	)
 
-	total, esData, aggSum, err := esQuerySearch(esPrefixIndex("tbl_balance_transaction"), "created_at",
-		page, pageSize, colsEsCommissionTransaction, query, map[string]*elastic.SumAggregation{
-			"amount_agg": agg,
-		})
+	total, esData, _, err := esQuerySearch(esPrefixIndex("tbl_balance_transaction"), "created_at",
+		page, pageSize, colsEsCommissionTransaction, query, nil)
 
 	if err != nil {
 		return data, err
 	}
 
-	if v, ok := aggSum.Sum("amount_agg"); ok {
-		data.Agg = map[string]string{
-			"amount_agg": decimal.NewFromFloat(*v.Value).StringFixed(4),
-		}
-	}
-
 	data.T = total
 	for _, v := range esData {
 
+		fmt.Println(string(v.Source))
 		comm := BalanceTransaction{}
-		comm.ID = v.Id
 		_ = helper.JsonUnmarshal(v.Source, &comm)
-
+		fmt.Println(comm)
 		item := trade{
 			Flag:         flag,
 			ID:           v.Id,
@@ -491,8 +484,8 @@ func recordTradeRebate(flag, page, pageSize int, uid string, startAt, endAt int6
 			BillNo:       v.Id,
 			PlatformId:   "",
 			TransferType: comm.CashType,
-			Amount:       fmt.Sprintf("%.4f", comm.Amount),
-			CreatedAt:    fmt.Sprintf("%d", comm.CreatedAt),
+			Amount:       fmt.Sprintf(`%f`, comm.Amount),
+			CreatedAt:    fmt.Sprintf(`%d`, comm.CreatedAt),
 			State:        1,
 		}
 

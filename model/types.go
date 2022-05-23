@@ -482,16 +482,12 @@ type MessageEsData struct {
 }
 
 type BalanceTransaction struct {
-	ID           string  `json:"id" db:"id"`
-	BillNo       string  `json:"bill_no" db:"bill_no"`
-	Uid          int64   `json:"uid" db:"uid"`
-	Username     string  `json:"username" db:"username"`
-	CashType     int     `json:"cash_type" db:"cash_type"`
-	Amount       float64 `json:"amount" db:"amount"`
-	BeforeAmount float64 `json:"before_amount" db:"before_amount"`
-	AfterAmount  float64 `json:"after_amount" db:"after_amount"`
-	CreatedAt    int64   `json:"created_at" db:"created_at"`
-	Remark       string  `json:"remark" db:"remark"`
-	Prefix       string  `json:"prefix" db:"prefix"`
-	OperationNo  string  `json:"operation_no" db:"operation_no"`
+	Uid          string  `json:"uid"`
+	Amount       float64 `json:"amount"`
+	BeforeAmount float64 `json:"before_amount"`
+	CashType     int     `json:"cash_type"`
+	CreatedAt    int64   `json:"created_at"`
+	BillNo       string  `json:"bill_no"`
+	AfterAmount  float64 `json:"after_amount"`
+	Username     string  `json:"username"`
 }

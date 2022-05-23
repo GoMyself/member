@@ -83,8 +83,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	rebateCtl := new(controller.RebateController)
 	// 交易记录
 	recordCtl := new(controller.RecordController)
-	// 佣金
-	commissionCtl := new(controller.CommissionController)
 	// 报表
 	reportCtl := new(controller.ReportController)
 	// 邮件
@@ -164,8 +162,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	get("/member/record/trade", recordCtl.Trade)
 	// 交易记录详情
 	get("/member/record/tradedetail", recordCtl.TradeDetail)
-	// 佣金记录
-	get("/member/record/commission", recordCtl.CommissionRecord)
 
 	// 公告跑马灯
 	get("/member/notices", noticeCtl.List)
@@ -184,11 +180,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 
 	// 获取返水上限
 	get("/member/rebate/scale", rebateCtl.Scale)
-
-	// 佣金提取
-	post("/member/commission/draw", commissionCtl.Draw)
-	// 佣金下发
-	post("/member/commission/ration", commissionCtl.Ration)
 
 	// 代理报表
 	post("/member/agency/report", reportCtl.Report)

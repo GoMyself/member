@@ -205,23 +205,6 @@ type MemberTransaction struct {
 	Prefix       string `json:"prefix" db:"prefix"`
 }
 
-type CommissionTransfer struct {
-	ID           string `json:"id" db:"id"`
-	UID          string `json:"uid" db:"uid"`                     //用户ID
-	Username     string `json:"username" db:"username"`           //用户名
-	ReceiveUID   string `json:"receive_uid" db:"receive_uid"`     //用户ID
-	ReceiveName  string `json:"receive_name" db:"receive_name"`   //用户名
-	TransferType int    `json:"transfer_type" db:"transfer_type"` //转账类型 2 佣金提取 3佣金下发
-	Amount       string `json:"amount" db:"amount"`               //金额
-	CreatedAt    int64  `json:"created_at" db:"created_at"`       //创建时间
-	State        int    `json:"state" db:"state"`                 //1 审核中 2 审核通过 3 审核不通过
-	Automatic    int    `json:"automatic" db:"automatic"`         // 1自动 2手动
-	ReviewAt     int64  `json:"review_at" db:"review_at"`         //审核时间
-	ReviewUID    string `json:"review_uid" db:"review_uid"`       //审核人uid
-	ReviewName   string `json:"review_name" db:"review_name"`     //审核人名
-	Prefix       string `json:"prefix" db:"prefix"`
-}
-
 // 帐变数据
 type TransactionData struct {
 	T   int64             `json:"t"`
@@ -476,26 +459,6 @@ type MemberLoginLog struct {
 	Prefix   string `msg:"prefix" json:"prefix"`
 }
 
-// 会员佣金钱包余额账变表
-type CommissionTransaction struct {
-	ID           string  `db:"id" json:"id"`                       //
-	BillNo       string  `db:"bill_no" json:"bill_no"`             //三方注单号
-	UID          string  `db:"uid" json:"uid"`                     //
-	Username     string  `db:"username" json:"username"`           //
-	CashType     int     `db:"cash_type" json:"cash_type"`         //帐变类型
-	Amount       float64 `db:"amount" json:"amount"`               //帐变金额
-	BeforeAmount float64 `db:"before_amount" json:"before_amount"` //账变前的金额
-	AfterAmount  float64 `db:"after_amount" json:"after_amount"`
-	CreatedAt    int64   `db:"created_at" json:"created_at"`
-	PlatformID   string  `db:"platform_id" json:"platform_id"`
-}
-
-type CommissionTransactionData struct {
-	D   []CommissionTransaction `json:"d"`
-	T   int64                   `json:"t"`
-	Agg float64                 `json:"agg"`
-}
-
 type MessageEs struct {
 	ID       string `json:"id"`        //会员站内信id
 	MsgID    string `json:"msg_id"`    //站内信id
@@ -516,4 +479,19 @@ type MessageEsData struct {
 	T int64       `json:"t"`
 	S int         `json:"s"`
 	D []MessageEs `json:"d"`
+}
+
+type BalanceTransaction struct {
+	ID           string  `json:"id" db:"id"`
+	BillNo       string  `json:"bill_no" db:"bill_no"`
+	Uid          int64   `json:"uid" db:"uid"`
+	Username     string  `json:"username" db:"username"`
+	CashType     int     `json:"cash_type" db:"cash_type"`
+	Amount       float64 `json:"amount" db:"amount"`
+	BeforeAmount float64 `json:"before_amount" db:"before_amount"`
+	AfterAmount  float64 `json:"after_amount" db:"after_amount"`
+	CreatedAt    int64   `json:"created_at" db:"created_at"`
+	Remark       string  `json:"remark" db:"remark"`
+	Prefix       string  `json:"prefix" db:"prefix"`
+	OperationNo  string  `json:"operation_no" db:"operation_no"`
 }

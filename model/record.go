@@ -462,7 +462,7 @@ func recordTradeRebate(flag, page, pageSize int, uid string, startAt, endAt int6
 		elastic.NewTermQuery("uid", uid),
 	)
 
-	total, esData, aggSum, err := esQuerySearch(esPrefixIndex("tbl_commission_transaction"), "created_at",
+	total, esData, aggSum, err := esQuerySearch(esPrefixIndex("tbl_balance_transaction"), "created_at",
 		page, pageSize, colsEsCommissionTransaction, query, map[string]*elastic.SumAggregation{
 			"amount_agg": agg,
 		})
@@ -480,16 +480,16 @@ func recordTradeRebate(flag, page, pageSize int, uid string, startAt, endAt int6
 	data.T = total
 	for _, v := range esData {
 
-		comm := CommissionTransaction{}
+		comm := BalanceTransaction{}
 		comm.ID = v.Id
 		_ = helper.JsonUnmarshal(v.Source, &comm)
 
 		item := trade{
 			Flag:         flag,
 			ID:           v.Id,
-			Ty:           3, // 佣金钱包
+			Ty:           1, // 佣金钱包
 			BillNo:       v.Id,
-			PlatformId:   comm.PlatformID,
+			PlatformId:   "",
 			TransferType: comm.CashType,
 			Amount:       fmt.Sprintf("%.4f", comm.Amount),
 			CreatedAt:    fmt.Sprintf("%d", comm.CreatedAt),

@@ -64,7 +64,7 @@ var bankcardCode = map[string]string{
 	"148": "WOO",
 }
 
-func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) error {
+func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) string {
 
 	ts := fmt.Sprintf("%d", fctx.Time().In(loc).UnixMilli())
 
@@ -77,12 +77,12 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) err
 	if val, ok := bankcardCode[bankId]; ok {
 		data.BankCode = val
 	} else {
-		return errors.New(helper.RecordNotExistErr)
+		return helper.RecordNotExistErr
 	}
 
 	id, err := BankcardTaskCreate(ts, data)
 	if err != nil {
-		return err
+		return helper.BankcardValidErr
 	}
 
 	for i := 0; i < 5; i++ {
@@ -92,16 +92,16 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) err
 		valid, err := BankcardTaskQuery(ts, id)
 		if err == nil {
 			if valid {
-				return errors.New(helper.Success)
+				return helper.Success
 			} else {
-				return errors.New(helper.Failure)
+				return helper.Failure
 			}
 		}
 
 		time.Sleep(2 * time.Second)
 	}
 
-	return errors.New(helper.BankcardValidErr)
+	return helper.BankcardValidErr
 }
 
 func BankcardTaskQuery(ts, id string) (bool, error) {

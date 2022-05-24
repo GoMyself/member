@@ -215,6 +215,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.PhoneExist)
 	}
 
+	fmt.Println("MemberReg", device, deviceNo)
 	// web/h5不检查设备号黑名单
 	if _, ok := WebDevices[device]; !ok {
 

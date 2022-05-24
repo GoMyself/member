@@ -214,24 +214,35 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	if phoneExist == "1" {
 		return "", errors.New(helper.PhoneExist)
 	}
-	/*
-		//检查手机是否已经存在
-		phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
-		ex := g.Ex{
-			"phone_hash": phoneHash,
-		}
-		if MemberBindCheck(ex) {
-			return "", errors.New(helper.PhoneExist)
-		}
-	*/
+
 	// web/h5不检查设备号黑名单
 	if _, ok := WebDevices[device]; !ok {
 
 		// 检查设备号黑名单
-		// 检查设备号黑名单
 		device_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "device_blacklist", deviceNo).Val()
 		if v, ok := device_blacklist_ex.(int64); ok && v == 1 {
 			return "", errors.New(helper.DeviceBanErr)
+		}
+
+		maxKey := fmt.Sprintf("%s:risk:maxregnum", meta.Prefix)
+		num, err := meta.MerchantRedis.Get(ctx, maxKey).Int()
+		if err != nil && err != redis.Nil {
+			return "", pushLog(err, helper.RedisErr)
+		}
+
+		if err == nil && num > 0 {
+			ex := g.Ex{
+				"prefix":    meta.Prefix,
+				"device_no": deviceNo,
+			}
+			regNum, err := MemberCount(ex)
+			if err != nil {
+				return "", err
+			}
+
+			if regNum > num {
+				return "", errors.New(helper.RegLimitExceed)
+			}
 		}
 	}
 
@@ -845,6 +856,21 @@ func MemberBindCheck(ex g.Ex) bool {
 	}
 
 	return true
+}
+
+func MemberCount(ex g.Ex) (int, error) {
+
+	var num int
+
+	t := dialect.From("tbl_members")
+	query, _, _ := t.Select(g.COUNT("uid")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.MerchantDB.Get(&num, query)
+	if err != nil && err != sql.ErrNoRows {
+		return 0, pushLog(err, helper.DBErr)
+	}
+
+	return num, nil
 }
 
 func Platform() string {

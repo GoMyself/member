@@ -233,8 +233,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 		if err == nil && num > 0 {
 			ex := g.Ex{
-				"prefix":    meta.Prefix,
-				"device_no": deviceNo,
+				"prefix":     meta.Prefix,
+				"reg_device": deviceNo,
 			}
 			regNum, err := MemberCount(ex)
 			if err != nil {

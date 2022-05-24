@@ -101,7 +101,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) err
 		time.Sleep(2 * time.Second)
 	}
 
-	return nil
+	return errors.New(helper.BankcardValidErr)
 }
 
 func BankcardTaskQuery(ts, id string) (bool, error) {

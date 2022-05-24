@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	g "github.com/doug-martin/goqu/v9"
+	"github.com/shopspring/decimal"
 	"github.com/valyala/fasthttp"
 	"member2/contrib/helper"
 )
@@ -21,14 +22,38 @@ type ReportAgency struct {
 	NetAmount         float64 `json:"net_amount" db:"net_amount"`
 	DividendAmount    float64 `json:"dividend_amount" db:"dividend_amount"`
 	BalanceTotal      float64 `json:"balance_total" db:"balance_total"`
+	Profit            float64 `json:"profit"`
 }
 
-func AgencyReport(ty string, fCtx *fasthttp.RequestCtx) (ReportAgency, error) {
+func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (ReportAgency, error) {
 
 	data := ReportAgency{}
 	mb, err := MemberCache(fCtx, "")
 	if err != nil {
 		return data, errors.New(helper.AccessTokenExpires)
+	}
+	userId := mb.UID
+	if len(username) > 0 && username != mb.Username {
+
+		var count int64
+		mb, err = MemberCache(nil, username)
+		if err != nil {
+			return data, errors.New(helper.UsernameExist)
+		}
+		ex := g.Ex{
+			"ancestor":   userId,
+			"descendant": mb.UID,
+			"prefix":     meta.Prefix,
+		}
+		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
+		err := meta.MerchantDB.Get(&count, query)
+		if err != nil {
+			return data, pushLog(err, helper.NotDirectSubordinate)
+		}
+		if count == 0 {
+			return data, pushLog(err, helper.NotDirectSubordinate)
+		}
+
 	}
 
 	var startAt int64
@@ -80,6 +105,8 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx) (ReportAgency, error) {
 		fmt.Println(err.Error())
 		return data, pushLog(err, helper.DBErr)
 	}
-	fmt.Println(data)
+	//fmt.Println(data)
+	data.Profit, _ = decimal.NewFromFloat(data.NetAmount).Sub(decimal.NewFromFloat(data.Rebate)).Sub(decimal.NewFromFloat(data.DividendAmount)).Float64()
+
 	return data, nil
 }

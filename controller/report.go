@@ -12,7 +12,8 @@ type ReportController struct{}
 func (that *ReportController) Report(ctx *fasthttp.RequestCtx) {
 
 	ty := string(ctx.PostArgs().Peek("ty"))
-	data, err := model.AgencyReport(ty, ctx)
+	username := string(ctx.PostArgs().Peek("username"))
+	data, err := model.AgencyReport(ty, ctx, username)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

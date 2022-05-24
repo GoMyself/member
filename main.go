@@ -53,6 +53,8 @@ func main() {
 
 	mt.Program = os.Args[0]
 	mt.ES = conn.InitES(cfg.Es.Host, cfg.Es.Username, cfg.Es.Password)
+
+	mt.CardValid = cfg.BankcardValidAPI
 	mt.Email.Name = cfg.Email.Name
 	mt.Email.Account = cfg.Email.Account
 	mt.Email.Password = cfg.Email.Password

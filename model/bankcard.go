@@ -22,7 +22,7 @@ func BankcardUpdateCache(username string) {
 	ex := g.Ex{
 		"prefix":   meta.Prefix,
 		"username": username,
-		"state":    "1",
+		//"state":    "1",
 	}
 
 	t := dialect.From("tbl_member_bankcard")
@@ -104,8 +104,15 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		encRes = append(encRes, []string{"realname", realName})
 		// 会员信息更新真实姓名和真实姓名hash
 		memberRecord["realname_hash"] = fmt.Sprintf("%d", MurmurHash(realName, 0))
+	} else {
+		realName = recs["realname"]
 	}
 
+	err = BankcardCheck(fctx, bankcardNo, data.BankID, realName)
+	fmt.Println("BankcardCheck = ", err)
+	if err != nil {
+		return err
+	}
 	bankcardRecord := g.Record{
 		"id":               data.ID,
 		"uid":              mb.UID,

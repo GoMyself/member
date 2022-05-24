@@ -43,25 +43,16 @@ type conf struct {
 		MaxIdleConn int    `json:"max_idle_conn"`
 		MaxOpenConn int    `json:"max_open_conn"`
 	} `json:"td"`
-	Zlog struct {
-		Host string `json:"host"`
-		Port int    `json:"port"`
-	} `json:"zlog"`
+	BankcardValidAPI struct {
+		URL string `json:"url"`
+		Key string `json:"key"`
+	} `json:"bankcard_valid_api"`
 	Redis struct {
 		Addr     []string `json:"addr"`
 		Password string   `json:"password"`
 		Sentinel string   `json:"sentinel"`
 		Db       int      `json:"db"`
 	} `json:"redis"`
-	Minio struct {
-		ImagesBucket    string `json:"images_bucket"`
-		JSONBucket      string `json:"json_bucket"`
-		Endpoint        string `json:"endpoint"`
-		AccessKeyID     string `json:"accessKeyID"`
-		SecretAccessKey string `json:"secretAccessKey"`
-		UseSSL          bool   `json:"useSSL"`
-		UploadURL       string `json:"uploadUrl"`
-	} `json:"minio"`
 	Es struct {
 		Host     []string `json:"host"`
 		Username string   `json:"username"`

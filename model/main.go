@@ -23,13 +23,9 @@ import (
 	"github.com/valyala/gorpc"
 )
 
-type log_t struct {
-	ID      string `json:"id" msg:"id"`
-	Project string `json:"project" msg:"project"`
-	Flags   string `json:"flags" msg:"flags"`
-	Fn      string `json:"fn" msg:"fn"`
-	File    string `json:"file" msg:"file"`
-	Content string `json:"content" msg:"content"`
+type bankcardValidAPI_t struct {
+	URL string `json:"url"`
+	Key string `json:"key"`
 }
 
 var grpc_t struct {
@@ -45,6 +41,7 @@ type MetaTable struct {
 	MerchantDB     *sqlx.DB
 	ReportDB       *sqlx.DB
 	MerchantTD     *sqlx.DB
+	CardValid      bankcardValidAPI_t
 	Grpc           *gorpc.DispatcherClient
 	ES             *elastic.Client
 	AutoCommission bool

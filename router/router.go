@@ -13,7 +13,7 @@ import (
 
 var (
 	ApiTimeoutMsg = `{"status": "false","data":"服务器响应超时，请稍后重试"}`
-	ApiTimeout    = time.Second * 30
+	ApiTimeout    = time.Second * 16
 	router        *fasthttprouter.Router
 	buildInfo     BuildInfo
 )

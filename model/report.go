@@ -48,10 +48,10 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
 		err := meta.MerchantDB.Get(&count, query)
 		if err != nil {
-			return data, pushLog(err, helper.NotDirectSubordinate)
+			return data, pushLog(err, helper.DBErr)
 		}
 		if count == 0 {
-			return data, pushLog(err, helper.NotDirectSubordinate)
+			return data, errors.New(helper.NotDirectSubordinate)
 		}
 
 	}

@@ -950,6 +950,8 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].CP = rb.CP
 			data.D[i].FC = rb.FC
 			data.D[i].BY = rb.BY
+			data.D[i].CGHighRebate = rb.CGHighRebate
+			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
 		}
 	}
 

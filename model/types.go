@@ -424,21 +424,23 @@ type MemberListData struct {
 }
 
 type MemberListCol struct {
-	UID       string  `json:"uid" db:"uid"`
-	Username  string  `json:"username" db:"username"`
-	Deposit   float64 `json:"deposit" db:"deposit"`
-	Withdraw  float64 `json:"withdraw" db:"withdraw"`
-	Dividend  float64 `json:"dividend" db:"dividend"`
-	Rebate    float64 `json:"rebate" db:"rebate"`
-	NetAmount float64 `json:"net_amount" db:"net_amount"`
-	TY        string  `json:"ty" db:"ty"`
-	ZR        string  `json:"zr" db:"zr"`
-	QP        string  `json:"qp" db:"qp"`
-	DJ        string  `json:"dj" db:"dj"`
-	DZ        string  `json:"dz" db:"dz"`
-	CP        string  `json:"cp" db:"cp"`
-	FC        string  `json:"fc" db:"fc"`
-	BY        string  `json:"by" db:"by"`
+	UID              string  `json:"uid" db:"uid"`
+	Username         string  `json:"username" db:"username"`
+	Deposit          float64 `json:"deposit" db:"deposit"`
+	Withdraw         float64 `json:"withdraw" db:"withdraw"`
+	Dividend         float64 `json:"dividend" db:"dividend"`
+	Rebate           float64 `json:"rebate" db:"rebate"`
+	NetAmount        float64 `json:"net_amount" db:"net_amount"`
+	TY               string  `json:"ty" db:"ty"`
+	ZR               string  `json:"zr" db:"zr"`
+	QP               string  `json:"qp" db:"qp"`
+	DJ               string  `json:"dj" db:"dj"`
+	DZ               string  `json:"dz" db:"dz"`
+	CP               string  `json:"cp" db:"cp"`
+	FC               string  `json:"fc" db:"fc"`
+	BY               string  `json:"by" db:"by"`
+	CGHighRebate     string  `json:"cg_high_rebate" db:"cg_high_rebate"`         //CG高频彩返点
+	CGOfficialRebate string  `json:"cg_official_rebate" db:"cg_official_rebate"` //CG官方彩返点
 }
 
 type MemberAggData struct {

@@ -111,7 +111,7 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 会员登陆
 	post("/member/login", memberCtl.Login)
 	// 新增下级
-	post("/member/insert", memberCtl.Insert)
+	//post("/member/insert", memberCtl.Insert)
 	// 会员余额信息 中心钱包和锁定钱包
 	get("/member/balance", memberCtl.Balance)
 	// 检测提款密码

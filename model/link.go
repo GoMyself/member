@@ -106,8 +106,8 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		CP:               cp.StringFixed(1),
 		FC:               fc.StringFixed(1),
 		BY:               by.StringFixed(1),
-		CGHighRebate:     cgOfficialRebate.StringFixed(2),
-		CGOfficialRebate: cgHighRebate.StringFixed(2),
+		CGHighRebate:     cgHighRebate.StringFixed(2),
+		CGOfficialRebate: cgOfficialRebate.StringFixed(2),
 		Prefix:           meta.Prefix,
 	}
 	query, _, _ := dialect.Insert("tbl_member_link").Rows(&lk).ToSQL()

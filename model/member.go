@@ -790,20 +790,13 @@ func MemberFindByUid(uid string) (Member, error) {
 // 检测会员账号是否已存在
 func MemberExist(username string) bool {
 
-	ex := meta.MerchantRedis.Exists(ctx, username).Val()
-
-	if ex == 0 {
+	var uid uint64
+	t := dialect.From("tbl_members")
+	query, _, _ := t.Select("uid").Where(g.Ex{"username": username, "prefix": meta.Prefix}).ToSQL()
+	err := meta.MerchantDB.Get(&uid, query)
+	if err == sql.ErrNoRows {
 		return false
 	}
-	/*
-		var uid uint64
-		t := dialect.From("tbl_members")
-		query, _, _ := t.Select("uid").Where(g.Ex{"username": username, "prefix": meta.Prefix}).ToSQL()
-		err := meta.MerchantDB.Get(&uid, query)
-		if err == sql.ErrNoRows {
-			return false
-		}
-	*/
 	return true
 }
 

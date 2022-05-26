@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"member2/contrib/helper"
 
 	g "github.com/doug-martin/goqu/v9"
@@ -18,6 +19,21 @@ type MemberRebateResult_t struct {
 	BY               decimal.Decimal
 	CGOfficialRebate decimal.Decimal
 	CGHighRebate     decimal.Decimal
+}
+
+func MemberRebateUpdateCache(mr MemberRebate) error {
+
+	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, mr.UID)
+	vals := []interface{}{"zr", mr.ZR, "qp", mr.QP, "ty", mr.TY, "dj", mr.DJ, "dz", mr.DZ, "cp", mr.CP, "fc", mr.FC, "by", mr.BY, "cg_high_rebate", mr.CGHighRebate, "cg_official_rebate", mr.CGOfficialRebate}
+
+	pipe := meta.MerchantRedis.Pipeline()
+	pipe.Unlink(ctx, key)
+	pipe.HMSet(ctx, key, vals...)
+	pipe.Persist(ctx, key)
+	_, err := pipe.Exec(ctx)
+	pipe.Close()
+
+	return err
 }
 
 func RebateScale(uid string) (MemberRebate, error) {

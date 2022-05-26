@@ -21,6 +21,35 @@ type MemberRebateResult_t struct {
 	CGHighRebate     decimal.Decimal
 }
 
+func MemberRebateUpdateALL() error {
+
+	var data []MemberRebate
+
+	t := dialect.From("tbl_member_rebate_info")
+	query, _, _ := t.Select(colsMemberRebate...).ToSQL()
+	err := meta.MerchantDB.Select(&data, query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
+
+	pipe := meta.MerchantRedis.Pipeline()
+
+	for _, mr := range data {
+
+		key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, mr.UID)
+		vals := []interface{}{"zr", mr.ZR, "qp", mr.QP, "ty", mr.TY, "dj", mr.DJ, "dz", mr.DZ, "cp", mr.CP, "fc", mr.FC, "by", mr.BY, "cg_high_rebate", mr.CGHighRebate, "cg_official_rebate", mr.CGOfficialRebate}
+
+		pipe.Unlink(ctx, key)
+		pipe.HMSet(ctx, key, vals...)
+		pipe.Persist(ctx, key)
+	}
+
+	_, err = pipe.Exec(ctx)
+	pipe.Close()
+
+	return nil
+}
+
 func MemberRebateUpdateCache(mr MemberRebate) error {
 
 	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, mr.UID)

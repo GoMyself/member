@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/shopspring/decimal"
 	"member2/contrib/helper"
-	"member2/contrib/tracerr"
+	"runtime"
+	"strings"
 	"time"
 
 	"github.com/hprose/hprose-golang/v3/rpc/core"
@@ -36,8 +37,7 @@ var grpc_t struct {
 }
 
 type MetaTable struct {
-	MerchantRedis *redis.Client
-	//MerchantRedisRead *redis.Client
+	MerchantRedis  *redis.Client
 	MerchantDB     *sqlx.DB
 	ReportDB       *sqlx.DB
 	MerchantTD     *sqlx.DB
@@ -104,16 +104,23 @@ func MurmurHash(str string, seed uint32) uint64 {
 
 func pushLog(err error, code string) error {
 
-	err = tracerr.Wrap(err)
+	_, file, line, _ := runtime.Caller(1)
+	paths := strings.Split(file, "/")
+	l := len(paths)
+	if l > 2 {
+		file = paths[l-2] + "/" + paths[l-1]
+	}
+	path := fmt.Sprintf("%s:%d", file, line)
+
 	ts := time.Now()
 	id := helper.GenId()
 
 	fields := g.Record{
 		"id":       id,
-		"content":  tracerr.SprintSource(err, 2, 2),
+		"content":  err.Error(),
 		"project":  meta.Program,
 		"flags":    code,
-		"filename": err.Error(),
+		"filename": path,
 		"ts":       ts.In(loc).UnixMilli(),
 	}
 
@@ -121,8 +128,7 @@ func pushLog(err error, code string) error {
 	//fmt.Println(query)
 	_, err1 := meta.MerchantTD.Exec(query)
 	if err1 != nil {
-		fmt.Println("insert SMS query = ", query)
-		fmt.Println("insert SMS = ", err1.Error())
+		fmt.Println("insert SMS = ", err1.Error(), fields)
 	}
 
 	note := fmt.Sprintf("Hệ thống lỗi %s", id)

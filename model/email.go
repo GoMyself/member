@@ -32,18 +32,18 @@ func phoneCmp(sid, code, ip, phone string) error {
 		return errors.New(helper.PhoneVerificationErr)
 	}
 
-	rc := g.Record{
-		"state": "1",
-	}
-	ex := g.Ex{
-		"phone":  phone,
-		"state":  "0",
-		"code":   code,
-		"prefix": meta.Prefix,
-	}
-	query, _, _ := dialect.Update("sms_log").Set(rc).Where(ex).Limit(1).ToSQL()
-	fmt.Println(query)
-	_, _ = meta.MerchantTD.Exec(query)
+	//rc := g.Record{
+	//	"state": "1",
+	//}
+	//ex := g.Ex{
+	//	"phone":  phone,
+	//	"state":  "0",
+	//	"code":   code,
+	//	"prefix": meta.Prefix,
+	//}
+	//query, _, _ := dialect.Update("sms_log").Set(rc).Where(ex).Limit(1).ToSQL()
+	//fmt.Println(query)
+	//_, _ = meta.MerchantTD.Exec(query)
 
 	meta.MerchantRedis.Unlink(ctx, key).Err()
 	return nil

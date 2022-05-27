@@ -3,7 +3,6 @@ package model
 import (
 	"errors"
 	"fmt"
-	g "github.com/doug-martin/goqu/v9"
 	"member2/contrib/helper"
 	"net/smtp"
 	"strings"

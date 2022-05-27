@@ -211,7 +211,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
 	phoneExist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "phoneExist", phone).Val()
-	if phoneExist == "1" {
+	if v, ok := phoneExist.(int64); ok && v == 1 {
 		return "", errors.New(helper.PhoneExist)
 	}
 
@@ -294,19 +294,20 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	fmt.Println("regLink id : ", linkID)
 	parent := Member{}
+	mr := MemberRebate{}
 	var query string
 	// 邀请链接注册，不成功注册在默认代理root下
 	if linkID != "" {
-		parent, query, err = regLink(uid, linkID, createdAt)
+		parent, mr, err = regLink(uid, linkID, createdAt)
 		if err != nil {
-			parent, query, err = regRoot(uid, topId, createdAt)
+			parent, mr, err = regRoot(uid, topId, createdAt)
 			if err != nil {
 				_ = tx.Rollback()
 				return "", err
 			}
 		}
 	} else {
-		parent, query, err = regRoot(uid, topId, createdAt)
+		parent, mr, err = regRoot(uid, topId, createdAt)
 		if err != nil {
 			_ = tx.Rollback()
 			return "", err
@@ -321,6 +322,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	m.AgencyType = parent.AgencyType
 	m.GroupName = parent.GroupName
 
+	query, _, _ = dialect.Insert("tbl_member_rebate_info").Rows(&mr).ToSQL()
 	// 插入返水记录
 	_, err = tx.Exec(query)
 	if err != nil {
@@ -394,6 +396,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
+	MemberRebateUpdateCache(mr)
 	return id, nil
 }
 
@@ -443,57 +446,98 @@ func memberToMap(m Member) map[string]string {
 	return data
 }
 
-func regLink(uid, linkID string, createdAt uint32) (Member, string, error) {
+func regLink(uid, linkID string, createdAt uint32) (Member, MemberRebate, error) {
 
 	m := Member{}
-	var query string
+	mr := MemberRebate{}
+
+	//var query string
 	p := strings.Split(linkID, "|")
 	if len(p) != 2 {
-		return m, query, errors.New(helper.IDErr)
+		return m, mr, errors.New(helper.IDErr)
 	}
 
 	lkKey := "lk:" + p[0]
 	lkRes, err := meta.MerchantRedis.Do(ctx, "JSON.GET", lkKey, ".$"+p[1]).Text()
 	if err != nil {
-		return m, query, pushLog(err, helper.RedisErr)
+		return m, mr, pushLog(err, helper.RedisErr)
 	}
 
 	lk := Link_t{}
 	err = helper.JsonUnmarshal([]byte(lkRes), &lk)
 	if err != nil {
-		return m, query, pushLog(err, helper.FormatErr)
+		return m, mr, pushLog(err, helper.FormatErr)
 	}
 
-	fmt.Println("regLink :", lk)
+	//fmt.Println("regLink :", lk)
 	m, err = MemberFindByUid(lk.UID)
 	if err != nil {
-		return m, query, err
+		return m, mr, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`, `prefix`, `cg_official_rebate`, `cg_high_rebate`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s','%s','%s');",
-		uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, lk.CP, lk.FC, lk.BY, createdAt, meta.Prefix, lk.CGOfficialRebate, lk.CGHighRebate)
+	mr = MemberRebate{
+		UID:              uid,
+		ParentUID:        m.ParentUid,
+		ZR:               lk.ZR,
+		QP:               lk.QP,
+		TY:               lk.TY,
+		DJ:               lk.DJ,
+		DZ:               lk.DZ,
+		CP:               lk.CP,
+		FC:               lk.FC,
+		BY:               lk.BY,
+		CGHighRebate:     lk.CGHighRebate,
+		CGOfficialRebate: lk.CGOfficialRebate,
+		CreatedAt:        createdAt,
+		Prefix:           meta.Prefix,
+	}
 
-	return m, query, nil
+	/*
+		query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`, `prefix`, `cg_official_rebate`, `cg_high_rebate`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s','%s','%s');",
+			uid, lk.ZR, lk.QP, lk.TY, lk.DJ, lk.DZ, lk.CP, lk.FC, lk.BY, createdAt, meta.Prefix, lk.CGOfficialRebate, lk.CGHighRebate)
+	*/
+
+	return m, mr, nil
 }
 
-func regRoot(uid, topId string, createdAt uint32) (Member, string, error) {
+func regRoot(uid, topId string, createdAt uint32) (Member, MemberRebate, error) {
 
 	m := Member{}
-	var query string
+	mr := MemberRebate{}
+
 	rootRebate, err := RebateScale(topId)
 	if err != nil {
-		return m, query, pushLog(err, helper.DBErr)
+		return m, mr, pushLog(err, helper.DBErr)
 	}
 
 	m, err = MemberFindByUid(topId)
 	if err != nil {
-		return m, query, err
+		return m, mr, err
 	}
 
-	query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`,`prefix`,`cg_official_rebate`,`cg_high_rebate`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s');",
-		uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, rootRebate.CP, rootRebate.FC, rootRebate.BY, createdAt, meta.Prefix, rootRebate.CGOfficialRebate, rootRebate.CGHighRebate)
+	mr = MemberRebate{
+		UID:              uid,
+		ParentUID:        m.ParentUid,
+		ZR:               rootRebate.ZR,
+		QP:               rootRebate.QP,
+		TY:               rootRebate.TY,
+		DJ:               rootRebate.DJ,
+		DZ:               rootRebate.DZ,
+		CP:               rootRebate.CP,
+		FC:               rootRebate.FC,
+		BY:               rootRebate.BY,
+		CGHighRebate:     rootRebate.CGHighRebate,
+		CGOfficialRebate: rootRebate.CGOfficialRebate,
+		CreatedAt:        createdAt,
+		Prefix:           meta.Prefix,
+	}
 
-	return m, query, nil
+	/*
+		query = fmt.Sprintf("INSERT INTO `tbl_member_rebate_info` (`uid`, `zr`, `qp`, `ty`, `dj`, `dz`, `cp`, `fc`, `by`, `created_at`,`prefix`,`cg_official_rebate`,`cg_high_rebate`)VALUES(%s, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s', '%s');",
+			uid, rootRebate.ZR, rootRebate.QP, rootRebate.TY, rootRebate.DJ, rootRebate.DZ, rootRebate.CP, rootRebate.FC, rootRebate.BY, createdAt, meta.Prefix, rootRebate.CGOfficialRebate, rootRebate.CGHighRebate)
+	*/
+
+	return m, mr, nil
 }
 
 func MemberVerify(id, str string) bool {
@@ -582,6 +626,7 @@ func MemberInsert(parent Member, username, password, remark string, createdAt ui
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberRebateUpdateCache(mr)
 	_, err = session.Set([]byte(m.Username), m.UID)
 	if err != nil {
 		return errors.New(helper.SessionErr)

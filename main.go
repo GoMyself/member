@@ -67,6 +67,12 @@ func main() {
 		mt = nil
 	}()
 
+	if os.Args[3] == "load" {
+		model.MemberRebateUpdateALL()
+		fmt.Println("MemberRebateUpdateALL done")
+		return
+	}
+
 	b := router.BuildInfo{
 		GitReversion:   gitReversion,
 		BuildTime:      buildTime,

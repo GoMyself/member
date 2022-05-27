@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	g "github.com/doug-martin/goqu/v9"
 	"member2/contrib/helper"
 	"net/smtp"
 	"strings"
@@ -30,6 +31,19 @@ func phoneCmp(sid, code, ip, phone string) error {
 	if val != code {
 		return errors.New(helper.PhoneVerificationErr)
 	}
+
+	//rc := g.Record{
+	//	"state": "1",
+	//}
+	//ex := g.Ex{
+	//	"phone":  phone,
+	//	"state":  "0",
+	//	"code":   code,
+	//	"prefix": meta.Prefix,
+	//}
+	//query, _, _ := dialect.Update("sms_log").Set(rc).Where(ex).Limit(1).ToSQL()
+	//fmt.Println(query)
+	//_, _ = meta.MerchantTD.Exec(query)
 
 	meta.MerchantRedis.Unlink(ctx, key).Err()
 	return nil

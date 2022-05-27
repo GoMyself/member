@@ -117,7 +117,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		return pushLog(err, helper.DBErr)
 	}
 
-	key := "lk:" + sess.UID
+	key := fmt.Sprintf("%s:lk:%s", meta.Prefix, sess.Username)
 	num, err := meta.MerchantRedis.Exists(ctx, key).Result()
 	if err != nil {
 		_ = errors.New(helper.RedisErr)
@@ -167,7 +167,7 @@ func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
 		return pushLog(err, helper.DBErr)
 	}
 
-	key := "lk:" + sess.UID
+	key := fmt.Sprintf("%s:lk:%s", meta.Prefix, sess.Username)
 	err = meta.MerchantRedis.Do(ctx, "JSON.DEL", key, "$"+id).Err()
 	if err != nil {
 		_ = pushLog(err, helper.DBErr)
@@ -184,7 +184,7 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 		return data, err
 	}
 
-	key := "lk:" + sess.UID
+	key := fmt.Sprintf("%s:lk:%s", meta.Prefix, sess.Username)
 	res, err := meta.MerchantRedis.Do(ctx, "JSON.GET", key, ".").Text()
 	if err != nil && err != redis.Nil {
 		return data, pushLog(err, helper.RedisErr)

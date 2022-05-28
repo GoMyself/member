@@ -138,7 +138,7 @@ func pushLog(err error, code string) error {
 func tdInsert(tbl string, record g.Record) {
 
 	query, _, _ := dialect.Insert(tbl).Rows(record).ToSQL()
-	//fmt.Println(query)
+	fmt.Println(query)
 	_, err := meta.MerchantTD.Exec(query)
 	if err != nil {
 		fmt.Println("update td = ", err.Error(), record)

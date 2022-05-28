@@ -135,6 +135,16 @@ func pushLog(err error, code string) error {
 	return errors.New(note)
 }
 
+func tdInsert(tbl string, record g.Record) {
+
+	query, _, _ := dialect.Insert(tbl).Rows(record).ToSQL()
+	//fmt.Println(query)
+	_, err := meta.MerchantTD.Exec(query)
+	if err != nil {
+		fmt.Println("update td = ", err.Error(), record)
+	}
+}
+
 func esPrefixIndex(index string) string {
 	return meta.EsPrefix + index
 }

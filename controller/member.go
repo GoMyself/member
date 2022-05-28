@@ -26,6 +26,7 @@ type MemberRegParam struct {
 	Password   string `rule:"upwd" name:"password" min:"8" max:"20" msg:"password error"`
 	Phone      string `rule:"digit" name:"phone"`
 	Sid        string `json:"sid" name:"sid" rule:"digit" msg:"sid error"`
+	Ts         string `json:"ts" name:"ts" rule:"digit" msg:"ts error"`
 	VerifyCode string `rule:"digit" name:"verify_code"`
 }
 
@@ -191,7 +192,7 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 	}
 
 	// 注册地址 去除域名前缀
-	uid, err := model.MemberReg(i, param.Name, param.Password, ip, param.DeviceNo, param.RegUrl, param.LinkID, param.Phone, createdAt)
+	uid, err := model.MemberReg(i, param.Name, param.Password, ip, param.DeviceNo, param.RegUrl, param.LinkID, param.Phone, param.Ts, createdAt)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

@@ -198,14 +198,14 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 	return sid, nil
 }
 
-func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, phone string, createdAt uint32) (string, error) {
+func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, phone, ts string, createdAt uint32) (string, error) {
 
 	// 检查ip黑名单
 
 	topId := "4722355249852325"
 
-	ip_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "ip_blacklist", ip).Val()
-	if v, ok := ip_blacklist_ex.(int64); ok && v == 1 {
+	ipBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "ip_blacklist", ip).Val()
+	if v, ok := ipBlacklistEx.(int64); ok && v == 1 {
 		return "", errors.New(helper.IpBanErr)
 	}
 
@@ -220,8 +220,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	if _, ok := WebDevices[device]; !ok {
 
 		// 检查设备号黑名单
-		device_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "device_blacklist", deviceNo).Val()
-		if v, ok := device_blacklist_ex.(int64); ok && v == 1 {
+		deviceBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "device_blacklist", deviceNo).Val()
+		if v, ok := deviceBlacklistEx.(int64); ok && v == 1 {
 			return "", errors.New(helper.DeviceBanErr)
 		}
 
@@ -387,16 +387,21 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 			fmt.Printf("zlog error : %v data : %#v\n", err, l)
 		}
 	*/
-	encRes := [][]string{}
-
+	var encRes [][]string
 	encRes = append(encRes, []string{"phone", phone})
 	err = grpc_t.Encrypt(m.UID, encRes)
 	if err != nil {
 		return "", errors.New(helper.GetRPCErr)
 	}
 
-	meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
-	MemberRebateUpdateCache(mr)
+	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
+	_ = MemberRebateUpdateCache(mr)
+	tdInsert("sms_log", g.Record{
+		"ts":         ts,
+		"state":      "1",
+		"updated_at": createdAt,
+	})
+
 	return id, nil
 }
 

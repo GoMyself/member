@@ -171,7 +171,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		fmt.Println("grpc_t.Encrypt = ", err)
 		return errors.New(helper.UpdateRPCErr)
 	}
-
+	MemberUpdateCache(mb.UID, "")
 	BankcardUpdateCache(mb.Username)
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "bankcard_exist", bankcardNo).Err()
 

@@ -74,6 +74,7 @@ func MemberPasswordUpdate(ty int, sid, code, old, password string, fctx *fasthtt
 	if err != nil {
 		return pushLog(err, helper.DBErr)
 	}
+	MemberUpdateCache(mb.UID, "")
 
 	return nil
 }
@@ -123,6 +124,7 @@ func MemberUpdatePhone(phone string, fctx *fasthttp.RequestCtx) error {
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberUpdateCache(mb.UID, "")
 	return nil
 }
 
@@ -167,6 +169,7 @@ func MemberUpdateZalo(zalo string, fctx *fasthttp.RequestCtx) error {
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberUpdateCache(mb.UID, "")
 	return nil
 }
 
@@ -191,6 +194,7 @@ func MemberUpdateAvatar(avatar string, fctx *fasthttp.RequestCtx) error {
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberUpdateCache(mb.UID, "")
 	return nil
 }
 
@@ -236,6 +240,7 @@ func MemberUpdateEmail(sid, code, email string, fctx *fasthttp.RequestCtx) error
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberUpdateCache(mb.UID, "")
 	return nil
 }
 
@@ -296,5 +301,6 @@ func MemberUpdateName(fctx *fasthttp.RequestCtx, birth, realName, address string
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberUpdateCache(mb.UID, "")
 	return nil
 }

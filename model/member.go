@@ -158,6 +158,7 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 		fmt.Println("insert SMS = ", err.Error())
 	}
 
+	MemberUpdateCache(mb.UID, "")
 	/*
 		log := map[string]string{
 			"username":  mb.Username,
@@ -396,6 +397,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
 	_ = MemberRebateUpdateCache(mr)
+	MemberUpdateCache(uid, "")
 	tdInsert("sms_log", g.Record{
 		"ts":         ts,
 		"state":      "1",
@@ -632,6 +634,7 @@ func MemberInsert(parent Member, username, password, remark string, createdAt ui
 	}
 
 	MemberRebateUpdateCache(mr)
+	MemberUpdateCache(uid, "")
 	_, err = session.Set([]byte(m.Username), m.UID)
 	if err != nil {
 		return errors.New(helper.SessionErr)
@@ -659,7 +662,7 @@ func MemberCaptcha() ([]byte, string, error) {
 
 	img, err := val.Bytes()
 
-	fmt.Println("pipe.Exec(ctx) 2 = ", err)
+	//fmt.Println("pipe.Exec(ctx) 2 = ", err)
 	if err != nil {
 		return nil, id, errors.New(helper.RedisErr)
 	}
@@ -768,35 +771,38 @@ func MemberCache(fctx *fasthttp.RequestCtx, name string) (Member, error) {
 		}
 	}
 
-	//pipe := meta.MerchantRedis.TxPipeline()
-	//defer pipe.Close()
-	//
-	//exist := pipe.Exists(ctx, name)
-	//rs := pipe.HMGet(ctx, name, fieldsMember...)
-	//
-	//_, err := pipe.Exec(ctx)
-	//if err != nil {
-	//	return m, pushLog(err, helper.RedisErr)
-	//}
-	//
-	//if exist.Val() == 0 {
-	//	return m, errors.New(helper.UsernameErr)
-	//}
-	//
-	//if err = rs.Scan(&m); err != nil {
-	//	return m, pushLog(rs.Err(), helper.RedisErr)
-	//}
-	t := dialect.From("tbl_members")
-	query, _, _ := t.Select(colsMember...).Where(g.Ex{"username": name, "prefix": meta.Prefix}).Limit(1).ToSQL()
-	err := meta.MerchantDB.Get(&m, query)
-	if err != nil && err != sql.ErrNoRows {
-		return m, pushLog(err, helper.DBErr)
+	key := meta.Prefix + ":member:" + name
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	defer pipe.Close()
+
+	exist := pipe.Exists(ctx, key)
+	rs := pipe.HMGet(ctx, key, "uid", "username", "password", "birth", "birth_hash", "realname_hash", "email_hash", "phone_hash", "zalo_hash", "prefix", "tester", "withdraw_pwd", "regip", "reg_device", "reg_url", "created_at", "last_login_ip", "last_login_at", "source_id", "first_deposit_at", "first_deposit_amount", "first_bet_at", "first_bet_amount", "", "", "top_uid", "top_name", "parent_uid", "parent_name", "bankcard_total", "last_login_device", "last_login_source", "remarks", "state", "level", "balance", "lock_amount", "commission", "group_name", "agency_type", "address", "avatar")
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return m, pushLog(err, helper.RedisErr)
 	}
 
-	if err == sql.ErrNoRows {
+	if exist.Val() == 0 {
 		return m, errors.New(helper.UsernameErr)
 	}
 
+	if err = rs.Scan(&m); err != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
+	}
+	/*
+		t := dialect.From("tbl_members")
+		query, _, _ := t.Select(colsMember...).Where(g.Ex{"username": name, "prefix": meta.Prefix}).Limit(1).ToSQL()
+		err := meta.MerchantDB.Get(&m, query)
+		if err != nil && err != sql.ErrNoRows {
+			return m, pushLog(err, helper.DBErr)
+		}
+
+		if err == sql.ErrNoRows {
+			return m, errors.New(helper.UsernameErr)
+		}
+	*/
 	return m, nil
 }
 
@@ -817,6 +823,37 @@ func MemberFindOne(name string) (Member, error) {
 	}
 
 	return m, nil
+}
+
+func MemberUpdateCache(uid, username string) error {
+
+	var (
+		err error
+		dst Member
+	)
+
+	if helper.CtypeDigit(uid) {
+		dst, err = MemberFindByUid(uid)
+		if err != nil {
+			return err
+		}
+	} else {
+		dst, err = MemberFindOne(username)
+		if err != nil {
+			return err
+		}
+	}
+
+	key := meta.Prefix + ":member:" + dst.Username
+	fields := []interface{}{"uid", dst.UID, "username", dst.Username, "password", dst.Password, "birth", dst.Birth, "birth_hash", dst.BirthHash, "realname_hash", dst.RealnameHash, "email_hash", dst.EmailHash, "phone_hash", dst.PhoneHash, "zalo_hash", dst.ZaloHash, "prefix", dst.Prefix, "tester", dst.Tester, "withdraw_pwd", dst.WithdrawPwd, "regip", dst.Regip, "reg_device", dst.RegDevice, "reg_url", dst.RegUrl, "created_at", dst.CreatedAt, "last_login_ip", dst.LastLoginIp, "last_login_at", dst.LastLoginAt, "source_id", dst.SourceId, "first_deposit_at", dst.FirstDepositAt, "first_deposit_amount", dst.FirstDepositAmount, "first_bet_at", dst.FirstBetAt, "first_bet_amount", dst.FirstBetAmount, "", dst.SecondDepositAt, "", dst.SecondDepositAmount, "top_uid", dst.TopUid, "top_name", dst.TopName, "parent_uid", dst.ParentUid, "parent_name", dst.ParentName, "bankcard_total", dst.BankcardTotal, "last_login_device", dst.LastLoginDevice, "last_login_source", dst.LastLoginSource, "remarks", dst.Remarks, "state", dst.State, "level", dst.Level, "balance", dst.Balance, "lock_amount", dst.LockAmount, "commission", dst.Commission, "group_name", dst.GroupName, "agency_type", dst.AgencyType, "address", dst.Address, "avatar", dst.Avatar}
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	pipe.Del(ctx, key)
+	pipe.HMSet(ctx, key, fields...)
+	pipe.Persist(ctx, key)
+	pipe.Exec(ctx)
+	pipe.Close()
+	return nil
 }
 
 func MemberFindByUid(uid string) (Member, error) {
@@ -885,6 +922,7 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberUpdateCache(mb.UID, "")
 	return nil
 }
 
@@ -1177,6 +1215,8 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 			_ = tx.Rollback()
 			return pushLog(err, helper.DBErr)
 		}
+
+		MemberUpdateCache(user.UID, "")
 	}
 
 	recd := g.Record{

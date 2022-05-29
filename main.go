@@ -69,6 +69,7 @@ func main() {
 
 	if os.Args[3] == "load" {
 		model.MemberRebateUpdateALL()
+		model.MemberFlushAll()
 		fmt.Println("MemberRebateUpdateALL done")
 		return
 	}

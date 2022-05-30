@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"member2/contrib/helper"
 	"member2/contrib/session"
+	"strconv"
 	"strings"
 	"time"
 
@@ -216,7 +217,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.PhoneExist)
 	}
 
-	fmt.Println("MemberReg", device, deviceNo)
+	//fmt.Println("MemberReg", device, deviceNo)
 	// web/h5不检查设备号黑名单
 	if _, ok := WebDevices[device]; !ok {
 
@@ -347,47 +348,11 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	_ = tx.Commit()
 
-	pipe := meta.MerchantRedis.TxPipeline()
-
-	pipe.Unlink(ctx, m.Username)
-	pipe.HMSet(ctx, m.Username, memberToMap(m))
-	pipe.Persist(ctx, m.Username)
-
-	_, _ = pipe.Exec(ctx)
-	_ = pipe.Close()
-
 	id, err := session.Set([]byte(m.Username), m.UID)
 	if err != nil {
 		return "", errors.New(helper.SessionErr)
 	}
 
-	/*
-		log := map[string]string{
-			"username":  username,
-			"ip":        ip,
-			"device":    fmt.Sprintf("%d", device),
-			"device_no": deviceNo,
-			"parents":   m.ParentName,
-		}
-		err = tdlog.WriteLog("member_login_log", log)
-		if err != nil {
-			fmt.Printf("member write member_login_log error : [%s]/n", err.Error())
-		}
-
-		l := MemberLoginLog{
-			Username: userName,
-			IPS:      ip,
-			Device:   strconv.Itoa(device),
-			DeviceNo: deviceNo,
-			Date:     createdAt,
-			Parents:  m.ParentName,
-			Prefix:   meta.Prefix,
-		}
-		err = meta.Zlog.Post(esPrefixIndex("memberlogin"), l)
-		if err != nil {
-			fmt.Printf("zlog error : %v data : %#v\n", err, l)
-		}
-	*/
 	var encRes [][]string
 	encRes = append(encRes, []string{"phone", phone})
 	err = grpc_t.Encrypt(m.UID, encRes)
@@ -398,12 +363,20 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
 	_ = MemberRebateUpdateCache(mr)
 	_ = MemberUpdateCache(uid, "")
+
+	fmt.Println("==== TD Update ====")
+
+	its, ie := strconv.ParseInt(ts, 10, 64)
+	if ie != nil {
+		fmt.Println("parse int err:", ie)
+	}
+
 	tdInsert("sms_log", g.Record{
-		"ts":         ts,
+		"ts":         its,
 		"state":      "1",
 		"updated_at": createdAt,
 	})
-
+	fmt.Println("==== TD Update End ====")
 	return id, nil
 }
 
@@ -648,34 +621,25 @@ func memberInfoCache(fCtx *fasthttp.RequestCtx) (MemberInfos, error) {
 		return m, errors.New(helper.UsernameErr)
 	}
 
-	//pipe := meta.MerchantRedis.TxPipeline()
-	//defer pipe.Close()
-	//
-	//exist := pipe.Exists(ctx, name)
-	//rs := pipe.HMGet(ctx, name, fieldsMemberInfo...)
-	//
-	//_, err := pipe.Exec(ctx)
-	//if err != nil {
-	//	return m, pushLog(err, helper.RedisErr)
-	//}
-	//
-	//num, err := exist.Result()
-	//if num == 0 {
-	//	return m, errors.New(helper.UsernameErr)
-	//}
-	//
-	//if err = rs.Scan(&m); err != nil {
-	//	return m, pushLog(err, helper.RedisErr)
-	//}
-	t := dialect.From("tbl_members")
-	query, _, _ := t.Select(colsMemberInfo...).Where(g.Ex{"username": name, "prefix": meta.Prefix}).Limit(1).ToSQL()
-	err := meta.MerchantDB.Get(&m, query)
-	if err != nil && err != sql.ErrNoRows {
-		return m, pushLog(err, helper.DBErr)
+	key := meta.Prefix + ":member:" + name
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	defer pipe.Close()
+
+	exist := pipe.Exists(ctx, key)
+	rs := pipe.HMGet(ctx, key, "uid", "username", "password", "birth", "birth_hash", "realname_hash", "email_hash", "phone_hash", "zalo_hash", "prefix", "tester", "withdraw_pwd", "regip", "reg_device", "reg_url", "created_at", "last_login_ip", "last_login_at", "source_id", "first_deposit_at", "first_deposit_amount", "first_bet_at", "first_bet_amount", "", "", "top_uid", "top_name", "parent_uid", "parent_name", "bankcard_total", "last_login_device", "last_login_source", "remarks", "state", "level", "balance", "lock_amount", "commission", "group_name", "agency_type", "address", "avatar")
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return m, pushLog(err, helper.RedisErr)
 	}
 
-	if err == sql.ErrNoRows {
+	if exist.Val() == 0 {
 		return m, errors.New(helper.UsernameErr)
+	}
+
+	if err = rs.Scan(&m); err != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
 	}
 
 	return m, nil
@@ -842,6 +806,12 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 	if err != nil {
 		return pushLog(err, helper.DBErr)
 	}
+
+	//tdInsert("sms_log", g.Record{
+	//	"ts":         ts,
+	//	"state":      "1",
+	//	"updated_at": createdAt,
+	//})
 
 	MemberUpdateCache(mb.UID, "")
 	return nil

@@ -217,7 +217,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.PhoneExist)
 	}
 
-	fmt.Println("MemberReg", device, deviceNo)
+	//fmt.Println("MemberReg", device, deviceNo)
 	// web/h5不检查设备号黑名单
 	if _, ok := WebDevices[device]; !ok {
 
@@ -733,34 +733,25 @@ func memberInfoCache(fCtx *fasthttp.RequestCtx) (MemberInfos, error) {
 		return m, errors.New(helper.UsernameErr)
 	}
 
-	//pipe := meta.MerchantRedis.TxPipeline()
-	//defer pipe.Close()
-	//
-	//exist := pipe.Exists(ctx, name)
-	//rs := pipe.HMGet(ctx, name, fieldsMemberInfo...)
-	//
-	//_, err := pipe.Exec(ctx)
-	//if err != nil {
-	//	return m, pushLog(err, helper.RedisErr)
-	//}
-	//
-	//num, err := exist.Result()
-	//if num == 0 {
-	//	return m, errors.New(helper.UsernameErr)
-	//}
-	//
-	//if err = rs.Scan(&m); err != nil {
-	//	return m, pushLog(err, helper.RedisErr)
-	//}
-	t := dialect.From("tbl_members")
-	query, _, _ := t.Select(colsMemberInfo...).Where(g.Ex{"username": name, "prefix": meta.Prefix}).Limit(1).ToSQL()
-	err := meta.MerchantDB.Get(&m, query)
-	if err != nil && err != sql.ErrNoRows {
-		return m, pushLog(err, helper.DBErr)
+	key := meta.Prefix + ":member:" + name
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	defer pipe.Close()
+
+	exist := pipe.Exists(ctx, key)
+	rs := pipe.HMGet(ctx, key, "uid", "username", "password", "birth", "birth_hash", "realname_hash", "email_hash", "phone_hash", "zalo_hash", "prefix", "tester", "withdraw_pwd", "regip", "reg_device", "reg_url", "created_at", "last_login_ip", "last_login_at", "source_id", "first_deposit_at", "first_deposit_amount", "first_bet_at", "first_bet_amount", "", "", "top_uid", "top_name", "parent_uid", "parent_name", "bankcard_total", "last_login_device", "last_login_source", "remarks", "state", "level", "balance", "lock_amount", "commission", "group_name", "agency_type", "address", "avatar")
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return m, pushLog(err, helper.RedisErr)
 	}
 
-	if err == sql.ErrNoRows {
+	if exist.Val() == 0 {
 		return m, errors.New(helper.UsernameErr)
+	}
+
+	if err = rs.Scan(&m); err != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
 	}
 
 	return m, nil

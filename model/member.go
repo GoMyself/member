@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"member2/contrib/helper"
 	"member2/contrib/session"
+	"strconv"
 	"strings"
 	"time"
 
@@ -398,12 +399,17 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
 	_ = MemberRebateUpdateCache(mr)
 	MemberUpdateCache(uid, "")
+
+	fmt.Println("==== TD Update ====")
+
+	its, _ := strconv.ParseInt(ts, 64, 10)
+
 	tdInsert("sms_log", g.Record{
-		"ts":         ts,
+		"ts":         its,
 		"state":      "1",
 		"updated_at": createdAt,
 	})
-
+	fmt.Println("==== TD Update End ====")
 	return id, nil
 }
 
@@ -921,6 +927,12 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 	if err != nil {
 		return pushLog(err, helper.DBErr)
 	}
+
+	//tdInsert("sms_log", g.Record{
+	//	"ts":         ts,
+	//	"state":      "1",
+	//	"updated_at": createdAt,
+	//})
 
 	MemberUpdateCache(mb.UID, "")
 	return nil

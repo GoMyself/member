@@ -397,7 +397,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
 	_ = MemberRebateUpdateCache(mr)
-	MemberUpdateCache(uid, "")
+	_ = MemberUpdateCache(uid, "")
 	tdInsert("sms_log", g.Record{
 		"ts":         ts,
 		"state":      "1",
@@ -562,85 +562,6 @@ func MemberVerify(id, str string) bool {
 	_, _ = meta.MerchantRedis.Unlink(ctx, id).Result()
 
 	return true
-}
-
-func MemberInsert(parent Member, username, password, remark string, createdAt uint32, mr MemberRebate) error {
-
-	userName := strings.ToLower(username)
-	if MemberExist(userName) {
-		return errors.New(helper.UsernameExist)
-	}
-
-	uid := helper.GenId()
-
-	mr.UID = uid
-	mr.ParentUID = parent.UID
-	mr.CreatedAt = createdAt
-	mr.Prefix = meta.Prefix
-	m := Member{
-		UID:                uid,
-		Username:           userName,
-		Password:           fmt.Sprintf("%d", MurmurHash(password, createdAt)),
-		Prefix:             meta.Prefix,
-		State:              1,
-		CreatedAt:          createdAt,
-		LastLoginIp:        "",
-		LastLoginAt:        createdAt,
-		LastLoginDevice:    "",
-		LastLoginSource:    0,
-		ParentUid:          parent.UID,
-		ParentName:         parent.Username,
-		TopUid:             parent.TopUid,
-		TopName:            parent.TopName,
-		FirstDepositAmount: "0.000",
-		FirstBetAmount:     "0.000",
-		Balance:            "0.000",
-		LockAmount:         "0.000",
-		Commission:         "0.000",
-		Remarks:            remark,
-		Avatar:             "0",
-		Tester:             parent.Tester,
-	}
-
-	tx, err := meta.MerchantDB.Begin() // 开启事务
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	query, _, _ := dialect.Insert("tbl_members").Rows(&m).ToSQL()
-	_, err = tx.Exec(query)
-	if err != nil {
-		_ = tx.Rollback()
-		return pushLog(err, helper.DBErr)
-	}
-
-	query, _, _ = dialect.Insert("tbl_member_rebate_info").Rows(&mr).ToSQL()
-	_, err = tx.Exec(query)
-	if err != nil {
-		_ = tx.Rollback()
-		return pushLog(err, helper.DBErr)
-	}
-
-	treeNode := MemberClosureInsert(uid, parent.UID)
-	_, err = tx.Exec(treeNode)
-	if err != nil {
-		_ = tx.Rollback()
-		return pushLog(err, helper.DBErr)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	MemberRebateUpdateCache(mr)
-	MemberUpdateCache(uid, "")
-	_, err = session.Set([]byte(m.Username), m.UID)
-	if err != nil {
-		return errors.New(helper.SessionErr)
-	}
-
-	return nil
 }
 
 func MemberCaptcha() ([]byte, string, error) {

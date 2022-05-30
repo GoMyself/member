@@ -364,67 +364,15 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	_ = MemberRebateUpdateCache(mr)
 	_ = MemberUpdateCache(uid, "")
 
-	fmt.Println("==== TD Update ====")
-
-	its, ie := strconv.ParseInt(ts, 10, 64)
-	if ie != nil {
-		fmt.Println("parse int err:", ie)
-	}
-
+	its, _ := strconv.ParseInt(ts, 10, 64)
 	tdInsert("sms_log", g.Record{
 		"ts":         its,
 		"state":      "1",
 		"updated_at": createdAt,
 	})
-	fmt.Println("==== TD Update End ====")
+	
 	return id, nil
 }
-
-//func memberToMap(m Member) map[string]string {
-//
-//	data := map[string]string{
-//		"uid":                  m.UID,
-//		"username":             m.Username,
-//		"password":             m.Password,
-//		"realname_hash":        m.RealnameHash,                       //真实姓名哈希
-//		"email_hash":           m.EmailHash,                          //邮件地址哈希
-//		"phone_hash":           m.PhoneHash,                          //电话号码哈希
-//		"zalo_hash":            m.ZaloHash,                           //电话号码哈希
-//		"prefix":               m.Prefix,                             //站点前缀
-//		"withdraw_pwd":         fmt.Sprintf("%d", m.WithdrawPwd),     //取款密码哈希
-//		"regip":                m.Regip,                              //注册IP
-//		"reg_device":           m.RegDevice,                          //注册设备号
-//		"reg_url":              m.RegUrl,                             //注册链接
-//		"created_at":           fmt.Sprintf("%d", m.CreatedAt),       //注册时间
-//		"last_login_ip":        m.LastLoginIp,                        //最后登陆ip
-//		"last_login_at":        fmt.Sprintf("%d", m.LastLoginAt),     //最后登陆时间
-//		"source_id":            fmt.Sprintf("%d", m.SourceId),        //注册来源 1 pc 2h5 3 app
-//		"first_deposit_at":     fmt.Sprintf("%d", m.FirstDepositAt),  //首充时间
-//		"first_deposit_amount": m.FirstDepositAmount,                 //首充金额
-//		"first_bet_at":         fmt.Sprintf("%d", m.FirstBetAt),      //首投时间
-//		"first_bet_amount":     m.FirstBetAmount,                     //首投金额
-//		"top_uid":              m.TopUid,                             //总代uid
-//		"top_name":             m.TopName,                            //总代代理
-//		"parent_uid":           m.ParentUid,                          //上级uid
-//		"parent_name":          m.ParentName,                         //上级代理
-//		"bankcard_total":       fmt.Sprintf("%d", m.BankcardTotal),   //用户绑定银行卡的数量
-//		"last_login_device":    m.LastLoginDevice,                    //最后登陆设备
-//		"last_login_source":    fmt.Sprintf("%d", m.LastLoginSource), //上次登录设备来源:1=pc,2=h5,3=ios,4=andriod
-//		"remarks":              m.Remarks,                            //备注
-//		"state":                fmt.Sprintf("%d", m.State),           //状态 1正常 2禁用
-//		"level":                fmt.Sprintf("%d", m.Level),           //等级
-//		"balance":              m.Balance,                            //余额
-//		"lock_amount":          m.LockAmount,                         //锁定金额
-//		"commission":           m.Commission,                         //佣金
-//		"group_name":           m.GroupName,                          //团队名称
-//		"agency_type":          fmt.Sprintf("%d", m.AgencyType),      //391团队代理 393普通代理
-//		"address":              m.Address,                            //收货地址
-//		"tester":               m.Tester,                             //收货地址
-//		"avatar":               m.Avatar,                             //收货地址
-//	}
-//
-//	return data
-//}
 
 func regLink(uid, linkID string, createdAt uint32) (Member, MemberRebate, error) {
 

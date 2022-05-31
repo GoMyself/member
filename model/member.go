@@ -352,47 +352,11 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	_ = tx.Commit()
 
-	pipe := meta.MerchantRedis.TxPipeline()
-
-	pipe.Unlink(ctx, m.Username)
-	pipe.HMSet(ctx, m.Username, memberToMap(m))
-	pipe.Persist(ctx, m.Username)
-
-	_, _ = pipe.Exec(ctx)
-	_ = pipe.Close()
-
 	id, err := session.Set([]byte(m.Username), m.UID)
 	if err != nil {
 		return "", errors.New(helper.SessionErr)
 	}
 
-	/*
-		log := map[string]string{
-			"username":  username,
-			"ip":        ip,
-			"device":    fmt.Sprintf("%d", device),
-			"device_no": deviceNo,
-			"parents":   m.ParentName,
-		}
-		err = tdlog.WriteLog("member_login_log", log)
-		if err != nil {
-			fmt.Printf("member write member_login_log error : [%s]/n", err.Error())
-		}
-
-		l := MemberLoginLog{
-			Username: userName,
-			IPS:      ip,
-			Device:   strconv.Itoa(device),
-			DeviceNo: deviceNo,
-			Date:     createdAt,
-			Parents:  m.ParentName,
-			Prefix:   meta.Prefix,
-		}
-		err = meta.Zlog.Post(esPrefixIndex("memberlogin"), l)
-		if err != nil {
-			fmt.Printf("zlog error : %v data : %#v\n", err, l)
-		}
-	*/
 	var encRes [][]string
 	encRes = append(encRes, []string{"phone", phone})
 	err = grpc_t.Encrypt(m.UID, encRes)
@@ -404,7 +368,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	_ = MemberRebateUpdateCache(mr)
 	MemberUpdateCache(uid, "")
 
-	fmt.Println("==== Reg TD Update ====")
+	fmt.Println("==== TD Update ====")
 
 	its, ie := strconv.ParseInt(ts, 10, 64)
 	if ie != nil {
@@ -416,54 +380,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		"state":      "1",
 		"updated_at": createdAt,
 	})
-	fmt.Println("==== Reg TD Update End ====")
+	fmt.Println("==== TD Update End ====")
 	return id, nil
-}
-
-func memberToMap(m Member) map[string]string {
-
-	data := map[string]string{
-		"uid":                  m.UID,
-		"username":             m.Username,
-		"password":             m.Password,
-		"realname_hash":        m.RealnameHash,                       //真实姓名哈希
-		"email_hash":           m.EmailHash,                          //邮件地址哈希
-		"phone_hash":           m.PhoneHash,                          //电话号码哈希
-		"zalo_hash":            m.ZaloHash,                           //电话号码哈希
-		"prefix":               m.Prefix,                             //站点前缀
-		"withdraw_pwd":         fmt.Sprintf("%d", m.WithdrawPwd),     //取款密码哈希
-		"regip":                m.Regip,                              //注册IP
-		"reg_device":           m.RegDevice,                          //注册设备号
-		"reg_url":              m.RegUrl,                             //注册链接
-		"created_at":           fmt.Sprintf("%d", m.CreatedAt),       //注册时间
-		"last_login_ip":        m.LastLoginIp,                        //最后登陆ip
-		"last_login_at":        fmt.Sprintf("%d", m.LastLoginAt),     //最后登陆时间
-		"source_id":            fmt.Sprintf("%d", m.SourceId),        //注册来源 1 pc 2h5 3 app
-		"first_deposit_at":     fmt.Sprintf("%d", m.FirstDepositAt),  //首充时间
-		"first_deposit_amount": m.FirstDepositAmount,                 //首充金额
-		"first_bet_at":         fmt.Sprintf("%d", m.FirstBetAt),      //首投时间
-		"first_bet_amount":     m.FirstBetAmount,                     //首投金额
-		"top_uid":              m.TopUid,                             //总代uid
-		"top_name":             m.TopName,                            //总代代理
-		"parent_uid":           m.ParentUid,                          //上级uid
-		"parent_name":          m.ParentName,                         //上级代理
-		"bankcard_total":       fmt.Sprintf("%d", m.BankcardTotal),   //用户绑定银行卡的数量
-		"last_login_device":    m.LastLoginDevice,                    //最后登陆设备
-		"last_login_source":    fmt.Sprintf("%d", m.LastLoginSource), //上次登录设备来源:1=pc,2=h5,3=ios,4=andriod
-		"remarks":              m.Remarks,                            //备注
-		"state":                fmt.Sprintf("%d", m.State),           //状态 1正常 2禁用
-		"level":                fmt.Sprintf("%d", m.Level),           //等级
-		"balance":              m.Balance,                            //余额
-		"lock_amount":          m.LockAmount,                         //锁定金额
-		"commission":           m.Commission,                         //佣金
-		"group_name":           m.GroupName,                          //团队名称
-		"agency_type":          fmt.Sprintf("%d", m.AgencyType),      //391团队代理 393普通代理
-		"address":              m.Address,                            //收货地址
-		"tester":               m.Tester,                             //收货地址
-		"avatar":               m.Avatar,                             //收货地址
-	}
-
-	return data
 }
 
 func regLink(uid, linkID string, createdAt uint32) (Member, MemberRebate, error) {
@@ -575,85 +493,6 @@ func MemberVerify(id, str string) bool {
 	_, _ = meta.MerchantRedis.Unlink(ctx, id).Result()
 
 	return true
-}
-
-func MemberInsert(parent Member, username, password, remark string, createdAt uint32, mr MemberRebate) error {
-
-	userName := strings.ToLower(username)
-	if MemberExist(userName) {
-		return errors.New(helper.UsernameExist)
-	}
-
-	uid := helper.GenId()
-
-	mr.UID = uid
-	mr.ParentUID = parent.UID
-	mr.CreatedAt = createdAt
-	mr.Prefix = meta.Prefix
-	m := Member{
-		UID:                uid,
-		Username:           userName,
-		Password:           fmt.Sprintf("%d", MurmurHash(password, createdAt)),
-		Prefix:             meta.Prefix,
-		State:              1,
-		CreatedAt:          createdAt,
-		LastLoginIp:        "",
-		LastLoginAt:        createdAt,
-		LastLoginDevice:    "",
-		LastLoginSource:    0,
-		ParentUid:          parent.UID,
-		ParentName:         parent.Username,
-		TopUid:             parent.TopUid,
-		TopName:            parent.TopName,
-		FirstDepositAmount: "0.000",
-		FirstBetAmount:     "0.000",
-		Balance:            "0.000",
-		LockAmount:         "0.000",
-		Commission:         "0.000",
-		Remarks:            remark,
-		Avatar:             "0",
-		Tester:             parent.Tester,
-	}
-
-	tx, err := meta.MerchantDB.Begin() // 开启事务
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	query, _, _ := dialect.Insert("tbl_members").Rows(&m).ToSQL()
-	_, err = tx.Exec(query)
-	if err != nil {
-		_ = tx.Rollback()
-		return pushLog(err, helper.DBErr)
-	}
-
-	query, _, _ = dialect.Insert("tbl_member_rebate_info").Rows(&mr).ToSQL()
-	_, err = tx.Exec(query)
-	if err != nil {
-		_ = tx.Rollback()
-		return pushLog(err, helper.DBErr)
-	}
-
-	treeNode := MemberClosureInsert(uid, parent.UID)
-	_, err = tx.Exec(treeNode)
-	if err != nil {
-		_ = tx.Rollback()
-		return pushLog(err, helper.DBErr)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	MemberRebateUpdateCache(mr)
-	MemberUpdateCache(uid, "")
-	_, err = session.Set([]byte(m.Username), m.UID)
-	if err != nil {
-		return errors.New(helper.SessionErr)
-	}
-
-	return nil
 }
 
 func MemberCaptcha() ([]byte, string, error) {
@@ -892,7 +731,7 @@ func MemberExist(username string) bool {
 }
 
 //会员忘记密码
-func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
+func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 
 	err := phoneCmp(sid, code, ip, phone)
 	if err != nil {
@@ -913,10 +752,6 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 		return errors.New(helper.UsernamePhoneMismatch)
 	}
 
-	if !helper.CtypeDigit(ts) {
-		return errors.New(helper.ParamErr)
-	}
-
 	record := g.Record{
 		"password": fmt.Sprintf("%d", MurmurHash(pwd, mb.CreatedAt)),
 	}
@@ -930,19 +765,11 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 		return pushLog(err, helper.DBErr)
 	}
 
-	fmt.Println("==== ForgotPWD TD Update ====")
-
-	its, ie := strconv.ParseInt(ts, 10, 64)
-	if ie != nil {
-		fmt.Println("parse int err:", ie)
-	}
-
-	tdInsert("sms_log", g.Record{
-		"ts":         its,
-		"state":      "1",
-		"updated_at": time.Now().Unix(),
-	})
-	fmt.Println("==== ForgotPWD TD Update End ====")
+	//tdInsert("sms_log", g.Record{
+	//	"ts":         ts,
+	//	"state":      "1",
+	//	"updated_at": createdAt,
+	//})
 
 	MemberUpdateCache(mb.UID, "")
 	return nil

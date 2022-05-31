@@ -96,7 +96,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 			if valid {
 				return helper.Success
 			} else {
-				return helper.Failure
+				return helper.BankcardValidErr
 			}
 		}
 

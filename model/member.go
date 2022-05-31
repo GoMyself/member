@@ -368,7 +368,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	_ = MemberRebateUpdateCache(mr)
 	MemberUpdateCache(uid, "")
 
-	fmt.Println("==== TD Update ====")
+	fmt.Println("==== Reg TD Update ====")
 
 	its, ie := strconv.ParseInt(ts, 10, 64)
 	if ie != nil {
@@ -380,7 +380,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		"state":      "1",
 		"updated_at": createdAt,
 	})
-	fmt.Println("==== TD Update End ====")
+	fmt.Println("==== Reg TD Update End ====")
 	return id, nil
 }
 

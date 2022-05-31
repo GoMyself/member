@@ -135,6 +135,7 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 会员列表
 	get("/member/list", memberCtl.List)
 	// 编辑会员密码，返水
+	get("/member/rebate/detail", memberCtl.Rebate)
 	post("/member/rebate/update", memberCtl.UpdateRebate)
 
 	get("/member/avatar/update", memberCtl.Avatar)

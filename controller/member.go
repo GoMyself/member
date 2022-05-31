@@ -497,6 +497,22 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	helper.Print(ctx, true, data)
 }
 
+func (that *MemberController) Rebate(ctx *fasthttp.RequestCtx) {
+
+	uid := string(ctx.QueryArgs().Peek("uid"))
+
+	if !helper.CtypeDigit(uid) {
+		helper.Print(ctx, false, helper.PLatNameErr)
+		return
+	}
+	res, err := model.MemberRebateGetCache(uid)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+	helper.Print(ctx, true, res)
+}
+
 // UpdateRebate 修改密码以及返水比例
 func (that *MemberController) UpdateRebate(ctx *fasthttp.RequestCtx) {
 

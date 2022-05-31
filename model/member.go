@@ -1105,5 +1105,6 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberRebateUpdateCache(mr)
 	return nil
 }

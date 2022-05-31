@@ -101,16 +101,16 @@ type BankcardData struct {
 type MemberRebate struct {
 	UID              string `db:"uid" json:"uid"`
 	ParentUID        string `db:"parent_uid" json:"parent_uid"`
-	ZR               string `db:"zr" json:"zr"`                                 //真人返水
-	QP               string `db:"qp" json:"qp"`                                 //棋牌返水
-	TY               string `db:"ty" json:"ty"`                                 //体育返水
-	DJ               string `db:"dj" json:"dj"`                                 //电竞返水
-	DZ               string `db:"dz" json:"dz"`                                 //电游返水
-	CP               string `db:"cp" json:"cp"`                                 //彩票返水
-	FC               string `db:"fc" json:"fc"`                                 //斗鸡返水
-	BY               string `db:"by" json:"by"`                                 //捕鱼返水
-	CGHighRebate     string `db:"cg_high_rebate" json:"cg_high_rebate"`         //CG高频彩返点
-	CGOfficialRebate string `db:"cg_official_rebate" json:"cg_official_rebate"` //CG官方彩返点
+	ZR               string `db:"zr" json:"zr" redis:"zr"`                                                 //真人返水
+	QP               string `db:"qp" json:"qp" redis:"qp"`                                                 //棋牌返水
+	TY               string `db:"ty" json:"ty" redis:"ty"`                                                 //体育返水
+	DJ               string `db:"dj" json:"dj" redis:"dj"`                                                 //电竞返水
+	DZ               string `db:"dz" json:"dz" redis:"dz"`                                                 //电游返水
+	CP               string `db:"cp" json:"cp" redis:"cp"`                                                 //彩票返水
+	FC               string `db:"fc" json:"fc" redis:"fc"`                                                 //斗鸡返水
+	BY               string `db:"by" json:"by" redis:"by"`                                                 //捕鱼返水
+	CGHighRebate     string `db:"cg_high_rebate" json:"cg_high_rebate" redis:"cg_high_rebate"`             //CG高频彩返点
+	CGOfficialRebate string `db:"cg_official_rebate" json:"cg_official_rebate" redis:"cg_official_rebate"` //CG官方彩返点
 	CreatedAt        uint32 `db:"created_at" json:"created_at"`
 	Prefix           string `db:"prefix" json:"prefix"`
 }

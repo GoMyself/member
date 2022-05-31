@@ -17,11 +17,11 @@ func SlotList(pid string, flag, page, pageSize int) (string, error) {
 	)
 
 	buf := `{"d":[], "t":0}`
-	key := fmt.Sprintf("game:%s", pid)
+	key := fmt.Sprintf("%s:game:%s", meta.Prefix, pid)
 	if flag == 1 {
-		key = fmt.Sprintf("game:n:%s", pid)
+		key = fmt.Sprintf("%s:game:n:%s", meta.Prefix, pid)
 	} else if flag == 2 {
-		key = fmt.Sprintf("game:h:%s", pid)
+		key = fmt.Sprintf("%s:game:h:%s", meta.Prefix, pid)
 	}
 	if page == 1 {
 		total, err = meta.MerchantRedis.LLen(ctx, key).Result()
@@ -133,11 +133,11 @@ func SlotSearch(page, pageSize int, params map[string]string) (string, error) {
 	)
 
 	buf := `{"d":[], "t":0}`
-	key := fmt.Sprintf("game:%s", params["pid"])
+	key := fmt.Sprintf("%s:game:%s", meta.Prefix, params["pid"])
 	if params["flag"] == "1" {
-		key = fmt.Sprintf("game:n:%s", params["pid"])
+		key = fmt.Sprintf("%s:game:n:%s", meta.Prefix, params["pid"])
 	} else if params["flag"] == "2" {
-		key = fmt.Sprintf("game:h:%s", params["pid"])
+		key = fmt.Sprintf("%s:game:h:%s", meta.Prefix, params["pid"])
 	}
 	if page == 1 {
 		total, err = meta.MerchantRedis.LLen(ctx, key).Result()

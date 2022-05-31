@@ -1,7 +1,8 @@
 package model
 
-func UpgradeInfo(device string) (string, error) {
+import "fmt"
 
-	key := "upgrade:" + device
+func UpgradeInfo(device string) (string, error) {
+	key := fmt.Sprintf("%s:upgrade:%s", meta.Prefix, device)
 	return meta.MerchantRedis.Get(ctx, key).Result()
 }

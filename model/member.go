@@ -731,7 +731,7 @@ func MemberExist(username string) bool {
 }
 
 //会员忘记密码
-func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
+func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 
 	err := phoneCmp(sid, code, ip, phone)
 	if err != nil {
@@ -752,6 +752,10 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 		return errors.New(helper.UsernamePhoneMismatch)
 	}
 
+	if !helper.CtypeDigit(ts) {
+		return errors.New(helper.ParamErr)
+	}
+
 	record := g.Record{
 		"password": fmt.Sprintf("%d", MurmurHash(pwd, mb.CreatedAt)),
 	}
@@ -765,11 +769,19 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 		return pushLog(err, helper.DBErr)
 	}
 
-	//tdInsert("sms_log", g.Record{
-	//	"ts":         ts,
-	//	"state":      "1",
-	//	"updated_at": createdAt,
-	//})
+	fmt.Println("==== ForgotPWD TD Update ====")
+
+	its, ie := strconv.ParseInt(ts, 10, 64)
+	if ie != nil {
+		fmt.Println("parse int err:", ie)
+	}
+
+	tdInsert("sms_log", g.Record{
+		"ts":         its,
+		"state":      "1",
+		"updated_at": time.Now().Unix(),
+	})
+	fmt.Println("==== ForgotPWD TD Update End ====")
 
 	MemberUpdateCache(mb.UID, "")
 	return nil

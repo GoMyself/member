@@ -34,7 +34,7 @@ func BankcardUpdateCache(username string) {
 		return
 	}
 
-	key := "cbc:" + username
+	key := fmt.Sprintf("%s:merchant:cbc:%s", meta.Prefix, username)
 
 	pipe := meta.MerchantRedis.Pipeline()
 	pipe.Del(ctx, key)
@@ -174,7 +174,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 
 	_ = MemberUpdateCache(mb.UID, "")
 	BankcardUpdateCache(mb.Username)
-	
+
 	key := fmt.Sprintf("%s:merchant:bankcard_exist", meta.Prefix)
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", key, bankcardNo).Err()
 
@@ -195,7 +195,8 @@ func BankcardList(username string) ([]BankcardData, error) {
 	if mb.BankcardTotal == 0 {
 		return data, nil
 	}
-	key := "cbc:" + mb.Username
+
+	key := fmt.Sprintf("%s:merchant:cbc:%s", meta.Prefix, username)
 	bcs, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
 		//fmt.Println("BankcardList GET err = ", err.Error())

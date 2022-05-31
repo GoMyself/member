@@ -217,6 +217,10 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.PhoneExist)
 	}
 
+	if !helper.CtypeDigit(ts) {
+		return "", errors.New(helper.ParamErr)
+	}
+
 	//fmt.Println("MemberReg", device, deviceNo)
 	// web/h5不检查设备号黑名单
 	if _, ok := WebDevices[device]; !ok {
@@ -362,15 +366,21 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
 	_ = MemberRebateUpdateCache(mr)
-	_ = MemberUpdateCache(uid, "")
+	MemberUpdateCache(uid, "")
 
-	its, _ := strconv.ParseInt(ts, 10, 64)
+	fmt.Println("==== Reg TD Update ====")
+
+	its, ie := strconv.ParseInt(ts, 10, 64)
+	if ie != nil {
+		fmt.Println("parse int err:", ie)
+	}
+
 	tdInsert("sms_log", g.Record{
 		"ts":         its,
 		"state":      "1",
 		"updated_at": createdAt,
 	})
-	
+	fmt.Println("==== Reg TD Update End ====")
 	return id, nil
 }
 
@@ -721,7 +731,7 @@ func MemberExist(username string) bool {
 }
 
 //会员忘记密码
-func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
+func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 
 	err := phoneCmp(sid, code, ip, phone)
 	if err != nil {
@@ -742,6 +752,10 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 		return errors.New(helper.UsernamePhoneMismatch)
 	}
 
+	if !helper.CtypeDigit(ts) {
+		return errors.New(helper.ParamErr)
+	}
+
 	record := g.Record{
 		"password": fmt.Sprintf("%d", MurmurHash(pwd, mb.CreatedAt)),
 	}
@@ -755,11 +769,19 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code string) error {
 		return pushLog(err, helper.DBErr)
 	}
 
-	//tdInsert("sms_log", g.Record{
-	//	"ts":         ts,
-	//	"state":      "1",
-	//	"updated_at": createdAt,
-	//})
+	fmt.Println("==== ForgotPWD TD Update ====")
+
+	its, ie := strconv.ParseInt(ts, 10, 64)
+	if ie != nil {
+		fmt.Println("parse int err:", ie)
+	}
+
+	tdInsert("sms_log", g.Record{
+		"ts":         its,
+		"state":      "1",
+		"updated_at": time.Now().Unix(),
+	})
+	fmt.Println("==== ForgotPWD TD Update End ====")
 
 	MemberUpdateCache(mb.UID, "")
 	return nil
@@ -1083,5 +1105,6 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 		return pushLog(err, helper.DBErr)
 	}
 
+	MemberRebateUpdateCache(mr)
 	return nil
 }

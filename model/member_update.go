@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"member2/contrib/helper"
 	"member2/contrib/validator"
+	"strconv"
 	"time"
 
 	g "github.com/doug-martin/goqu/v9"
@@ -12,7 +13,7 @@ import (
 )
 
 // 更新用户密码
-func MemberPasswordUpdate(ty int, sid, code, old, password string, fctx *fasthttp.RequestCtx) error {
+func MemberPasswordUpdate(ty int, sid, code, old, password, ts string, fctx *fasthttp.RequestCtx) error {
 
 	mb, err := MemberCache(fctx, "")
 	if err != nil {
@@ -22,6 +23,10 @@ func MemberPasswordUpdate(ty int, sid, code, old, password string, fctx *fasthtt
 	// 邮箱 有绑定
 	if ty == 1 && mb.PhoneHash != "0" {
 		if !helper.CtypeDigit(sid) {
+			return errors.New(helper.ParamErr)
+		}
+
+		if !helper.CtypeDigit(ts) {
 			return errors.New(helper.ParamErr)
 		}
 
@@ -74,6 +79,20 @@ func MemberPasswordUpdate(ty int, sid, code, old, password string, fctx *fasthtt
 	if err != nil {
 		return pushLog(err, helper.DBErr)
 	}
+	fmt.Println("==== UpdatePWD TD Update ====")
+
+	its, ie := strconv.ParseInt(ts, 10, 64)
+	if ie != nil {
+		fmt.Println("parse int err:", ie)
+	}
+
+	tdInsert("sms_log", g.Record{
+		"ts":         its,
+		"state":      "1",
+		"updated_at": time.Now().Unix(),
+	})
+	fmt.Println("==== UpdatePWD TD Update End ====")
+
 	MemberUpdateCache(mb.UID, "")
 
 	return nil

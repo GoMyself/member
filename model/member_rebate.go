@@ -65,6 +65,33 @@ func MemberRebateUpdateCache(mr MemberRebate) error {
 	return err
 }
 
+func MemberRebateGetCache(uid string) (MemberRebate, error) {
+
+	m := MemberRebate{}
+	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, uid)
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	defer pipe.Close()
+
+	exist := pipe.Exists(ctx, key)
+	rs := pipe.HMGet(ctx, key, "zr", "dj", "ty", "dz", "cp", "fc", "by", "cg_high_rebate", "cg_official_rebate", "qp")
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return m, pushLog(err, helper.RedisErr)
+	}
+
+	if exist.Val() == 0 {
+		return m, pushLog(err, helper.RecordNotExistErr)
+	}
+
+	if err = rs.Scan(&m); err != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
+	}
+
+	return m, nil
+}
+
 func RebateScale(uid string) (MemberRebate, error) {
 
 	data := MemberRebate{}

@@ -34,6 +34,7 @@ type MemberRegParam struct {
 type forgetPassword struct {
 	Username string `rule:"alnum" msg:"username error" name:"username"`
 	Sid      string `json:"sid" name:"sid" rule:"digit" msg:"phone error"`
+	Ts       string `json:"ts" name:"ts" rule:"digit" msg:"ts error"`
 	Code     string `json:"code" name:"code" rule:"digit" msg:"code error"`
 	Phone    string `rule:"digit" msg:"phone error" name:"phone"`
 	Password string `rule:"upwd" name:"password" msg:"password error"`
@@ -237,6 +238,7 @@ func (that *MemberController) UpdatePassword(ctx *fasthttp.RequestCtx) {
 
 	ty := ctx.PostArgs().GetUintOrZero("ty")
 	sid := string(ctx.PostArgs().Peek("sid"))
+	ts := string(ctx.PostArgs().Peek("ts"))
 	code := string(ctx.PostArgs().Peek("code"))
 	old := string(ctx.PostArgs().Peek("old"))
 	password := string(ctx.PostArgs().Peek("password"))
@@ -256,7 +258,7 @@ func (that *MemberController) UpdatePassword(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err := model.MemberPasswordUpdate(ty, sid, code, old, password, ctx)
+	err := model.MemberPasswordUpdate(ty, sid, code, old, password, ts, ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -298,7 +300,7 @@ func (that *MemberController) ForgetPassword(ctx *fasthttp.RequestCtx) {
 	//fmt.Println(params)
 
 	ip := helper.FromRequest(ctx)
-	err = model.MemberForgetPwd(params.Username, params.Password, params.Phone, ip, params.Sid, params.Code)
+	err = model.MemberForgetPwd(params.Username, params.Password, params.Phone, ip, params.Sid, params.Code, params.Ts)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -493,6 +495,22 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	}
 
 	helper.Print(ctx, true, data)
+}
+
+func (that *MemberController) Rebate(ctx *fasthttp.RequestCtx) {
+
+	uid := string(ctx.QueryArgs().Peek("uid"))
+
+	if !helper.CtypeDigit(uid) {
+		helper.Print(ctx, false, helper.PLatNameErr)
+		return
+	}
+	res, err := model.MemberRebateGetCache(uid)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+	helper.Print(ctx, true, res)
 }
 
 // UpdateRebate 修改密码以及返水比例

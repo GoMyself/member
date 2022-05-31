@@ -61,8 +61,9 @@ func MemberAmount(fctx *fasthttp.RequestCtx) (string, error) {
 func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, device, deviceNo string) (string, error) {
 
 	ts := fctx.Time()
-	ip_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "ip_blacklist", ip).Val()
-	if v, ok := ip_blacklist_ex.(int64); ok && v == 1 {
+	key := fmt.Sprintf("%s:merchant:ip_blacklist", meta.Prefix)
+	ipBlackListEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, ip).Val()
+	if v, ok := ipBlackListEx.(int64); ok && v == 1 {
 		return "", errors.New(helper.IpBanErr)
 	}
 
@@ -70,15 +71,15 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 	if device != "24" && device != "25" {
 
 		// 检查设备号黑名单
-		device_blacklist_ex := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "device_blacklist", deviceNo).Val()
-		//fmt.Println("device_blacklist_ex = ", device_blacklist_ex)
-		if v, ok := device_blacklist_ex.(int64); ok && v == 1 {
+		key := fmt.Sprintf("%s:merchant:device_blacklist", meta.Prefix)
+		deviceBlackListEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, deviceNo).Val()
+		if v, ok := deviceBlackListEx.(int64); ok && v == 1 {
 			return "", errors.New(helper.DeviceBanErr)
 		}
 	}
 
 	// 处理会员输入错误密码逻辑
-	key := fmt.Sprintf("MPE:%s", username)
+	key = fmt.Sprintf("MPE:%s", username)
 	errTimes, err := meta.MerchantRedis.Get(ctx, key).Int64()
 	if err != nil && err != redis.Nil {
 		return "", errors.New(helper.RedisErr)
@@ -205,8 +206,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	// 检查ip黑名单
 
 	topId := "4722355249852325"
-
-	ipBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "ip_blacklist", ip).Val()
+	key := fmt.Sprintf("%s:merchant:ip_blacklist", meta.Prefix)
+	ipBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, ip).Val()
 	if v, ok := ipBlacklistEx.(int64); ok && v == 1 {
 		return "", errors.New(helper.IpBanErr)
 	}
@@ -221,12 +222,12 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.ParamErr)
 	}
 
-	//fmt.Println("MemberReg", device, deviceNo)
 	// web/h5不检查设备号黑名单
 	if _, ok := WebDevices[device]; !ok {
 
 		// 检查设备号黑名单
-		deviceBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "device_blacklist", deviceNo).Val()
+		key := fmt.Sprintf("%s:merchant:device_blacklist", meta.Prefix)
+		deviceBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, deviceNo).Val()
 		if v, ok := deviceBlacklistEx.(int64); ok && v == 1 {
 			return "", errors.New(helper.DeviceBanErr)
 		}

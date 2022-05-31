@@ -171,9 +171,12 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		fmt.Println("grpc_t.Encrypt = ", err)
 		return errors.New(helper.UpdateRPCErr)
 	}
-	MemberUpdateCache(mb.UID, "")
+
+	_ = MemberUpdateCache(mb.UID, "")
 	BankcardUpdateCache(mb.Username)
-	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "bankcard_exist", bankcardNo).Err()
+	
+	key := fmt.Sprintf("%s:merchant:bankcard_exist", meta.Prefix)
+	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", key, bankcardNo).Err()
 
 	return nil
 }
@@ -250,17 +253,19 @@ func BankcardList(username string) ([]BankcardData, error) {
 func BankCardExistRedis(bankcardNo string) error {
 
 	pipe := meta.MerchantRedis.Pipeline()
-	ex1_temp := pipe.Do(ctx, "CF.EXISTS", "bankcard_exist", bankcardNo)
-	ex2_temp := pipe.Do(ctx, "CF.EXISTS", "bankcard_blacklist", bankcardNo)
+	defer pipe.Close()
+
+	key := fmt.Sprintf("%s:merchant:bankcard_exist", meta.Prefix)
+	ex1Temp := pipe.Do(ctx, "CF.EXISTS", key, bankcardNo)
+	key = fmt.Sprintf("%s:merchant:bankcard_blacklist", meta.Prefix)
+	ex2Temp := pipe.Do(ctx, "CF.EXISTS", key, bankcardNo)
 	_, err := pipe.Exec(ctx)
-	pipe.Close()
 	if err != nil {
 		return errors.New(helper.RedisErr)
 	}
 
-	ex1 := ex1_temp.Val()
-	ex2 := ex2_temp.Val()
-
+	ex1 := ex1Temp.Val()
+	ex2 := ex2Temp.Val()
 	if v, ok := ex1.(int64); ok && v == 1 {
 		return errors.New(helper.BankCardExistErr)
 	}

@@ -197,11 +197,6 @@ func BankcardTaskCreate(ts string, res bankcard_check_t) (string, error) {
  */
 func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Status int) error {
 
-	// 插入时银行卡合法性检查  TODO 需要 params.BankCard
-	// if model.BankcardCheck(ctx, params.BankName, params.BankNo, params.BankName) != "1000" {
-	// 	helper.Print(ctx, false, helper.BankcardIDErr)
-	// 	return
-	// }
 	var Username, RealName, Ip string
 
 	mb, err := MemberCache(ctx, "")
@@ -209,7 +204,19 @@ func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Stat
 		return err
 	}
 	Username = mb.Username
-	RealName = mb.RealnameHash
+
+	// 获取用户真实信息
+	d, err := grpc_t.Decrypt(mb.UID, true, []string{"realname"})
+
+	fmt.Println("grpc_t.Decrypt uids = ", mb.UID)
+	fmt.Println("grpc_t.Decrypt d = ", d)
+
+	if err != nil {
+		fmt.Println("grpc_t.Decrypt err = ", err)
+		return errors.New(helper.GetRPCErr)
+	}
+
+	RealName = d["realname"]
 	Ip = helper.FromRequest(ctx)
 	ts := fmt.Sprintf("%d", ctx.Time().In(loc).UnixMilli())
 

@@ -504,3 +504,20 @@ type WaterFlow struct {
 	ReturnWaterFlow     string `json:"return_water_flow" redis:"return_water_flow"`         //回归存款
 	RelegationWaterFlow string `json:"relegation_water_flow" redis:"relegation_water_flow"` //保级流水
 }
+
+/*
+ * @Description: MemberCardList 会员银行卡 数据概览表结构
+ * @Author: starc
+ * @Date: 2022/6/1 12:38
+ * @LastEditTime: 2022/6/1 20:00
+ * @LastEditors: starc
+ */
+type MemberCardOverviewData struct {
+	Username string `rule:"none" name:"username" msg:"username error"`
+	BankName string `rule:"none" name:"bankname" msg:"bankname error"`
+	BankNo   string `rule:"none" name:"bankno" msg:"bankno error"`
+	RealName string `rule:"none" name:"realname" msg:"realname error"`
+	Ip       string `rule:"none" name:"ip" msg:"ip error"`
+	Status   int    `rule:"digit" min:"0" max:"1" default:"1" msg:"status error"`
+	Ts       string `rule:"none" nane:"ts" `
+}

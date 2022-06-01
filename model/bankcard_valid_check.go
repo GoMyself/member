@@ -79,30 +79,36 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	if val, ok := bankcardCode[bankId]; ok {
 		data.BankCode = val
 	} else {
+		// 插入记录 银行卡校验失败日志
+		MemberCardLogInsert(fctx, name, bankCard, 0)
 		return helper.RecordNotExistErr
 	}
 
 	id, err := BankcardTaskCreate(ts, data)
 	if err != nil {
+		// 插入记录 银行卡校验失败日志
+		MemberCardLogInsert(fctx, name, bankCard, 0)
 		return helper.BankcardValidErr
 	}
 
 	for i := 0; i < 5; i++ {
-
 		ts = fmt.Sprintf("%d", fctx.Time().In(loc).UnixMilli())
-
 		valid, err := BankcardTaskQuery(ts, id)
 		if err == nil {
 			if valid {
+				//插入记录 校验成功日志
+				MemberCardLogInsert(fctx, name, bankCard, 1)
 				return helper.Success
 			} else {
+				//插入记录 校验失败日志
+				MemberCardLogInsert(fctx, name, bankCard, 0)
 				return helper.BankcardValidErr
 			}
 		}
-
 		time.Sleep(2 * time.Second)
 	}
-
+	// 插入记录 银行卡校验失败日志
+	MemberCardLogInsert(fctx, name, bankCard, 0)
 	return helper.BankcardValidErr
 }
 
@@ -180,4 +186,38 @@ func BankcardTaskCreate(ts string, res bankcard_check_t) (string, error) {
 	}
 
 	return "", err
+}
+
+/**
+ * @Description: MemberCardList // 新增会员 银行卡 记录
+ * @Author: starc
+ * @Date: 2022/5/31 16:38
+ * @LastEditTime: 2022/6/1 20:00
+ * @LastEditors: starc
+ */
+func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Status int) error {
+
+	// 插入时银行卡合法性检查  TODO 需要 params.BankCard
+	// if model.BankcardCheck(ctx, params.BankName, params.BankNo, params.BankName) != "1000" {
+	// 	helper.Print(ctx, false, helper.BankcardIDErr)
+	// 	return
+	// }
+	var Username, RealName, Ip string
+
+	mb, err := MemberCache(ctx, "")
+	if err != nil {
+		return err
+	}
+	Username = mb.Username
+	RealName = mb.RealnameHash
+	Ip = helper.FromRequest(ctx)
+	ts := fmt.Sprintf("%d", ctx.Time().In(loc).UnixMilli())
+
+	err2 := MemberCardInsert(Username, RealName, BankName, BankNo, Ip, Status, ts)
+	if err2 != nil {
+		helper.Print(ctx, false, err2.Error())
+		return err2
+	}
+	helper.Print(ctx, true, true)
+	return nil
 }

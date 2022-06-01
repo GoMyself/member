@@ -270,3 +270,42 @@ func BankCardExistRedis(bankcardNo string) error {
 	}
 	return nil
 }
+
+/**
+ * @Description: MemberCardList // 会员管理-会员银行卡新增
+ * @Author: starc
+ * @Date: 2022/6/1 12:38
+ * @LastEditTime: 2022/6/1 19:00
+ * @LastEditors: starc
+ */
+func MemberCardInsert(username, realname, bankname, bank_no, ip string, status int, ts string) error {
+
+	// 开始插入事务
+	tx, err := meta.MerchantDB.Begin()
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
+	trans := MemberCardOverviewData{
+		Username: username,
+		RealName: realname,
+		BankName: bankname,
+		BankNo:   bank_no,
+		Ip:       ip,
+		Status:   status,
+		Ts:       ts,
+	}
+	query2, param, errs := dialect.Insert("bandcardcheck_log").Rows(trans).ToSQL()
+	if errs != nil {
+		_ = tx.Rollback()
+		return pushLog(fmt.Errorf("%s, errorr To insert Sql , %s,[%s] ", err.Error(), query2, param), helper.DBErr)
+	}
+	_, err = tx.Exec(query2)
+	if err != nil {
+		_ = tx.Rollback()
+		return pushLog(fmt.Errorf("%s,[%s]", err.Error(), query2), helper.DBErr)
+	}
+
+	_ = tx.Commit()
+
+	return nil
+}

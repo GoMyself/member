@@ -1,6 +1,7 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"member2/contrib/helper"
@@ -20,6 +21,129 @@ type MemberRebateResult_t struct {
 	BY               decimal.Decimal
 	CGOfficialRebate decimal.Decimal
 	CGHighRebate     decimal.Decimal
+}
+
+func MemberMaxRebateFindOne(uid string) (MemberRebateResult_t, error) {
+
+	data := MemberMaxRebate{}
+	res := MemberRebateResult_t{}
+
+	t := dialect.From("tbl_member_rebate_info")
+	query, _, _ := t.Select(
+		g.MAX("zr").As("zr"),
+		g.MAX("qp").As("qp"),
+		g.MAX("dz").As("dz"),
+		g.MAX("dj").As("dj"),
+		g.MAX("ty").As("ty"),
+		g.MAX("cp").As("cp"),
+		g.MAX("fc").As("fc"),
+		g.MAX("by").As("by"),
+		g.MAX("cg_high_rebate").As("cg_high_rebate"),
+		g.MAX("cg_official_rebate").As("cg_official_rebate"),
+	).Where(g.Ex{"parent_uid": uid, "prefix": meta.Prefix}).ToSQL()
+	err := meta.MerchantDB.Get(&data, query)
+	if err == sql.ErrNoRows {
+
+		res.ZR = decimal.NewFromInt(0).Truncate(1)
+		res.QP = decimal.NewFromInt(0).Truncate(1)
+		res.TY = decimal.NewFromInt(0).Truncate(1)
+		res.DJ = decimal.NewFromInt(0).Truncate(1)
+		res.DZ = decimal.NewFromInt(0).Truncate(1)
+		res.CP = decimal.NewFromInt(0).Truncate(1)
+		res.FC = decimal.NewFromInt(0).Truncate(1)
+		res.BY = decimal.NewFromInt(0).Truncate(1)
+		res.CGHighRebate = decimal.NewFromFloat(9.00).Truncate(2)
+		res.CGOfficialRebate = decimal.NewFromFloat(9.00).Truncate(2)
+
+		return res, nil
+	}
+	if err != nil {
+		return res, pushLog(err, helper.DBErr)
+	}
+
+	res.ZR = decimal.NewFromFloat(data.ZR.Float64).Truncate(1)
+	res.QP = decimal.NewFromFloat(data.QP.Float64).Truncate(1)
+	res.TY = decimal.NewFromFloat(data.TY.Float64).Truncate(1)
+	res.DJ = decimal.NewFromFloat(data.DJ.Float64).Truncate(1)
+	res.DZ = decimal.NewFromFloat(data.DZ.Float64).Truncate(1)
+	res.CP = decimal.NewFromFloat(data.CP.Float64).Truncate(1)
+	res.FC = decimal.NewFromFloat(data.FC.Float64).Truncate(1)
+	res.BY = decimal.NewFromFloat(data.BY.Float64).Truncate(1)
+	res.CGHighRebate = decimal.NewFromFloat(data.CgHighRebate.Float64).Truncate(2)
+	res.CGOfficialRebate = decimal.NewFromFloat(data.CgOfficialRebate.Float64).Truncate(2)
+
+	return res, nil
+}
+
+func MemberRebateUpdateCache1(uid string, mr MemberRebateResult_t) error {
+
+	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, uid)
+	vals := []interface{}{"zr", mr.ZR.Truncate(1), "qp", mr.QP.Truncate(1), "ty", mr.TY.Truncate(1), "dj", mr.DJ.Truncate(1), "dz", mr.DZ.Truncate(1), "cp", mr.CP.Truncate(1), "fc", mr.FC.Truncate(1), "by", mr.BY.Truncate(1), "cg_high_rebate", mr.CGHighRebate.Truncate(2), "cg_official_rebate", mr.CGOfficialRebate.Truncate(2)}
+
+	pipe := meta.MerchantRedis.Pipeline()
+	pipe.Del(ctx, key)
+	pipe.HMSet(ctx, key, vals...)
+	pipe.Persist(ctx, key)
+	_, err := pipe.Exec(ctx)
+	pipe.Close()
+
+	return err
+}
+
+func MemberRebateUpdateCache2(uid string, mr MemberRebate) error {
+
+	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, uid)
+	vals := []interface{}{"zr", mr.ZR, "qp", mr.QP, "ty", mr.TY, "dj", mr.DJ, "dz", mr.DZ, "cp", mr.CP, "fc", mr.FC, "by", mr.BY, "cg_high_rebate", mr.CGHighRebate, "cg_official_rebate", mr.CGOfficialRebate}
+
+	pipe := meta.MerchantRedis.Pipeline()
+	pipe.Del(ctx, key)
+	pipe.HMSet(ctx, key, vals...)
+	pipe.Persist(ctx, key)
+	_, err := pipe.Exec(ctx)
+	pipe.Close()
+
+	return err
+}
+
+func MemberRebateCmp(uid string, own MemberRebateResult_t) bool {
+
+	lower, err := MemberMaxRebateFindOne(uid)
+	if err != nil {
+		return false
+	}
+
+	if own.QP.Cmp(lower.QP) == -1 {
+		return false
+	}
+	if own.ZR.Cmp(lower.ZR) == -1 {
+		return false
+	}
+	if own.TY.Cmp(lower.TY) == -1 {
+		return false
+	}
+	if own.DJ.Cmp(lower.DJ) == -1 {
+		return false
+	}
+	if own.DZ.Cmp(lower.DZ) == -1 {
+		return false
+	}
+	if own.CP.Cmp(lower.CP) == -1 {
+		return false
+	}
+	if own.FC.Cmp(lower.FC) == -1 {
+		return false
+	}
+	if own.BY.Cmp(lower.BY) == -1 {
+		return false
+	}
+	if own.CGHighRebate.Cmp(lower.CGHighRebate) == -1 {
+		return false
+	}
+	if own.CGOfficialRebate.Cmp(lower.CGOfficialRebate) == -1 {
+		return false
+	}
+	return true
+
 }
 
 func MemberRebateUpdateALL() error {
@@ -51,6 +175,7 @@ func MemberRebateUpdateALL() error {
 	return nil
 }
 
+/*
 func MemberRebateUpdateCache(mr MemberRebate) error {
 
 	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, mr.UID)
@@ -65,6 +190,7 @@ func MemberRebateUpdateCache(mr MemberRebate) error {
 
 	return err
 }
+*/
 
 func MemberRebateGetCache(uid string) (MemberRebate, error) {
 
@@ -116,6 +242,7 @@ func MemberRebateFindOne(uid string) (MemberRebateResult_t, error) {
 	query, _, _ := t.Select(colsMemberRebate...).Where(g.Ex{"uid": uid}).Limit(1).ToSQL()
 	err := meta.MerchantDB.Get(&data, query)
 	if err != nil {
+		fmt.Println("MemberRebateFindOne query = ", query)
 		return res, pushLog(err, helper.DBErr)
 	}
 

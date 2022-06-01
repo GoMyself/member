@@ -1,5 +1,7 @@
 package model
 
+import "database/sql"
+
 type Member struct {
 	UID                 string `db:"uid" json:"uid" redis:"uid"`
 	Username            string `db:"username" json:"username" redis:"username"`                                     //会员名
@@ -43,6 +45,19 @@ type Member struct {
 	AgencyType          int64  `db:"agency_type" json:"agency_type" redis:"agency_type"`                            //391团队代理 393普通代理
 	Address             string `db:"address" json:"address" redis:"address"`                                        //收货地址
 	Avatar              string `db:"avatar" json:"avatar" redis:"avatar"`                                           //收货地址
+}
+
+type MemberMaxRebate struct {
+	ZR               sql.NullFloat64 `db:"zr" json:"zr"`                                 //真人返水
+	QP               sql.NullFloat64 `db:"qp" json:"qp"`                                 //棋牌返水
+	TY               sql.NullFloat64 `db:"ty" json:"ty"`                                 //体育返水
+	DJ               sql.NullFloat64 `db:"dj" json:"dj"`                                 //电竞返水
+	DZ               sql.NullFloat64 `db:"dz" json:"dz"`                                 //电游返水
+	CP               sql.NullFloat64 `db:"cp" json:"cp"`                                 //彩票返水
+	FC               sql.NullFloat64 `db:"fc" json:"fc"`                                 //斗鸡返水
+	BY               sql.NullFloat64 `db:"by" json:"by"`                                 //捕鱼返水
+	CgHighRebate     sql.NullFloat64 `db:"cg_high_rebate" json:"cg_high_rebate"`         //高频彩返点
+	CgOfficialRebate sql.NullFloat64 `db:"cg_official_rebate" json:"cg_official_rebate"` //官方彩返点
 }
 
 type MemberData struct {

@@ -60,11 +60,20 @@ func (that *RebateController) Update(ctx *fasthttp.RequestCtx) {
 	cg_high_rebate_temp := string(ctx.PostArgs().Peek("cg_high_rebate"))
 	cg_official_rebate_temp := string(ctx.PostArgs().Peek("cg_official_rebate"))
 
+	fmt.Println("Update = ", string(ctx.PostBody()))
+
+	if !helper.CtypeAlnum(subName) {
+		helper.Print(ctx, false, helper.UsernameErr)
+		return
+	}
+
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}
+
+	//fmt.Println("mb = ", mb)
 
 	child, err := model.MemberCache(nil, subName)
 	if err != nil {
@@ -77,7 +86,7 @@ func (that *RebateController) Update(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	parent, err := model.MemberRebateFindOne(mb.ParentUid)
+	parent, err := model.MemberRebateFindOne(mb.UID)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -180,7 +189,7 @@ func (that *RebateController) Update(ctx *fasthttp.RequestCtx) {
 		CGOfficialRebate: cgOfficialRebate,
 	}
 
-	if ok := model.MemberRebateCmp(mb.UID, mr); !ok {
+	if ok := model.MemberRebateCmp(child.UID, mr); !ok {
 		helper.Print(ctx, false, helper.RebateOutOfRange)
 		return
 	}

@@ -90,6 +90,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// vip
 	vipCtl := new(controller.VipController)
 
+	get("/member/version", Version)
+
 	post("/member/link/insert", linkCtl.Insert)
 	get("/member/link/delete", linkCtl.Delete)
 	get("/member/link/list", linkCtl.List)

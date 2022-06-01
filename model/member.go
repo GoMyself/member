@@ -833,6 +833,7 @@ func Nav() string {
 	key := fmt.Sprintf("%s:nav", meta.Prefix)
 	res, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err == redis.Nil || err != nil {
+		fmt.Println(key, err)
 		return "[]"
 	}
 

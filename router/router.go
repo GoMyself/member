@@ -19,9 +19,11 @@ var (
 )
 
 type BuildInfo struct {
+	Name           string
 	GitReversion   string
 	BuildTime      string
 	BuildGoVersion string
+	Now            string
 }
 
 func apiServerPanic(ctx *fasthttp.RequestCtx, rcv interface{}) {
@@ -40,10 +42,14 @@ func apiServerPanic(ctx *fasthttp.RequestCtx, rcv interface{}) {
 
 func Version(ctx *fasthttp.RequestCtx) {
 
-	ctx.SetContentType("text/html; charset=utf-8")
-	fmt.Fprintf(ctx, "merchant<br />Git reversion = %s<br />Build Time = %s<br />Go version = %s<br />System Time = %s<br />",
-		buildInfo.GitReversion, buildInfo.BuildTime, buildInfo.BuildGoVersion, ctx.Time())
-
+	buildInfo.Name = "Member"
+	buildInfo.Now = time.Now().Format("2006-01-02 15:04:05")
+	helper.Print(ctx, true, buildInfo)
+	/*
+		ctx.SetContentType("text/html; charset=utf-8")
+		fmt.Fprintf(ctx, "{merchant<br />Git reversion = %s<br />Build Time = %s<br />Go version = %s<br />System Time = %s<br />",
+			buildInfo.GitReversion, buildInfo.BuildTime, buildInfo.BuildGoVersion, ctx.Time())
+	*/
 	//ctx.Request.Header.VisitAll(func (key, value []byte) {
 	//	fmt.Fprintf(ctx, "%s: %s<br/>", string(key), string(value))
 	//})

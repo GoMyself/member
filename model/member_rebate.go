@@ -78,8 +78,9 @@ func MemberMaxRebateFindOne(uid string) (MemberRebateResult_t, error) {
 func MemberRebateUpdateCache1(uid string, mr MemberRebateResult_t) error {
 
 	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, uid)
-	vals := []interface{}{"zr", mr.ZR.Truncate(1), "qp", mr.QP.Truncate(1), "ty", mr.TY.Truncate(1), "dj", mr.DJ.Truncate(1), "dz", mr.DZ.Truncate(1), "cp", mr.CP.Truncate(1), "fc", mr.FC.Truncate(1), "by", mr.BY.Truncate(1), "cg_high_rebate", mr.CGHighRebate.Truncate(2), "cg_official_rebate", mr.CGOfficialRebate.Truncate(2)}
+	vals := []interface{}{"zr", mr.ZR.StringFixed(1), "qp", mr.QP.StringFixed(1), "ty", mr.TY.StringFixed(1), "dj", mr.DJ.StringFixed(1), "dz", mr.DZ.StringFixed(1), "cp", mr.CP.StringFixed(1), "fc", mr.FC.StringFixed(1), "by", mr.BY.StringFixed(1), "cg_high_rebate", mr.CGHighRebate.StringFixed(2), "cg_official_rebate", mr.CGOfficialRebate.StringFixed(2)}
 
+	fmt.Println("MemberRebateUpdateCache1 vals = ", vals)
 	pipe := meta.MerchantRedis.Pipeline()
 	pipe.Del(ctx, key)
 	pipe.HMSet(ctx, key, vals...)
@@ -217,20 +218,6 @@ func MemberRebateGetCache(uid string) (MemberRebate, error) {
 	}
 
 	return m, nil
-}
-
-func RebateScale(uid string) (MemberRebate, error) {
-
-	data := MemberRebate{}
-
-	t := dialect.From("tbl_member_rebate_info")
-	query, _, _ := t.Select(colsMemberRebate...).Where(g.Ex{"uid": uid}).Limit(1).ToSQL()
-	err := meta.MerchantDB.Get(&data, query)
-	if err != nil {
-		return data, pushLog(err, helper.DBErr)
-	}
-
-	return data, nil
 }
 
 func MemberRebateFindOne(uid string) (MemberRebateResult_t, error) {

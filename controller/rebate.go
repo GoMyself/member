@@ -20,7 +20,7 @@ func (that *RebateController) Scale(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	vs, err := model.RebateScale(mb.UID)
+	vs, err := model.MemberRebateGetCache(mb.UID)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 	}

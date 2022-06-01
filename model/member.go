@@ -444,7 +444,7 @@ func regRoot(uid, topId string, createdAt uint32) (Member, MemberRebate, error) 
 	m := Member{}
 	mr := MemberRebate{}
 
-	rootRebate, err := RebateScale(topId)
+	rootRebate, err := MemberRebateGetCache(topId)
 	if err != nil {
 		return m, mr, pushLog(err, helper.DBErr)
 	}

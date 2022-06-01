@@ -218,8 +218,7 @@ func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Stat
 
 	RealName = d["realname"]
 	Ip = helper.FromRequest(ctx)
-	ts := fmt.Sprintf("%d", ctx.Time().In(loc).UnixMilli())
-
+	ts := ctx.Time().In(loc).UnixMilli()
 	err2 := MemberCardInsert(Username, RealName, BankName, BankNo, Ip, Status, ts)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())

@@ -819,7 +819,8 @@ func MemberCount(ex g.Ex) (int, error) {
 
 func Platform() string {
 
-	res, err := meta.MerchantRedis.Get(ctx, "plat").Result()
+	key := fmt.Sprintf("%s:plat", meta.Prefix)
+	res, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err == redis.Nil || err != nil {
 		return "[]"
 	}
@@ -829,7 +830,8 @@ func Platform() string {
 
 func Nav() string {
 
-	res, err := meta.MerchantRedis.Get(ctx, "nav").Result()
+	key := fmt.Sprintf("%s:nav", meta.Prefix)
+	res, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err == redis.Nil || err != nil {
 		return "[]"
 	}

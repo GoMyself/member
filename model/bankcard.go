@@ -272,7 +272,7 @@ func BankCardExistRedis(bankcardNo string) error {
 }
 
 /**
- * @Description: MemberCardList // 会员管理-会员银行卡新增
+ * @Description: MemberCardList // 会员管理-会员银行卡 新增校验记录日志
  * @Author: starc
  * @Date: 2022/6/1 12:38
  * @LastEditTime: 2022/6/1 19:00

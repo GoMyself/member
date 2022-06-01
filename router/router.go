@@ -90,6 +90,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// vip
 	vipCtl := new(controller.VipController)
 
+	get("/member/version", Version)
+
 	post("/member/link/insert", linkCtl.Insert)
 	get("/member/link/delete", linkCtl.Delete)
 	get("/member/link/list", linkCtl.List)
@@ -134,9 +136,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	get("/member/nav", memberCtl.Nav)
 	// 会员列表
 	get("/member/list", memberCtl.List)
-	// 编辑会员密码，返水
-	get("/member/rebate/detail", memberCtl.Rebate)
-	post("/member/rebate/update", memberCtl.UpdateRebate)
 
 	get("/member/avatar/update", memberCtl.Avatar)
 
@@ -186,6 +185,9 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 找回密码发送邮件
 	post("/member/email", emailCtl.Send)
 
+	// 编辑会员密码，返水
+	get("/member/rebate/detail", rebateCtl.Detail)
+	post("/member/rebate/update", rebateCtl.Update)
 	// 获取返水上限
 	get("/member/rebate/scale", rebateCtl.Scale)
 

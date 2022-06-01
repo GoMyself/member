@@ -366,7 +366,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
-	_ = MemberRebateUpdateCache(mr)
+	_ = MemberRebateUpdateCache2(m.UID, mr)
 	MemberUpdateCache(uid, "")
 
 	fmt.Println("==== Reg TD Update ====")
@@ -1057,7 +1057,7 @@ func MemberAgg(username string) (MemberAggData, error) {
 	return data, nil
 }
 
-func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
+func MemberUpdateInfo(user Member, password string, mr MemberRebateResult_t) error {
 
 	tx, err := meta.MerchantDB.Begin() // 开启事务
 	if err != nil {
@@ -1108,6 +1108,6 @@ func MemberUpdateInfo(user Member, password string, mr MemberRebate) error {
 		return pushLog(err, helper.DBErr)
 	}
 
-	MemberRebateUpdateCache(mr)
+	MemberRebateUpdateCache1(user.UID, mr)
 	return nil
 }

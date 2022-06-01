@@ -1,8 +1,11 @@
 package model
 
+import "fmt"
+
 func TreeList(level string) (string, error) {
 
-	data, err := meta.MerchantRedis.Get(ctx, "T:"+level).Result()
+	key := fmt.Sprintf("%s:T:%s", meta.Prefix, level)
+	data, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil {
 		return "", err
 	}

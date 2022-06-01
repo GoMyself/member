@@ -286,32 +286,23 @@ func BankCardExistRedis(bankcardNo string) error {
  */
 func MemberCardInsert(username, realname, bankname, bank_no, ip string, status int, ts string) error {
 
-	// 开始插入事务
-	tx, err := meta.MerchantTD.Begin()
-	if err != nil {
-		return pushLog(err, helper.DBErr)
+	record := g.Record{
+		"ts":       ts,
+		"username": username,
+		"realname": realname,
+		"bankname": bankname,
+		"bank_no":  bank_no,
+		"ip":       ip,
+		"status":   status,
 	}
-	trans := MemberCardOverviewData{
-		Username: username,
-		RealName: realname,
-		BankName: bankname,
-		BankNo:   bank_no,
-		Ip:       ip,
-		Status:   status,
-		Ts:       ts,
-	}
-	query2, param, errs := dialect.Insert("bandcardcheck_log").Rows(trans).ToSQL()
+	query2, param, errs := dialect.Insert("bandcardcheck_log").Rows(record).ToSQL()
 	if errs != nil {
-		_ = tx.Rollback()
-		return pushLog(fmt.Errorf("%s, errorr To insert Sql , %s,[%s] ", err.Error(), query2, param), helper.DBErr)
+		return pushLog(fmt.Errorf("errorr:%s, To insert Sql:, %s, param:[%s] ", errs.Error(), query2, param), helper.DBErr)
 	}
-	_, err = tx.Exec(query2)
-	if err != nil {
-		_ = tx.Rollback()
-		return pushLog(fmt.Errorf("%s,[%s]", err.Error(), query2), helper.DBErr)
+	er, err2 := meta.MerchantTD.Exec(query2)
+	if err2 != nil {
+		fmt.Println("insert td = ", err2.Error(), query2)
+		return pushLog(fmt.Errorf("%s,[%s],result:%s", err2.Error(), query2, er), helper.DBErr)
 	}
-
-	_ = tx.Commit()
-
 	return nil
 }

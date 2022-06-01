@@ -287,7 +287,7 @@ func BankCardExistRedis(bankcardNo string) error {
 func MemberCardInsert(username, realname, bankname, bank_no, ip string, status int, ts string) error {
 
 	// 开始插入事务
-	tx, err := meta.MerchantDB.Begin()
+	tx, err := meta.MerchantTD.Begin()
 	if err != nil {
 		return pushLog(err, helper.DBErr)
 	}

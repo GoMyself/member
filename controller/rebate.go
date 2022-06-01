@@ -60,7 +60,7 @@ func (that *RebateController) Update(ctx *fasthttp.RequestCtx) {
 	cg_high_rebate_temp := string(ctx.PostArgs().Peek("cg_high_rebate"))
 	cg_official_rebate_temp := string(ctx.PostArgs().Peek("cg_official_rebate"))
 
-	fmt.Println("Update = ", string(ctx.PostBody()))
+	//fmt.Println("Update = ", string(ctx.PostBody()))
 
 	if !helper.CtypeAlnum(subName) {
 		helper.Print(ctx, false, helper.UsernameErr)

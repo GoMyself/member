@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 	"member2/contrib/helper"
 
@@ -82,7 +83,7 @@ func MemberRebateGetCache(uid string) (MemberRebate, error) {
 	}
 
 	if exist.Val() == 0 {
-		return m, pushLog(err, helper.RecordNotExistErr)
+		return m, errors.New(helper.RecordNotExistErr)
 	}
 
 	if err = rs.Scan(&m); err != nil {

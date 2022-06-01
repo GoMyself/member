@@ -22,6 +22,7 @@ type ReportAgency struct {
 	NetAmount         float64 `json:"net_amount" db:"net_amount"`
 	DividendAmount    float64 `json:"dividend_amount" db:"dividend_amount"`
 	BalanceTotal      float64 `json:"balance_total" db:"balance_total"`
+	WinAmount         float64 `json:"win_amount" db:"win_amount"`
 	Profit            float64 `json:"profit"`
 }
 
@@ -97,6 +98,7 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 			g.C("company_net_amount").As("net_amount"),           //输赢
 			g.C("dividend_amount").As("dividend_amount"),         //活动礼金
 			g.C("balance_total").As("balance_total"),             //团队余额
+			g.C("win_amount").As("win_amount"),                   //中奖金额
 		).
 		ToSQL()
 	fmt.Println(query)

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"member2/contrib/helper"
+	"strconv"
 	"time"
 
 	"github.com/valyala/fasthttp"
@@ -220,7 +221,20 @@ func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Stat
 	RealName = d["realname"]
 	Ip = helper.FromRequest(ctx)
 	ts := ctx.Time().In(loc).UnixMilli()
-	err2 := MemberCardCheckInsertLog(Username, RealName, BankName, BankNo, Ip, Status, ts)
+	/// 获取设备名称并保存
+	DeviceName := string(ctx.Request.Header.Peek("d"))
+	device_i, err := strconv.Atoi(DeviceName)
+	if err != nil {
+		helper.Print(ctx, false, helper.DeviceTypeErr)
+		return err
+	}
+
+	if _, ok := Devices[device_i]; !ok {
+		helper.Print(ctx, false, helper.DeviceTypeErr)
+		return err
+	}
+	//存入
+	err2 := MemberCardCheckInsertLog(Username, RealName, BankName, BankNo, Ip, Status, device_i, ts)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())
 		return err2

@@ -13,7 +13,7 @@ import (
 )
 
 // 更新用户密码
-func MemberPasswordUpdate(ty int, sid, code, old, password, phone, ts string, fctx *fasthttp.RequestCtx) error {
+func MemberPasswordUpdate(ty int, sid, code, old, password, ts, phone string, fctx *fasthttp.RequestCtx) error {
 
 	mb, err := MemberCache(fctx, "")
 	if err != nil {
@@ -43,19 +43,13 @@ func MemberPasswordUpdate(ty int, sid, code, old, password, phone, ts string, fc
 		if !helper.CtypeDigit(code) {
 			return errors.New(helper.ParamErr)
 		}
+		//
+		//recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
+		//if err != nil {
+		//	return errors.New(helper.GetRPCErr)
+		//}
+		//address := recs["phone"]
 
-		ip := helper.FromRequest(fctx)
-
-		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
-		if err != nil {
-			return errors.New(helper.GetRPCErr)
-		}
-		address := recs["phone"]
-
-		err = phoneCmp(sid, code, ip, address)
-		if err != nil {
-			return err
-		}
 	}
 
 	pwd := fmt.Sprintf("%d", MurmurHash(password, mb.CreatedAt))

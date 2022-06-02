@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/shopspring/decimal"

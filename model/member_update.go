@@ -3,8 +3,8 @@ package model
 import (
 	"errors"
 	"fmt"
-	"member2/contrib/helper"
-	"member2/contrib/validator"
+	"member/contrib/helper"
+	"member/contrib/validator"
 	"strconv"
 	"time"
 

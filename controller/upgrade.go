@@ -2,8 +2,8 @@ package controller
 
 import (
 	"github.com/valyala/fasthttp"
-	"member2/contrib/helper"
-	"member2/model"
+	"member/contrib/helper"
+	"member/model"
 )
 
 type UpgradeController struct{}

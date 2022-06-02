@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/olivere/elastic/v7"
 	"github.com/wI2L/jettison"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 )
 
 //MessageList  站内信列表

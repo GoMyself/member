@@ -11,8 +11,8 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fastjson"
 
-	"member2/contrib/helper"
-	"member2/contrib/validator"
+	"member/contrib/helper"
+	"member/contrib/validator"
 )
 
 func BankcardUpdateCache(username string) {

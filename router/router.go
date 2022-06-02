@@ -2,8 +2,8 @@ package router
 
 import (
 	"fmt"
-	"member2/contrib/helper"
-	"member2/controller"
+	"member/contrib/helper"
+	"member/controller"
 	"runtime/debug"
 	"time"
 

@@ -8,9 +8,9 @@ import (
 
 	g "github.com/doug-martin/goqu/v9"
 
-	"member2/contrib/helper"
-	"member2/contrib/validator"
-	"member2/model"
+	"member/contrib/helper"
+	"member/contrib/validator"
+	"member/model"
 
 	"github.com/valyala/fasthttp"
 )

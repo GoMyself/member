@@ -1,4 +1,4 @@
-module member2
+module member
 
 go 1.18
 

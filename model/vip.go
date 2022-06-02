@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 )
 
 func VipConfig() string {

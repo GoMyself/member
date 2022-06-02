@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 	"github.com/olivere/elastic/v7"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 )
 
 var (

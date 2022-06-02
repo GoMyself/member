@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"errors"
-	"member2/contrib/session"
+	"member/contrib/session"
 
 	"github.com/valyala/fasthttp"
 )

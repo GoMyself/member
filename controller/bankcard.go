@@ -2,8 +2,8 @@ package controller
 
 import (
 	"fmt"
-	"member2/contrib/helper"
-	"member2/model"
+	"member/contrib/helper"
+	"member/model"
 
 	"github.com/valyala/fasthttp"
 )

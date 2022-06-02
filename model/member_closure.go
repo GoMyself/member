@@ -2,7 +2,7 @@ package model
 
 import (
 	"fmt"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 )
 
 func MemberClosureInsert(nodeID, targetID string) string {

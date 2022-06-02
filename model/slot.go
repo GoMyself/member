@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/valyala/fastjson"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 	"strings"
 )
 

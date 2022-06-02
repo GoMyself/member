@@ -3,7 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 	"time"
 )
 

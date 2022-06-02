@@ -3,12 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
-	"member2/contrib/apollo"
-	"member2/contrib/conn"
-	"member2/contrib/session"
-	"member2/middleware"
-	"member2/model"
-	"member2/router"
+	"member/contrib/apollo"
+	"member/contrib/conn"
+	"member/contrib/session"
+	"member/middleware"
+	"member/model"
+	"member/router"
 	"os"
 	"strings"
 

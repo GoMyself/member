@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"member2/contrib/helper"
-	"member2/model"
+	"member/contrib/helper"
+	"member/model"
 	"strconv"
 
 	"github.com/valyala/fasthttp"

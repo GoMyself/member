@@ -7,7 +7,7 @@ import (
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/shopspring/decimal"
 	"github.com/valyala/fasthttp"
-	"member2/contrib/helper"
+	"member/contrib/helper"
 )
 
 type ReportAgency struct {

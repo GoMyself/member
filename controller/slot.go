@@ -3,9 +3,9 @@ package controller
 import (
 	"fmt"
 	"github.com/valyala/fasthttp"
-	"member2/contrib/helper"
-	"member2/contrib/validator"
-	"member2/model"
+	"member/contrib/helper"
+	"member/contrib/validator"
+	"member/model"
 )
 
 type SlotController struct{}

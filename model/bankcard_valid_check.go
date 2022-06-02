@@ -76,19 +76,18 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 		//BankCode: bankCode,
 		Name: name,
 	}
-
 	if val, ok := bankcardCode[bankId]; ok {
 		data.BankCode = val
 	} else {
 		// 插入记录 银行卡校验失败日志
-		MemberCardLogInsert(fctx, name, bankCard, 0)
+		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("RecordNotExistErr %v", helper.RecordNotExistErr), 0)
 		return helper.RecordNotExistErr
 	}
 
 	id, err := BankcardTaskCreate(ts, data)
 	if err != nil {
 		// 插入记录 银行卡校验失败日志
-		MemberCardLogInsert(fctx, name, bankCard, 0)
+		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("BankcardValidErr %v", helper.BankcardValidErr), 0)
 		return helper.BankcardValidErr
 	}
 
@@ -98,18 +97,18 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 		if err == nil {
 			if valid {
 				//插入记录 校验成功日志
-				MemberCardLogInsert(fctx, name, bankCard, 1)
+				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("Success %v", helper.Success), 1)
 				return helper.Success
 			} else {
 				//插入记录 校验失败日志
-				MemberCardLogInsert(fctx, name, bankCard, 0)
+				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("BankcardValidErr %v", helper.BankcardValidErr), 0)
 				return helper.BankcardValidErr
 			}
 		}
 		time.Sleep(2 * time.Second)
 	}
 	// 插入记录 银行卡校验失败日志
-	MemberCardLogInsert(fctx, name, bankCard, 0)
+	MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("BankcardValidErr %v", helper.BankcardValidErr), 0)
 	return helper.BankcardValidErr
 }
 
@@ -196,7 +195,7 @@ func BankcardTaskCreate(ts string, res bankcard_check_t) (string, error) {
  * @LastEditTime: 2022/6/1 20:00
  * @LastEditors: starc
  */
-func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Status int) error {
+func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo, msg string, Status int) error {
 
 	var Username, RealName, Ip string
 
@@ -234,7 +233,7 @@ func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Stat
 		return err
 	}
 	//存入
-	err2 := MemberCardCheckInsertLog(Username, RealName, BankName, BankNo, Ip, Status, device_i, ts)
+	err2 := MemberCardCheckInsertLog(Username, RealName, BankName, BankNo, Ip, msg, Status, device_i, ts)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())
 		return err2

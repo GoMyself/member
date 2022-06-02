@@ -284,7 +284,7 @@ func BankCardExistRedis(bankcardNo string) error {
  * @LastEditTime: 2022/6/1 19:00
  * @LastEditors: starc
  */
-func MemberCardCheckInsertLog(username, realname, bankname, bank_no, ip string, status int, ts int64) error {
+func MemberCardCheckInsertLog(username, realname, bankname, bank_no, ip string, status, device int, ts int64) error {
 
 	record := g.Record{
 		"ts":       ts,
@@ -294,6 +294,7 @@ func MemberCardCheckInsertLog(username, realname, bankname, bank_no, ip string, 
 		"bank_no":  bank_no,
 		"ip":       ip,
 		"status":   status,
+		"device":   device,
 	}
 	query2, param, errs := dialect.Insert("bandcardcheck_log").Rows(record).ToSQL()
 	if errs != nil {

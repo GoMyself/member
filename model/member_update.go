@@ -13,11 +13,21 @@ import (
 )
 
 // 更新用户密码
-func MemberPasswordUpdate(ty int, sid, code, old, password, ts string, fctx *fasthttp.RequestCtx) error {
+func MemberPasswordUpdate(ty int, sid, code, old, password, ts, phone string, fctx *fasthttp.RequestCtx) error {
 
 	mb, err := MemberCache(fctx, "")
 	if err != nil {
 		return err
+	}
+	ip := helper.FromRequest(fctx)
+	err = phoneCmp(sid, code, ip, phone)
+	if err != nil {
+		return err
+	}
+
+	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
+	if phoneHash != mb.PhoneHash {
+		return errors.New(helper.UsernamePhoneMismatch)
 	}
 
 	// 邮箱 有绑定
@@ -33,19 +43,13 @@ func MemberPasswordUpdate(ty int, sid, code, old, password, ts string, fctx *fas
 		if !helper.CtypeDigit(code) {
 			return errors.New(helper.ParamErr)
 		}
+		//
+		//recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
+		//if err != nil {
+		//	return errors.New(helper.GetRPCErr)
+		//}
+		//address := recs["phone"]
 
-		ip := helper.FromRequest(fctx)
-
-		recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
-		if err != nil {
-			return errors.New(helper.GetRPCErr)
-		}
-		address := recs["phone"]
-
-		err = phoneCmp(sid, code, ip, address)
-		if err != nil {
-			return err
-		}
 	}
 
 	pwd := fmt.Sprintf("%d", MurmurHash(password, mb.CreatedAt))

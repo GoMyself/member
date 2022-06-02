@@ -237,6 +237,7 @@ func (that *MemberController) UpdatePassword(ctx *fasthttp.RequestCtx) {
 
 	ty := ctx.PostArgs().GetUintOrZero("ty")
 	sid := string(ctx.PostArgs().Peek("sid"))
+	phone := string(ctx.PostArgs().Peek("phone"))
 	ts := string(ctx.PostArgs().Peek("ts"))
 	code := string(ctx.PostArgs().Peek("code"))
 	old := string(ctx.PostArgs().Peek("old"))
@@ -257,7 +258,7 @@ func (that *MemberController) UpdatePassword(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err := model.MemberPasswordUpdate(ty, sid, code, old, password, ts, ctx)
+	err := model.MemberPasswordUpdate(ty, sid, code, old, password, ts, phone, ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

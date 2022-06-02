@@ -284,7 +284,7 @@ func BankCardExistRedis(bankcardNo string) error {
  * @LastEditTime: 2022/6/1 19:00
  * @LastEditors: starc
  */
-func MemberCardInsert(username, realname, bankname, bank_no, ip string, status int, ts int64) error {
+func MemberCardCheckInsertLog(username, realname, bankname, bank_no, ip string, status int, ts int64) error {
 
 	record := g.Record{
 		"ts":       ts,

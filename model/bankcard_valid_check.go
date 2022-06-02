@@ -210,6 +210,7 @@ func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Stat
 
 	fmt.Println("grpc_t.Decrypt uids = ", mb.UID)
 	fmt.Println("grpc_t.Decrypt d = ", d)
+	fmt.Printf("and mb:%+v\n", mb)
 
 	if err != nil {
 		fmt.Println("grpc_t.Decrypt err = ", err)
@@ -219,7 +220,7 @@ func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo string, Stat
 	RealName = d["realname"]
 	Ip = helper.FromRequest(ctx)
 	ts := ctx.Time().In(loc).UnixMilli()
-	err2 := MemberCardInsert(Username, RealName, BankName, BankNo, Ip, Status, ts)
+	err2 := MemberCardCheckInsertLog(Username, RealName, BankName, BankNo, Ip, Status, ts)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())
 		return err2

@@ -78,6 +78,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	}
 	if val, ok := bankcardCode[bankId]; ok {
 		data.BankCode = val
+		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("ok bankcode %v", val), 0)
 	} else {
 		// 插入记录 银行卡校验失败日志
 		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("RecordNotExistErr %v", helper.RecordNotExistErr), 0)
@@ -87,13 +88,15 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	id, err := BankcardTaskCreate(ts, data)
 	if err != nil {
 		// 插入记录 银行卡校验失败日志
-		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("BankcardValidErr %v", helper.BankcardValidErr), 0)
+		errmsg := fmt.Sprintf("BankcardValidErr %v %v %v ", helper.BankcardValidErr, id, err.Error())
+		MemberCardLogInsert(fctx, name, bankCard, errmsg[:59], 0)
 		return helper.BankcardValidErr
 	}
 
 	for i := 0; i < 5; i++ {
 		ts = fmt.Sprintf("%d", fctx.Time().In(loc).UnixMilli())
 		valid, err := BankcardTaskQuery(ts, id)
+		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("try ts %v valid %v", ts, valid), 0)
 		if err == nil {
 			if valid {
 				//插入记录 校验成功日志

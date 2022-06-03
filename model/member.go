@@ -483,7 +483,9 @@ func MemberVerify(id, code string) bool {
 
 	code = fmt.Sprintf("%s:cap:code:%s", meta.Prefix, code)
 	id = fmt.Sprintf("%s:cap:id:%s", meta.Prefix, id)
-	val, err := meta.MerchantRedis.Get(ctx, id).Result()
+	cmd := meta.MerchantRedis.Get(ctx, id)
+	fmt.Println(cmd.String())
+	val, err := cmd.Result()
 	if err != nil || err == redis.Nil {
 		return false
 	}

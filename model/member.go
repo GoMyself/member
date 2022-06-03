@@ -514,12 +514,12 @@ func MemberCaptcha() ([]byte, string, error) {
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		return nil, id, errors.New(helper.RedisErr)
+		return nil, id, pushLog(err, helper.RedisErr)
 	}
 
 	img, err := val.Bytes()
 	if err != nil {
-		return nil, id, errors.New(helper.RedisErr)
+		return nil, id, pushLog(err, helper.RedisErr)
 	}
 
 	return img, id, nil

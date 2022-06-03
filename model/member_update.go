@@ -222,50 +222,50 @@ func MemberUpdateAvatar(avatar string, fctx *fasthttp.RequestCtx) error {
 }
 
 // 更新用户信息
-func MemberUpdateEmail(sid, code, email string, fctx *fasthttp.RequestCtx) error {
-
-	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
-	ex := g.Ex{
-		"email_hash": emailHash,
-	}
-	if MemberBindCheck(ex) {
-		return errors.New(helper.EmailExist)
-	}
-
-	mb, err := MemberCache(fctx, "")
-	if err != nil {
-		return err
-	}
-
-	ip := helper.FromRequest(fctx)
-	err = emailCmp(sid, code, ip, email)
-	if err != nil {
-		return err
-	}
-
-	encRes := [][]string{}
-	encRes = append(encRes, []string{"email", email})
-	err = grpc_t.Encrypt(mb.UID, encRes)
-	if err != nil {
-		return errors.New(helper.UpdateRPCErr)
-	}
-
-	record := g.Record{
-		"email_hash": emailHash,
-	}
-	ex = g.Ex{
-		"uid": mb.UID,
-	}
-	// 更新会员信息
-	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
-	_, err = meta.MerchantDB.Exec(query)
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	MemberUpdateCache(mb.UID, "")
-	return nil
-}
+//func MemberUpdateEmail(sid, code, email string, fctx *fasthttp.RequestCtx) error {
+//
+//	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
+//	ex := g.Ex{
+//		"email_hash": emailHash,
+//	}
+//	if MemberBindCheck(ex) {
+//		return errors.New(helper.EmailExist)
+//	}
+//
+//	mb, err := MemberCache(fctx, "")
+//	if err != nil {
+//		return err
+//	}
+//
+//	ip := helper.FromRequest(fctx)
+//	err = emailCmp(sid, code, ip, email)
+//	if err != nil {
+//		return err
+//	}
+//
+//	encRes := [][]string{}
+//	encRes = append(encRes, []string{"email", email})
+//	err = grpc_t.Encrypt(mb.UID, encRes)
+//	if err != nil {
+//		return errors.New(helper.UpdateRPCErr)
+//	}
+//
+//	record := g.Record{
+//		"email_hash": emailHash,
+//	}
+//	ex = g.Ex{
+//		"uid": mb.UID,
+//	}
+//	// 更新会员信息
+//	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
+//	_, err = meta.MerchantDB.Exec(query)
+//	if err != nil {
+//		return pushLog(err, helper.DBErr)
+//	}
+//
+//	MemberUpdateCache(mb.UID, "")
+//	return nil
+//}
 
 // 用户信息更新
 func MemberUpdateName(fctx *fasthttp.RequestCtx, birth, realName, address string) error {

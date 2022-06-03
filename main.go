@@ -54,10 +54,6 @@ func main() {
 	mt.ES = conn.InitES(cfg.Es.Host, cfg.Es.Username, cfg.Es.Password)
 
 	mt.CardValid = cfg.BankcardValidAPI
-	mt.Email.Name = cfg.Email.Name
-	mt.Email.Account = cfg.Email.Account
-	mt.Email.Password = cfg.Email.Password
-
 	model.Constructor(mt, cfg.RPC)
 	session.New(mt.MerchantRedis, cfg.Prefix)
 

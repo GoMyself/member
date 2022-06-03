@@ -46,7 +46,6 @@ type MetaTable struct {
 	Grpc           *gorpc.DispatcherClient
 	ES             *elastic.Client
 	AutoCommission bool
-	Email          Email
 	Prefix         string
 	EsPrefix       string
 	PullPrefix     string
@@ -66,12 +65,6 @@ var (
 
 	colsEsCommissionTransaction = []string{"id", "bill_no", "uid", "username", "cash_type", "amount", "before_amount", "after_amount", "created_at"}
 )
-
-type Email struct {
-	Name     string
-	Account  string
-	Password string
-}
 
 func Constructor(mt *MetaTable, rpcconn string) {
 

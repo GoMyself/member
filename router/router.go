@@ -91,8 +91,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	recordCtl := new(controller.RecordController)
 	// 报表
 	reportCtl := new(controller.ReportController)
-	// 邮件
-	emailCtl := new(controller.EmailController)
 	// vip
 	vipCtl := new(controller.VipController)
 
@@ -128,8 +126,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	post("/member/password/forget", memberCtl.ForgetPassword)
 	// 用户修改密码
 	post("/member/password/update", memberCtl.UpdatePassword)
-	// 绑定邮箱
-	post("/member/bindemail", memberCtl.BindEmail)
 	// 绑定手机号
 	post("/member/bindphone", memberCtl.BindPhone)
 	// 绑定zalo号
@@ -187,9 +183,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	get("/member/message/num", msgCtl.Num)
 	// 站内信-删除
 	get("/member/message/delete", msgCtl.Delete)
-
-	// 找回密码发送邮件
-	post("/member/email", emailCtl.Send)
 
 	// 编辑会员密码，返水
 	get("/member/rebate/detail", rebateCtl.Detail)

@@ -128,6 +128,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	post("/member/password/update", memberCtl.UpdatePassword)
 	// 绑定手机号
 	post("/member/bindphone", memberCtl.BindPhone)
+	// 绑定邮箱
+	post("/member/bindemail", memberCtl.BindEmail)
 	// 绑定zalo号
 	post("/member/bindzalo", memberCtl.BindZalo)
 	// 更新用户信息 （真实姓名/收货地址）

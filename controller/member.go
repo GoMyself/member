@@ -315,28 +315,28 @@ func (that *MemberController) ForgetPassword(ctx *fasthttp.RequestCtx) {
 }
 
 // 用户绑定邮箱
-//func (that *MemberController) BindEmail(ctx *fasthttp.RequestCtx) {
-//
-//	params := paramBindEmail{}
-//	err := validator.Bind(ctx, &params)
-//	if err != nil {
-//		helper.Print(ctx, false, helper.ParamErr)
-//		return
-//	}
-//
-//	if params.Email == "" || !strings.Contains(params.Email, "@") {
-//		helper.Print(ctx, false, helper.EmailFMTErr)
-//		return
-//	}
-//
-//	err = model.MemberUpdateEmail(params.Sid, params.Code, params.Email, ctx)
-//	if err != nil {
-//		helper.Print(ctx, false, err.Error())
-//		return
-//	}
-//
-//	helper.Print(ctx, true, helper.Success)
-//}
+func (that *MemberController) BindEmail(ctx *fasthttp.RequestCtx) {
+
+	params := paramBindEmail{}
+	err := validator.Bind(ctx, &params)
+	if err != nil {
+		helper.Print(ctx, false, helper.ParamErr)
+		return
+	}
+
+	if params.Email == "" || !strings.Contains(params.Email, "@") {
+		helper.Print(ctx, false, helper.EmailFMTErr)
+		return
+	}
+
+	err = model.MemberUpdateEmail(params.Sid, params.Code, params.Email, ctx)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+
+	helper.Print(ctx, true, helper.Success)
+}
 
 // 用户绑定手机号
 func (that *MemberController) BindPhone(ctx *fasthttp.RequestCtx) {

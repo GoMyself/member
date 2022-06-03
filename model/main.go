@@ -3,11 +3,12 @@ package model
 import (
 	"context"
 	"fmt"
-	"github.com/shopspring/decimal"
 	"member/contrib/helper"
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/shopspring/decimal"
 
 	"github.com/hprose/hprose-golang/v3/rpc/core"
 	rpchttp "github.com/hprose/hprose-golang/v3/rpc/http"
@@ -37,7 +38,7 @@ var grpc_t struct {
 }
 
 type MetaTable struct {
-	MerchantRedis  *redis.Client
+	MerchantRedis  *redis.ClusterClient
 	MerchantDB     *sqlx.DB
 	ReportDB       *sqlx.DB
 	MerchantTD     *sqlx.DB

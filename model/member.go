@@ -488,6 +488,7 @@ func MemberVerify(id, code string) bool {
 		return false
 	}
 
+	fmt.Println(id, code, val)
 	code = strings.ToLower(code)
 	if val != code {
 		return false

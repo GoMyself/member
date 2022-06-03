@@ -40,16 +40,23 @@ type Game struct {
 
 func MemberAmount(fctx *fasthttp.RequestCtx) (string, error) {
 
-	m, err := MemberCache(fctx, "")
-	if err != nil {
+	username := string(fctx.UserValue("token").([]byte))
+	if username == "" {
 		return "", errors.New(helper.AccessTokenExpires)
 	}
 
-	mb := MBBalance{
-		Balance:    m.Balance,
-		Commission: m.Commission,
-		LockAmount: m.LockAmount,
+	mb := MBBalance{}
+	t := dialect.From("tbl_members")
+	query, _, _ := t.Select("balance", "lock_amount").Where(g.Ex{"username": username}).Limit(1).ToSQL()
+	err := meta.MerchantDB.Get(&mb, query)
+	if err != nil && err == sql.ErrNoRows {
+		return "", pushLog(err, helper.DBErr)
 	}
+
+	if err == sql.ErrNoRows {
+		return "", pushLog(err, helper.AccessTokenExpires)
+	}
+
 	data, err := helper.JsonMarshal(mb)
 	if err != nil {
 		return "", errors.New(helper.FormatErr)

@@ -71,7 +71,6 @@ type MemberData struct {
 type MBBalance struct {
 	Balance    string `db:"balance" json:"balance"`         //余额
 	LockAmount string `db:"lock_amount" json:"lock_amount"` //锁定额度
-	Commission string `db:"commission" json:"commission"`   //代理余额
 }
 
 type MemberInfos struct {

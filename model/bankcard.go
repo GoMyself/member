@@ -262,7 +262,7 @@ func BankCardExistRedis(bankcardNo string) error {
 	ex2Temp := pipe.Do(ctx, "CF.EXISTS", key, bankcardNo)
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		return errors.New(helper.RedisErr)
+		return pushLog(err, helper.RedisErr)
 	}
 
 	ex1 := ex1Temp.Val()

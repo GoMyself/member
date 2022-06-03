@@ -511,9 +511,9 @@ func MemberCaptcha() ([]byte, string, error) {
 	defer pipe.Close()
 
 	code = fmt.Sprintf("%s:cap:code:%s", meta.Prefix, code)
-	id = fmt.Sprintf("%s:cap:id:%s", meta.Prefix, id)
+	idKey := fmt.Sprintf("%s:cap:id:%s", meta.Prefix, id)
 	val := pipe.Get(ctx, code)
-	pipe.SetNX(ctx, id, code, 120*time.Second)
+	pipe.SetNX(ctx, idKey, code, 120*time.Second)
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {

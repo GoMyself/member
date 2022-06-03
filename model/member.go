@@ -479,15 +479,17 @@ func regRoot(uid, topId string, createdAt uint32) (Member, MemberRebate, error) 
 	return m, mr, nil
 }
 
-func MemberVerify(id, str string) bool {
+func MemberVerify(id, code string) bool {
 
+	code = fmt.Sprintf("%s:cap:code:%s", meta.Prefix, code)
+	id = fmt.Sprintf("%s:cap:id:%s", meta.Prefix, id)
 	val, err := meta.MerchantRedis.Get(ctx, id).Result()
 	if err != nil || err == redis.Nil {
 		return false
 	}
 
-	str = strings.ToLower(str)
-	if val != str {
+	code = strings.ToLower(code)
+	if val != code {
 		return false
 	}
 
@@ -499,26 +501,27 @@ func MemberVerify(id, str string) bool {
 func MemberCaptcha() ([]byte, string, error) {
 
 	id := helper.GenId()
-	text := meta.MerchantRedis.RPopLPush(ctx, "captcha", "captcha").Val()
+	key := fmt.Sprintf("%s:captcha", meta.Prefix)
+	code := meta.MerchantRedis.RPopLPush(ctx, key, key).Val()
 
 	pipe := meta.MerchantRedis.TxPipeline()
 	defer pipe.Close()
 
-	val := pipe.Get(ctx, text)
-	pipe.SetNX(ctx, id, text, 120*time.Second)
+	code = fmt.Sprintf("%s:cap:code:%s", meta.Prefix, code)
+	id = fmt.Sprintf("%s:cap:id:%s", meta.Prefix, id)
+	val := pipe.Get(ctx, code)
+	pipe.SetNX(ctx, id, code, 120*time.Second)
 
 	_, err := pipe.Exec(ctx)
-
 	if err != nil {
 		return nil, id, errors.New(helper.RedisErr)
 	}
 
 	img, err := val.Bytes()
-
-	//fmt.Println("pipe.Exec(ctx) 2 = ", err)
 	if err != nil {
 		return nil, id, errors.New(helper.RedisErr)
 	}
+
 	return img, id, nil
 }
 

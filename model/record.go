@@ -321,7 +321,7 @@ func recordTradeWithdraw(flag, page, pageSize int,
 			Ty:           1,
 			BillNo:       v.OID,
 			PlatformId:   "0",
-			TransferType: TransactionWithDraw,
+			TransferType: helper.TransactionWithDraw,
 			Amount:       fmt.Sprintf("%.4f", v.Amount),
 			CreatedAt:    fmt.Sprintf("%d", v.CreatedAt),
 			State:        v.State,
@@ -358,7 +358,7 @@ func recordTradeDeposit(flag, page, pageSize int,
 			Ty:           1,
 			BillNo:       v.OID,
 			PlatformId:   v.ChannelID,
-			TransferType: TransactionDeposit,
+			TransferType: helper.TransactionDeposit,
 			Amount:       fmt.Sprintf("%.4f", v.Amount),
 			CreatedAt:    fmt.Sprintf("%d", v.CreatedAt),
 			State:        v.State,
@@ -436,7 +436,7 @@ func recordTradeDividend(flag, page, pageSize int,
 		// 中心钱包
 		if v.Wallet == 1 {
 			// 中心钱包红利
-			item.TransferType = TransactionDividend
+			item.TransferType = helper.TransactionDividend
 		} else { //场馆钱包
 			// 场馆红利
 			item.TransferType = TransferDividend
@@ -538,9 +538,9 @@ func recordTradeAdjust(uid string, flag, page, pageSize int, startAt, endAt int6
 		}
 
 		if adjust.AdjustMode == AdjustUpMode {
-			t.TransferType = TransactionUpPoint
+			t.TransferType = helper.TransactionUpPoint
 		} else {
-			t.TransferType = TransactionDownPoint
+			t.TransferType = helper.TransactionDownPoint
 		}
 
 		data.D = append(data.D, t)

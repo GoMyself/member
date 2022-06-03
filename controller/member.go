@@ -69,6 +69,11 @@ func (that *MemberController) Token(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	m.CreatedAt = 0
+	m.Password = ""
+	m.Address = ""
+	m.BankcardTotal = 0
+	m.Remarks = ""
 	helper.Print(ctx, true, m)
 }
 

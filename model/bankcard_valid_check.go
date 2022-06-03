@@ -20,6 +20,7 @@ type bankcard_check_t struct {
 }
 
 var bankcardCode = map[string]string{
+	"1005": "TPBank",
 	"1006": "AGR",
 	"1007": "OCB",
 	"1008": "BIDV",

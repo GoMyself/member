@@ -20,7 +20,7 @@ type bankcard_check_t struct {
 }
 
 var bankcardCode = map[string]string{
-	"1005": "TPBank",
+	"1005": "TPB",
 	"1006": "AGR",
 	"1007": "OCB",
 	"1008": "BIDV",
@@ -89,7 +89,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	id, err := BankcardTaskCreate(ts, data)
 	if err != nil {
 		// 插入记录 银行卡校验失败日志
-		errmsg := fmt.Sprintf("BankcardValidErr %v %v %v ", helper.BankcardValidErr, id, err.Error())
+		errmsg := fmt.Sprintf("BankcardTaskCreate BankcardValidErr %v %v %v ", helper.BankcardValidErr, id, err.Error())
 		MemberCardLogInsert(fctx, name, bankCard, errmsg[:59], 0)
 		return helper.BankcardValidErr
 	}
@@ -101,18 +101,18 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 		if err == nil {
 			if valid {
 				//插入记录 校验成功日志
-				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("Success %v", helper.Success), 1)
+				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("try at %d Success %v", i, helper.Success), 1)
 				return helper.Success
 			} else {
 				//插入记录 校验失败日志
-				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("BankcardValidErr %v", helper.BankcardValidErr), 0)
+				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("try %d BankcardValidErr %v", i, helper.BankcardValidErr), 0)
 				return helper.BankcardValidErr
 			}
 		}
 		time.Sleep(2 * time.Second)
 	}
 	// 插入记录 银行卡校验失败日志
-	MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("BankcardValidErr %v", helper.BankcardValidErr), 0)
+	MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("Final BankcardValidErr %v", helper.BankcardValidErr), 0)
 	return helper.BankcardValidErr
 }
 

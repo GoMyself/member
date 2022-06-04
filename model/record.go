@@ -564,3 +564,60 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 
 	return errors.New(helper.PhoneVerificationErr)
 }
+
+/// starc 会员列表查询执行
+func EsMemberList(page, pageSize int, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
+
+	data := MemberListData{}
+	if startTime != "" && endTime != "" {
+
+		startAt, err := helper.TimeToLoc(startTime, loc)
+		if err != nil {
+			return data, errors.New(helper.TimeTypeErr)
+		}
+
+		endAt, err := helper.TimeToLoc(endTime, loc)
+		if err != nil {
+			return data, errors.New(helper.TimeTypeErr)
+		}
+
+		if startAt >= endAt {
+			return data, errors.New(helper.QueryTimeRangeErr)
+		}
+
+		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
+	}
+	data.S = pageSize
+
+	query.Filter(elastic.NewTermQuery("prefix", meta.Prefix))
+	var t int64
+	var esResult []*elastic.SearchHit
+	var err2 error
+	if sortField != "" && username == "" {
+		t, esResult, _, err2 = EsMemberListSort(
+			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, depositFields, query, nil)
+		if err2 != nil {
+			return data, pushLog(err2, helper.DBErr)
+		}
+	} else {
+		t, esResult, _, err2 = EsMemberListSearch(
+			esPrefixIndex("tbl_members"), "created_at", page, pageSize, depositFields, query, nil)
+		if err2 != nil {
+			return data, pushLog(err2, helper.DBErr)
+		}
+	}
+
+	var names []string
+	//new_t :=
+	data.T = int(t)
+	for _, v := range esResult {
+
+		record := MemberListCol{}
+		_ = helper.JsonUnmarshal(v.Source, &record)
+		//record.ID = v.Id
+		data.D = append(data.D, record)
+		names = append(names, record.Username)
+	}
+
+	return data, nil
+}

@@ -172,15 +172,12 @@ func (that *MemberController) Reg(ctx *fasthttp.RequestCtx) {
 	}
 
 	ip := helper.FromRequest(ctx)
-	day := ctx.Time().Format("0102")
 	if param.VerifyCode != "6666" {
-
-		smsFlag, err := model.CheckSmsCaptcha(ip, param.Sid, param.Phone, day, param.VerifyCode)
+		smsFlag, err := model.CheckSmsCaptcha(ip, param.Sid, param.Phone, param.VerifyCode)
 		if err != nil || !smsFlag {
 			helper.Print(ctx, false, helper.PhoneVerificationErr)
 			return
 		}
-
 	}
 
 	createdAt := uint32(ctx.Time().Unix())

@@ -20,15 +20,15 @@ func MemberPasswordUpdate(ty int, sid, code, old, password, ts, phone string, fc
 		return errors.New(helper.AccessTokenExpires)
 	}
 
+	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
+	if phoneHash != mb.PhoneHash {
+		return errors.New(helper.UsernamePhoneMismatch)
+	}
+
 	ip := helper.FromRequest(fctx)
 	err = CheckSmsCaptcha(ip, sid, phone, code)
 	if err != nil {
 		return err
-	}
-
-	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
-	if phoneHash != mb.PhoneHash {
-		return errors.New(helper.UsernamePhoneMismatch)
 	}
 
 	// 邮箱 有绑定

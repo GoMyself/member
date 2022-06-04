@@ -760,10 +760,6 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 		return err
 	}
 
-	if len(mb.Username) == 0 {
-		return errors.New(helper.UsernameErr)
-	}
-
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
 	if phoneHash != mb.PhoneHash {
 		return errors.New(helper.UsernamePhoneMismatch)

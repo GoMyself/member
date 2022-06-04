@@ -24,7 +24,12 @@ func MemberPasswordUpdate(ty int, sid, code, old, password, ts, phone string, fc
 	//if phoneHash != mb.PhoneHash {
 	//	return errors.New(helper.UsernamePhoneMismatch)
 	//}
+	recs, err := grpc_t.Decrypt(mb.UID, false, []string{"phone"})
+	if err != nil {
+		return errors.New(helper.GetRPCErr)
+	}
 
+	phone = recs["phone"]
 	ip := helper.FromRequest(fctx)
 	err = CheckSmsCaptcha(ip, sid, phone, code)
 	if err != nil {

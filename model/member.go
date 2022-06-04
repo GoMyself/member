@@ -760,11 +760,6 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 		return err
 	}
 
-	err = CheckSmsCaptcha(ip, sid, phone, code)
-	if err != nil {
-		return err
-	}
-
 	if len(mb.Username) == 0 {
 		return errors.New(helper.UsernameErr)
 	}
@@ -776,6 +771,11 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 
 	if !helper.CtypeDigit(ts) {
 		return errors.New(helper.ParamErr)
+	}
+
+	err = CheckSmsCaptcha(ip, sid, phone, code)
+	if err != nil {
+		return err
 	}
 
 	record := g.Record{

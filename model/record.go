@@ -549,17 +549,18 @@ func recordTradeAdjust(uid string, flag, page, pageSize int, startAt, endAt int6
 	return data, nil
 }
 
-func CheckSmsCaptcha(ip, sid, phone, code string) (bool, error) {
+func CheckSmsCaptcha(ip, sid, phone, code string) error {
 
 	key := fmt.Sprintf("%s:sms:%s%s%s", meta.Prefix, phone, ip, sid)
 	val, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
-		return false, errors.New(helper.CaptchaErr)
+		_ = pushLog(err, helper.RedisErr)
+		return errors.New(helper.PhoneVerificationErr)
 	}
 
 	if code == val {
-		return true, nil
+		return nil
 	}
 
-	return false, errors.New(helper.CaptchaErr)
+	return errors.New(helper.PhoneVerificationErr)
 }

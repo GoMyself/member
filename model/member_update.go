@@ -17,10 +17,11 @@ func MemberPasswordUpdate(ty int, sid, code, old, password, ts, phone string, fc
 
 	mb, err := MemberCache(fctx, "")
 	if err != nil {
-		return err
+		return errors.New(helper.AccessTokenExpires)
 	}
+
 	ip := helper.FromRequest(fctx)
-	err = phoneCmp(sid, code, ip, phone)
+	err = CheckSmsCaptcha(ip, sid, phone, code)
 	if err != nil {
 		return err
 	}

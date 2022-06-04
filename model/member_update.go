@@ -17,17 +17,18 @@ func MemberPasswordUpdate(ty int, sid, code, old, password, ts, phone string, fc
 
 	mb, err := MemberCache(fctx, "")
 	if err != nil {
-		return err
-	}
-	ip := helper.FromRequest(fctx)
-	err = phoneCmp(sid, code, ip, phone)
-	if err != nil {
-		return err
+		return errors.New(helper.AccessTokenExpires)
 	}
 
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
 	if phoneHash != mb.PhoneHash {
 		return errors.New(helper.UsernamePhoneMismatch)
+	}
+
+	ip := helper.FromRequest(fctx)
+	err = CheckSmsCaptcha(ip, sid, phone, code)
+	if err != nil {
+		return err
 	}
 
 	// 邮箱 有绑定

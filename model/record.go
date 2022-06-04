@@ -549,37 +549,20 @@ func recordTradeAdjust(uid string, flag, page, pageSize int, startAt, endAt int6
 	return data, nil
 }
 
-func CheckSmsCaptcha(ip, sid, phone, day, code string) (bool, error) {
+func CheckSmsCaptcha(ip, sid, phone, code string) error {
 
-	key := phone + ip + sid
+	key := fmt.Sprintf("%s:sms:%s%s%s", meta.Prefix, phone, ip, sid)
 	val, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
-		return false, errors.New(helper.CaptchaErr)
+		_ = pushLog(err, helper.RedisErr)
+		return errors.New(helper.PhoneVerificationErr)
 	}
 
-	/*
-		fmt.Println("CheckSmsCaptcha key = ", key)
-		fmt.Println("CheckSmsCaptcha val = ", val)
-		fmt.Println("CheckSmsCaptcha code = ", code)
-	*/
 	if code == val {
-		//rc := g.Record{
-		//	"state": "1",
-		//}
-		//ex := g.Ex{
-		//	"phone":  phone,
-		//	"state":  "0",
-		//	"code":   code,
-		//	"prefix": meta.Prefix,
-		//}
-		//query, _, _ := dialect.Update("sms_log").Set(rc).Where(ex).Limit(1).ToSQL()
-		//fmt.Println(query)
-		//_, _ = meta.MerchantTD.Exec(query)
-
-		return true, nil
+		return nil
 	}
 
-	return false, errors.New(helper.CaptchaErr)
+	return errors.New(helper.PhoneVerificationErr)
 }
 
 /// starc 会员列表查询执行

@@ -755,18 +755,9 @@ func MemberExist(username string) bool {
 //会员忘记密码
 func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 
-	err := phoneCmp(sid, code, ip, phone)
-	if err != nil {
-		return err
-	}
-
 	mb, err := MemberCache(nil, username)
 	if err != nil {
 		return err
-	}
-
-	if len(mb.Username) == 0 {
-		return errors.New(helper.UsernameErr)
 	}
 
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
@@ -776,6 +767,11 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 
 	if !helper.CtypeDigit(ts) {
 		return errors.New(helper.ParamErr)
+	}
+
+	err = CheckSmsCaptcha(ip, sid, phone, code)
+	if err != nil {
+		return err
 	}
 
 	record := g.Record{

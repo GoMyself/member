@@ -500,7 +500,13 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	helper.Print(ctx, true, data)
 }
 
-// 从ES获取 会员数据
+/**
+ * @Description: // 从ES获取 会员数据
+ * @Author: starc
+ * @Date: 2022/6/4 12:38
+ * @LastEditTime: 2022/6/7 19:00
+ * @LastEditors: starc
+ */
 func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))

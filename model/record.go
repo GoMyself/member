@@ -565,7 +565,13 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 	return errors.New(helper.PhoneVerificationErr)
 }
 
-/// starc 会员列表查询执行
+/**
+ * @Description: // starc 会员列表查询执行
+ * @Author: starc
+ * @Date: 2022/6/4 12:38
+ * @LastEditTime: 2022/6/7 19:00
+ * @LastEditors: starc
+ */
 func EsMemberList(page, pageSize int, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
 
 	data := MemberListData{}
@@ -595,13 +601,13 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	var err2 error
 	if sortField != "" && username == "" {
 		t, esResult, _, err2 = EsMemberListSort(
-			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, depositFields, query, nil)
+			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, memberListColFields, query, nil)
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
 		}
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
-			esPrefixIndex("tbl_members"), "created_at", page, pageSize, depositFields, query, nil)
+			esPrefixIndex("tbl_members"), "created_at", page, pageSize, memberListColFields, query, nil)
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
 		}

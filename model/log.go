@@ -33,6 +33,13 @@ func EsMemberListSearch(index, sortField string,
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 }
 
+/**
+ * @Description: // starc 会员列表查询执行
+ * @Author: starc
+ * @Date: 2022/6/4 12:38
+ * @LastEditTime: 2022/6/7 19:00
+ * @LastEditors: starc
+ */
 func EsMemberListSort(index, sortField string,
 	page, pageSize int,
 	fields []string,

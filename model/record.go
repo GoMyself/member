@@ -680,31 +680,3 @@ func MemberRebateExistRedis(ids []string) (map[string]MemberRebate, error) {
 	fmt.Printf("从redis 获取的 返水信息:%+v\n", mm)
 	return mm, nil
 }
-
-//
-//func MemberRebateCache(uid string) (MemberRebate, error) {
-//
-//	m := MemberRebate{}
-//	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, uid)
-//
-//	pipe := meta.MerchantRedis.TxPipeline()
-//	defer pipe.Close()
-//
-//	exist := pipe.Exists(ctx, key)
-//	rs := pipe.HMGet(ctx, key, "zr", "dj", "ty", "dz", "cp", "fc", "by", "cg_high_rebate", "cg_official_rebate", "qp")
-//
-//	_, err := pipe.Exec(ctx)
-//	if err != nil {
-//		return m, pushLog(err, helper.RedisErr)
-//	}
-//
-//	if exist.Val() == 0 {
-//		return m, errors.New(helper.RecordNotExistErr)
-//	}
-//
-//	if err = rs.Scan(&m); err != nil {
-//		return m, pushLog(rs.Err(), helper.RedisErr)
-//	}
-//
-//	return m, nil
-//}

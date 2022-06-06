@@ -262,7 +262,6 @@ func MemberRebateSelect(ids []string) (map[string]MemberRebate, error) {
 	var own []MemberRebate
 	query, _, _ := dialect.From("tbl_member_rebate_info").Select(colsMemberRebate...).Where(g.Ex{"uid": ids}).ToSQL()
 	err := meta.MerchantDB.Select(&own, query)
-	fmt.Printf("反水查询 tbl_member_rebate_info sql:%+v\n", query)
 	if err != nil {
 		return nil, pushLog(err, helper.DBErr)
 	}

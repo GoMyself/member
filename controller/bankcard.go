@@ -30,7 +30,6 @@ func (that *BankcardController) Insert(ctx *fasthttp.RequestCtx) {
 
 	// 用户绑定银行卡
 	err := model.BankcardInsert(ctx, phone, realname, bankcardNo, data)
-	fmt.Println("Warning cart insert:", bankcardNo, data)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

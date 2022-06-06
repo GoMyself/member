@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	g "github.com/doug-martin/goqu/v9"
 	"github.com/olivere/elastic/v7"
 	"net/url"
 	"strconv"
@@ -426,7 +425,7 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 	helper.PrintJson(ctx, true, data)
 }
 
-// 旧接口函数，从mysql获取数据
+// 从ES获取 会员数据
 func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
@@ -445,80 +444,12 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		pageSize = 10
 	}
 
-	ex := g.Ex{}
-	if username != "" {
-		if !validator.CheckUName(username, 5, 14) {
-			helper.Print(ctx, false, helper.UsernameErr)
-			return
-		}
-		ex["username"] = username
+	ascending := false
+	if isAsc == 1 {
+		ascending = true
 	}
 
-	if sortField != "" {
-		sortFields := map[string]bool{
-			"deposit":    true,
-			"withdraw":   true,
-			"dividend":   true,
-			"rebate":     true,
-			"net_amount": true,
-		}
-
-		if _, ok := sortFields[sortField]; !ok {
-			helper.Print(ctx, false, helper.ParamErr)
-			return
-		}
-
-		if !validator.CheckIntScope(strconv.Itoa(isAsc), 0, 1) {
-			helper.Print(ctx, false, helper.ParamErr)
-			return
-		}
-	}
-
-	currentUsername := string(ctx.UserValue("token").([]byte))
-	if currentUsername == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-	//currentUsername := "jasper01"
-	ex["parent_name"] = currentUsername
-
-	data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
-	if err != nil {
-		helper.Print(ctx, false, err.Error())
-		return
-	}
-
-	if agg == 1 {
-		aggData, err := model.MemberAgg(currentUsername)
-		if err != nil {
-			helper.Print(ctx, false, err.Error())
-			return
-		}
-		data.Agg = aggData
-	}
-
-	helper.Print(ctx, true, data)
-}
-
-// @Description: 从ES获取 会员数据
-func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
-
-	username := string(ctx.QueryArgs().Peek("username"))
-	startTime := string(ctx.QueryArgs().Peek("start_time"))
-	endTime := string(ctx.QueryArgs().Peek("end_time"))
-	page := ctx.QueryArgs().GetUintOrZero("page")
-	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
-	sortField := string(ctx.QueryArgs().Peek("sort_field"))
-	isAsc := ctx.QueryArgs().GetUintOrZero("is_asc")
-	agg := ctx.QueryArgs().GetUintOrZero("agg")
-	if page == 0 {
-		page = 1
-	}
-
-	if pageSize == 0 {
-		pageSize = 10
-	}
-	// 改为 es 查询
+	// 从 es 查询
 	query := elastic.NewBoolQuery()
 	if username != "" {
 		if !validator.CheckUName(username, 5, 14) {
@@ -553,10 +484,10 @@ func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
 	}
-	//  从 es获取数据
+	// 获取数据
 	query.Filter(elastic.NewTermQuery("parent_name", currentUsername))
 
-	data, err2 := model.EsMemberList(page, pageSize, currentUsername, startTime, endTime, sortField, query, isAsc)
+	data, err2 := model.EsMemberList(page, pageSize, ascending, currentUsername, startTime, endTime, sortField, query)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())
 		return

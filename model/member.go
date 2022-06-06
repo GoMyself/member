@@ -967,8 +967,7 @@ func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page
 		Limit(uint(pageSize)).
 		Order(orderBy).
 		ToSQL()
-	fmt.Println("WARNING tbl_report_agency query:", query)
-	fmt.Printf("WARNING query from tbl_report_agency:%+v\n", query)
+
 	err := meta.ReportDB.Select(&data, query)
 	if err != nil {
 		return data, number, pushLog(err, helper.DBErr)
@@ -999,7 +998,6 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 	query, _, _ := dialect.From("tbl_members").Select("uid", "username").Where(ex).Offset(uint(offset)).
 		Limit(uint(pageSize)).Order(g.L("created_at").Desc()).ToSQL()
 	err := meta.MerchantDB.Select(&members, query)
-	fmt.Printf("WARNING query tbl_members fields:%+v result:%+v \n", query, err)
 
 	if err != nil {
 		return data, number, pushLog(err, helper.DBErr)
@@ -1031,8 +1029,6 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 			g.SUM("company_net_amount").As("net_amount"),
 		).GroupBy("uid").
 		ToSQL()
-	fmt.Printf("WARNING tbl_report_agency fields:", query)
-	fmt.Printf("WARNING query tbl_report_agency fields:%+v\n", query)
 
 	err = meta.ReportDB.Select(&data, query)
 	if err != nil && err != sql.ErrNoRows {

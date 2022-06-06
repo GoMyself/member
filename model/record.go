@@ -603,7 +603,7 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		}
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
-			esPrefixIndex("tbl_members"), "created_at", page, pageSize, memberListColFields, query, nil)
+			esPrefixIndex("tbl_members"), "created_at", page, pageSize, []string{"uid", "username"}, query, nil)
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)

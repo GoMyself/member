@@ -15,7 +15,6 @@ var (
 	adjustFields           = []string{"id", "uid", "username", "top_uid", "top_name", "parent_uid", "parent_name", "amount", "adjust_type", "adjust_mode", "is_turnover", "turnover_multi", "pid", "apply_remark", "review_remark", "state", "hand_out_state", "images", "apply_at", "apply_uid", "apply_name", "review_at", "review_uid", "review_name"}
 	depositFields          = []string{"id", "prefix", "oid", "channel_id", "finance_type", "uid", "top_uid", "top_name", "parent_uid", "parent_name", "username", "cid", "pid", "amount", "state", "automatic", "created_at", "created_uid", "created_name", "confirm_at", "confirm_uid", "confirm_name", "review_remark", "rate", "usdt_apply_amount", "protocol_type", "address", "hash_id", "usdt_final_amount", "flag", "bankcard_id", "manual_remark", "bank_no", "bank_code"}
 	withdrawFields         = []string{"id", "prefix", "bid", "flag", "finance_type", "oid", "uid", "top_uid", "top_name", "parent_uid", "parent_name", "username", "pid", "amount", "state", "automatic", "created_at", "confirm_at", "confirm_uid", "review_remark", "withdraw_at", "confirm_name", "withdraw_uid", "withdraw_name", "withdraw_remark", "bank_name", "card_name", "card_no", "receive_at"}
-	memberListColFields    = []string{"uid", "username"}
 	reportAgencyListFields = []string{"bet_amount", "deposit_amount", "withdrawal_amount", "bet_mem_count", "first_deposit_count", "regist_count", "mem_count", "rebate_amount", "company_net_amount", "dividend_amount", "balance_total", "win_amount"}
 )
 

@@ -2,16 +2,9 @@ package model
 
 import (
 	"fmt"
-	"log"
-	"os"
-
 	//"github.com/doug-martin/goqu/v9/exp"
 	"github.com/olivere/elastic/v7"
 	"member/contrib/helper"
-)
-
-var (
-	logger = log.New(os.Stderr, "Warning - ", 13)
 )
 
 func EsMemberListSearch(index, sortField string,
@@ -36,7 +29,7 @@ func EsMemberListSearch(index, sortField string,
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil
 	}
-	logger.Println("EsMemberListSearch from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
+	fmt.Println("EsMemberListSearch from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 }
 
@@ -55,7 +48,7 @@ func EsMemberListSort(index, sortField string,
 	//var data []MemberListCol
 	query.Filter(elastic.NewTermQuery("report_type", 2)) //  1投注时间2结算时间3投注时间月报4结算时间月报
 	query.Filter(elastic.NewTermQuery("data_type", 1))
-	logger.Println("Warning EsMemberListSort query: \n")
+	fmt.Println("Warning EsMemberListSort query: \n")
 	fmt.Printf("query:%+v\n", query)
 	fsc := elastic.NewFetchSourceContext(true).Include(fields...)
 	offset := (page - 1) * pageSize
@@ -68,14 +61,14 @@ func EsMemberListSort(index, sortField string,
 	esService := meta.ES.Search().FetchSourceContext(fsc).Query(query).From(offset).Size(pageSize).
 		TrackTotalHits(true).
 		Sort(sortField, orderAsc)
-	logger.Println("Warning meta.ES Sort:")
+	fmt.Println("Warning meta.ES Sort:")
 	fmt.Printf("esService:%+v\n", esService)
 
 	for k, v := range agg {
 		esService = esService.Aggregation(k, v)
 	}
 	resOrder, err := esService.Index(index).Do(ctx)
-	logger.Println("Warning meta.ES Sort: \n", resOrder)
+	fmt.Println("Warning meta.ES Sort: \n", resOrder)
 
 	if err != nil {
 		fmt.Println(err)
@@ -85,7 +78,7 @@ func EsMemberListSort(index, sortField string,
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil
 	}
-	logger.Println("EsMemberListSort from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
+	fmt.Println("EsMemberListSort from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 
 }

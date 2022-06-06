@@ -601,8 +601,8 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	if sortField != "" && username == "" {
 		t, esResult, _, err2 = EsMemberListSort(
 			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, reportAgencyListFields, query, nil, isAsc)
-		logger.Println("query from tbl_report_agency by EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t)
-		fmt.Printf("tbl_report_agency sort search result:%+v err2:%+v\n", esResult, err2)
+		//fmt.Println("query from tbl_report_agency by EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t)
+		fmt.Printf("tbl_report_agency sort search result:%+v err2:%+v\n", len(esResult), err2)
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
@@ -610,7 +610,7 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
 			esPrefixIndex("tbl_members"), "created_at", page, pageSize, memberListColFields, query, nil)
-		logger.Println("query tbl_members by EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t)
+		//fmt.Println("query tbl_members by EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t)
 		fmt.Printf("tbl_members search result:%+v,err2:%+v\n", len(esResult), err2)
 
 		if err2 != nil {
@@ -677,6 +677,6 @@ func MemberRebateExistRedis(ids []string) (map[string]MemberRebate, error) {
 		}
 
 	}
-	fmt.Printf("从redis 获取的 返水信息:%+v\n", mm)
+	//fmt.Printf("从redis 获取的 返水信息:%+v\n", mm)
 	return mm, nil
 }

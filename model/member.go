@@ -967,7 +967,7 @@ func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page
 		Limit(uint(pageSize)).
 		Order(orderBy).
 		ToSQL()
-	logger.Println("WARNING tbl_report_agency query:", query)
+	fmt.Println("WARNING tbl_report_agency query:", query)
 	fmt.Printf("WARNING query from tbl_report_agency:%+v\n", query)
 	err := meta.ReportDB.Select(&data, query)
 	if err != nil {
@@ -1031,7 +1031,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 			g.SUM("company_net_amount").As("net_amount"),
 		).GroupBy("uid").
 		ToSQL()
-	logger.Printf("WARNING tbl_report_agency fields:", query)
+	fmt.Printf("WARNING tbl_report_agency fields:", query)
 	fmt.Printf("WARNING query tbl_report_agency fields:%+v\n", query)
 
 	err = meta.ReportDB.Select(&data, query)

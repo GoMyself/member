@@ -1059,7 +1059,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 	return data, number, nil
 }
 
-// MemberAgg 获取 活跃人数 直属下级人数 新增注册人数
+//  获取 活跃人数 直属下级人数 新增注册人数
 func MemberAgg(username string) (MemberAggData, error) {
 
 	data := MemberAggData{}

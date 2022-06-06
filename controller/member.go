@@ -426,7 +426,7 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 	helper.PrintJson(ctx, true, data)
 }
 
-/// 旧接口函数，从mysql获取数据
+// 旧接口函数，从mysql获取数据
 func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
@@ -500,11 +500,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	helper.Print(ctx, true, data)
 }
 
-// EsList /* @Description: 从ES获取 会员数据
-// * @Author: starc
-// * @Date: 2022/6/4 12:38
-// * @LastEditTime: 2022/6/7 19:00
-// * @LastEditors: starc
+// @Description: 从ES获取 会员数据
 func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
@@ -557,11 +553,9 @@ func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
 	}
-	//currentUsername := "jasper01"
-	//  改为从 es获取数据
+	//  从 es获取数据
 	query.Filter(elastic.NewTermQuery("parent_name", currentUsername))
 
-	/// 从es 查询
 	data, err2 := model.EsMemberList(page, pageSize, currentUsername, startTime, endTime, sortField, query, isAsc)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())

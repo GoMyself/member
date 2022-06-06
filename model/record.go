@@ -678,7 +678,7 @@ func MemberRebateExistRedis(ids []string) (map[string]MemberRebate, error) {
 		}
 
 	}
-
+	fmt.Printf("从redis 获取的 返水信息:%+v\n", mm)
 	return mm, nil
 }
 

@@ -592,7 +592,6 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
 	}
 	data.S = pageSize
-	logger.Println("param check success.", startTime, endTime)
 
 	query.Filter(elastic.NewTermQuery("prefix", meta.Prefix))
 	var t int64
@@ -612,7 +611,7 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		t, esResult, _, err2 = EsMemberListSearch(
 			esPrefixIndex("tbl_members"), "created_at", page, pageSize, memberListColFields, query, nil)
 		logger.Println("query tbl_members by EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t)
-		fmt.Printf("tbl_members search result:%+v,err2:%+v\n", esResult, err2)
+		fmt.Printf("tbl_members search result:%+v,err2:%+v\n", len(esResult), err2)
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)

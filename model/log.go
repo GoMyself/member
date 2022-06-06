@@ -22,9 +22,6 @@ func EsMemberListSearch(index, sortField string,
 
 	fsc := elastic.NewFetchSourceContext(true).Include(fields...)
 	offset := (page - 1) * pageSize
-	logger.Println("Warning EsMemberListSort query: \n", offset)
-	fmt.Printf("fields:%+v fsc:%+v\n", fields, fsc)
-	fmt.Printf("query elastic:%+v\n", query)
 	//打印es查询json
 	esService := meta.ES.Search().FetchSourceContext(fsc).Query(query).From(offset).Size(pageSize).TrackTotalHits(true).Sort(sortField, false)
 	for k, v := range agg {
@@ -35,25 +32,19 @@ func EsMemberListSearch(index, sortField string,
 		fmt.Println(err)
 		return 0, nil, nil, pushLog(err, helper.ESErr)
 	}
-	logger.Println("Warning EsMemberListSort query: \n", offset)
-	fmt.Printf("fsc:%+v\n", fsc)
-
-	fmt.Printf("query sql:%+v\n", query)
 
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil
 	}
-
+	logger.Println("EsMemberListSearch from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 }
 
-/**
- * @Description: // starc 会员列表查询执行
- * @Author: starc
- * @Date: 2022/6/4 12:38
- * @LastEditTime: 2022/6/7 19:00
- * @LastEditors: starc
- */
+// EsMemberListSort @Description: starc 会员列表查询执行
+// * @Author: starc
+// * @Date: 2022/6/4 12:38
+// * @LastEditTime: 2022/6/7 19:00
+// * @LastEditors: starc
 func EsMemberListSort(index, sortField string,
 	page, pageSize int,
 	fields []string,
@@ -94,7 +85,7 @@ func EsMemberListSort(index, sortField string,
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil
 	}
-
+	logger.Println("EsMemberListSort from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 
 }

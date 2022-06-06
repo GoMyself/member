@@ -967,6 +967,7 @@ func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page
 		Limit(uint(pageSize)).
 		Order(orderBy).
 		ToSQL()
+
 	err := meta.ReportDB.Select(&data, query)
 	if err != nil {
 		return data, number, pushLog(err, helper.DBErr)
@@ -997,6 +998,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 	query, _, _ := dialect.From("tbl_members").Select("uid", "username").Where(ex).Offset(uint(offset)).
 		Limit(uint(pageSize)).Order(g.L("created_at").Desc()).ToSQL()
 	err := meta.MerchantDB.Select(&members, query)
+
 	if err != nil {
 		return data, number, pushLog(err, helper.DBErr)
 	}
@@ -1027,6 +1029,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 			g.SUM("company_net_amount").As("net_amount"),
 		).GroupBy("uid").
 		ToSQL()
+
 	err = meta.ReportDB.Select(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println(err.Error())
@@ -1052,7 +1055,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 	return data, number, nil
 }
 
-// MemberAgg 获取 活跃人数 直属下级人数 新增注册人数
+//  获取 活跃人数 直属下级人数 新增注册人数
 func MemberAgg(username string) (MemberAggData, error) {
 
 	data := MemberAggData{}

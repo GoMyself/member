@@ -58,10 +58,10 @@ func EsMemberListSort(index, sortField string,
 	page, pageSize int,
 	fields []string,
 	query *elastic.BoolQuery,
-	agg map[string]*elastic.SumAggregation) (int64, []*elastic.SearchHit, elastic.Aggregations, error) {
+	agg map[string]*elastic.SumAggregation,
+	isAsc int) (int64, []*elastic.SearchHit, elastic.Aggregations, error) {
 
 	//var data []MemberListCol
-
 	query.Filter(elastic.NewTermQuery("report_type", 2)) //  1投注时间2结算时间3投注时间月报4结算时间月报
 	query.Filter(elastic.NewTermQuery("data_type", 1))
 	logger.Println("Warning EsMemberListSort query: \n")
@@ -69,7 +69,14 @@ func EsMemberListSort(index, sortField string,
 	fsc := elastic.NewFetchSourceContext(true).Include(fields...)
 	offset := (page - 1) * pageSize
 	//打印es查询json
-	esService := meta.ES.Search().FetchSourceContext(fsc).Query(query).From(offset).Size(pageSize).TrackTotalHits(true).Sort(sortField, false)
+	//升序否?
+	orderAsc := false
+	if isAsc == 1 {
+		orderAsc = true
+	}
+	esService := meta.ES.Search().FetchSourceContext(fsc).Query(query).From(offset).Size(pageSize).
+		TrackTotalHits(true).
+		Sort(sortField, orderAsc)
 	logger.Println("Warning meta.ES Sort:")
 	fmt.Printf("esService:%+v\n", esService)
 

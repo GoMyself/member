@@ -523,14 +523,12 @@ func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 		pageSize = 10
 	}
 	// 改为 es 查询
-	//ex := g.Ex{}
 	query := elastic.NewBoolQuery()
 	if username != "" {
 		if !validator.CheckUName(username, 5, 14) {
 			helper.Print(ctx, false, helper.UsernameErr)
 			return
 		}
-		//ex["username"] = username
 		query.Filter(elastic.NewTermQuery("username", username))
 	}
 
@@ -560,19 +558,11 @@ func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 		return
 	}
 	//currentUsername := "jasper01"
-	//ex["parent_name"] = currentUsername
 	//  改为从 es获取数据
 	query.Filter(elastic.NewTermQuery("parent_name", currentUsername))
 
-	// 改为 es 数据源
-	//data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
-	//if err != nil {
-	//	helper.Print(ctx, false, err.Error())
-	//	return
-	//}
-
 	/// 从es 查询
-	data, err2 := model.EsMemberList(page, pageSize, currentUsername, startTime, endTime, sortField, query)
+	data, err2 := model.EsMemberList(page, pageSize, currentUsername, startTime, endTime, sortField, query, isAsc)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())
 		return

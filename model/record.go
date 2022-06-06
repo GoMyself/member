@@ -571,7 +571,7 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 // * @Date: 2022/6/4 12:38
 // * @LastEditTime: 2022/6/7 19:00
 // * @LastEditors: starc
-func EsMemberList(page, pageSize int, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
+func EsMemberList(page, pageSize int, username, startTime, endTime, sortField string, query *elastic.BoolQuery, isAsc int) (MemberListData, error) {
 
 	data := MemberListData{}
 	if startTime != "" && endTime != "" {
@@ -598,10 +598,10 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	var t int64
 	var esResult []*elastic.SearchHit
 	var err2 error
-
+	fmt.Printf("query member from ES sortField:%s, username:%s\n", sortField, username)
 	if sortField != "" && username == "" {
 		t, esResult, _, err2 = EsMemberListSort(
-			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, reportAgencyListFields, query, nil)
+			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, reportAgencyListFields, query, nil, isAsc)
 		logger.Println("query from tbl_report_agency by EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t)
 		fmt.Printf("tbl_report_agency sort search result:%+v err2:%+v\n", esResult, err2)
 

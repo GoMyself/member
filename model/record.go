@@ -552,6 +552,7 @@ func recordTradeAdjust(uid string, flag, page, pageSize int, startAt, endAt int6
 func CheckSmsCaptcha(ip, sid, phone, code string) error {
 
 	key := fmt.Sprintf("%s:sms:%s%s%s", meta.Prefix, phone, ip, sid)
+	fmt.Println("CheckSmsCaptcha", key)
 	val, err := meta.MerchantRedis.Get(ctx, key).Result()
 	if err != nil && err != redis.Nil {
 		_ = pushLog(err, helper.RedisErr)

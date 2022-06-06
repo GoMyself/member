@@ -597,7 +597,7 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	var t int64
 	var esResult []*elastic.SearchHit
 	var err2 error
-	fmt.Printf("query member from ES sortField:%s, username:%s\n", sortField, username)
+	//fmt.Printf("query member from ES sortField:%s, username:%s\n", sortField, username)
 	if sortField != "" && username == "" {
 		t, esResult, _, err2 = EsMemberListSort(
 			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, reportAgencyListFields, query, nil, isAsc)
@@ -619,13 +619,11 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	}
 
 	var names []string
-	//new_t :=
 	data.T = int(t)
 	for _, v := range esResult {
 
 		record := MemberListCol{}
 		_ = helper.JsonUnmarshal(v.Source, &record)
-		//record.ID = v.Id
 		data.D = append(data.D, record)
 		names = append(names, record.Username)
 	}

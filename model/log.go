@@ -29,7 +29,7 @@ func EsMemberListSearch(index, sortField string,
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil
 	}
-	fmt.Println("EsMemberListSearch from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
+	fmt.Println("EsMemberListSearch from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations)
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 }
 
@@ -78,7 +78,7 @@ func EsMemberListSort(index, sortField string,
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil
 	}
-	fmt.Println("EsMemberListSort from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations, nil)
+	fmt.Println("EsMemberListSort from index:", index, "sortField:", sortField, "result:", resOrder.Hits.TotalHits.Value, "length hits:", len(resOrder.Hits.Hits), resOrder.Aggregations)
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 
 }

@@ -634,18 +634,18 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		return data, nil
 	}
 
-	// 从mysql获取用户的反水比例
+	// 获取用户的反水比例
 	var ids []string
 	for _, v := range data.D {
 		ids = append(ids, v.UID)
 	}
-	rebate, err := MemberRebateSelect(ids)
+	rebates, err := MemberRebateExistRedis(ids)
 	if err != nil {
 		return data, err
 	}
 
 	for i, v := range data.D {
-		if rb, ok := rebate[v.UID]; ok {
+		if rb, ok := rebates[v.UID]; ok {
 			data.D[i].DJ = rb.DJ
 			data.D[i].TY = rb.TY
 			data.D[i].ZR = rb.ZR
@@ -660,3 +660,51 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	}
 	return data, nil
 }
+
+func MemberRebateExistRedis(ids []string) (map[string]MemberRebate, error) {
+	// 从redis获取 会员返水 信息
+	pipe := meta.MerchantRedis.Pipeline()
+	defer pipe.Close()
+	mm := make(map[string]MemberRebate)
+	//// 任何一个错误的id 都将返回一个错误  w88:m:rebate:100571726127070606
+	for i, idd := range ids {
+		m, ee := MemberRebateGetCache(idd)
+		if ee != nil {
+			msg := fmt.Sprintf("%d ,errtype:%s", i, helper.RedisErr)
+			return nil, pushLog(ee, msg)
+		} else {
+			mm[idd] = m
+		}
+
+	}
+
+	return mm, nil
+}
+
+//
+//func MemberRebateCache(uid string) (MemberRebate, error) {
+//
+//	m := MemberRebate{}
+//	key := fmt.Sprintf("%s:m:rebate:%s", meta.Prefix, uid)
+//
+//	pipe := meta.MerchantRedis.TxPipeline()
+//	defer pipe.Close()
+//
+//	exist := pipe.Exists(ctx, key)
+//	rs := pipe.HMGet(ctx, key, "zr", "dj", "ty", "dz", "cp", "fc", "by", "cg_high_rebate", "cg_official_rebate", "qp")
+//
+//	_, err := pipe.Exec(ctx)
+//	if err != nil {
+//		return m, pushLog(err, helper.RedisErr)
+//	}
+//
+//	if exist.Val() == 0 {
+//		return m, errors.New(helper.RecordNotExistErr)
+//	}
+//
+//	if err = rs.Scan(&m); err != nil {
+//		return m, pushLog(rs.Err(), helper.RedisErr)
+//	}
+//
+//	return m, nil
+//}

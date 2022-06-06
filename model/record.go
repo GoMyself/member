@@ -601,7 +601,8 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	if sortField != "" && username == "" {
 		t, esResult, _, err2 = EsMemberListSort(
 			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, reportAgencyListFields, query, nil)
-		logger.Println("query from tbl_report_agency by EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
+		logger.Println("query from tbl_report_agency by EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t)
+		fmt.Printf("tbl_report_agency sort search result:%+v err2:%+v\n", esResult, err2.Error())
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
@@ -609,7 +610,8 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
 			esPrefixIndex("tbl_members"), "created_at", page, pageSize, memberListColFields, query, nil)
-		logger.Println("query tbl_members by EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
+		logger.Println("query tbl_members by EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t)
+		fmt.Printf("tbl_members search result:%+v,err2:%+v\n", esResult, err2.Error())
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)

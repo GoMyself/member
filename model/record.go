@@ -630,6 +630,10 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		names = append(names, record.Username)
 	}
 
+	if len(data.D) == 0 {
+		return data, nil
+	}
+
 	// 从mysql获取用户的反水比例
 	var ids []string
 	for _, v := range data.D {

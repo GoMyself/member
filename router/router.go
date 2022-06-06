@@ -139,7 +139,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	//导航栏列表
 	get("/member/nav", memberCtl.Nav)
 	// 会员列表
-	get("/member/list", memberCtl.List)
+	//get("/member/list", memberCtl.List)
+	get("/member/list", memberCtl.EsList)
 
 	get("/member/avatar/update", memberCtl.Avatar)
 

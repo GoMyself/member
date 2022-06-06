@@ -588,7 +588,6 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		if startAt >= endAt {
 			return data, errors.New(helper.QueryTimeRangeErr)
 		}
-
 		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
 	}
 	data.S = pageSize
@@ -600,10 +599,9 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	var err2 error
 
 	if sortField != "" && username == "" {
-
 		t, esResult, _, err2 = EsMemberListSort(
-			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, memberListColFields, query, nil)
-		logger.Println("param check success.EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
+			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, reportAgencyListFields, query, nil)
+		logger.Println("query from tbl_report_agency by EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
@@ -611,7 +609,7 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
 			esPrefixIndex("tbl_members"), "created_at", page, pageSize, memberListColFields, query, nil)
-		logger.Println("param check success.EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
+		logger.Println("query tbl_members by EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
@@ -630,5 +628,29 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		names = append(names, record.Username)
 	}
 
+	// 从mysql获取用户的反水比例
+	var ids []string
+	for _, v := range data.D {
+		ids = append(ids, v.UID)
+	}
+	rebate, err := MemberRebateSelect(ids)
+	if err != nil {
+		return data, err
+	}
+
+	for i, v := range data.D {
+		if rb, ok := rebate[v.UID]; ok {
+			data.D[i].DJ = rb.DJ
+			data.D[i].TY = rb.TY
+			data.D[i].ZR = rb.ZR
+			data.D[i].QP = rb.QP
+			data.D[i].DZ = rb.DZ
+			data.D[i].CP = rb.CP
+			data.D[i].FC = rb.FC
+			data.D[i].BY = rb.BY
+			data.D[i].CGHighRebate = rb.CGHighRebate
+			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
+		}
+	}
 	return data, nil
 }

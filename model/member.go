@@ -765,10 +765,6 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 		return errors.New(helper.UsernamePhoneMismatch)
 	}
 
-	if !helper.CtypeDigit(ts) {
-		return errors.New(helper.ParamErr)
-	}
-
 	err = CheckSmsCaptcha(ip, sid, phone, code)
 	if err != nil {
 		return err

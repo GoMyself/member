@@ -565,13 +565,11 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 	return errors.New(helper.PhoneVerificationErr)
 }
 
-/**
- * @Description: // starc 会员列表查询执行
- * @Author: starc
- * @Date: 2022/6/4 12:38
- * @LastEditTime: 2022/6/7 19:00
- * @LastEditors: starc
- */
+// EsMemberList /* @Description: // starc 会员列表查询执行
+// * @Author: starc
+// * @Date: 2022/6/4 12:38
+// * @LastEditTime: 2022/6/7 19:00
+// * @LastEditors: starc
 func EsMemberList(page, pageSize int, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
 
 	data := MemberListData{}
@@ -594,20 +592,27 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
 	}
 	data.S = pageSize
+	logger.Println("param check success.", startTime, endTime)
 
 	query.Filter(elastic.NewTermQuery("prefix", meta.Prefix))
 	var t int64
 	var esResult []*elastic.SearchHit
 	var err2 error
+
 	if sortField != "" && username == "" {
+
 		t, esResult, _, err2 = EsMemberListSort(
 			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, memberListColFields, query, nil)
+		logger.Println("param check success.EsMemberListSort:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
+
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
 		}
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
 			esPrefixIndex("tbl_members"), "created_at", page, pageSize, memberListColFields, query, nil)
+		logger.Println("param check success.EsMemberListSearch:", startTime, endTime, sortField, username, "es result, error:", t, esResult, err2)
+
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
 		}

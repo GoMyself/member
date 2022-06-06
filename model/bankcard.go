@@ -67,6 +67,8 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 
 	//判断卡号是否存在
 	err = BankCardExistRedis(bankcardNo)
+	fmt.Printf("Warning card %v exist in redis cache?:%+v\n", bankcardNo, data)
+
 	if err != nil {
 		return err
 	}
@@ -109,7 +111,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	}
 
 	statusCoce := BankcardCheck(fctx, bankcardNo, data.BankID, realName)
-	fmt.Println("BankcardCheck = ", statusCoce)
+	fmt.Println("BankcardCheck = ", bankcardNo, statusCoce)
 	if statusCoce != helper.Success {
 		return errors.New(statusCoce)
 	}

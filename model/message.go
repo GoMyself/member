@@ -1,111 +1,122 @@
 package model
 
 import (
-	"errors"
+	"database/sql"
 	"fmt"
-	"github.com/olivere/elastic/v7"
-	"github.com/wI2L/jettison"
+	g "github.com/doug-martin/goqu/v9"
 	"member/contrib/helper"
+	"time"
 )
 
 //MessageList  站内信列表
-func MessageList(ty, page, pageSize int, username string) (string, error) {
+func MessageList(ty, page, pageSize int, username string) (MessageTDData, error) {
 
-	fields := []string{"msg_id", "username", "title", "sub_title", "content", "is_top", "is_vip", "ty", "is_read", "send_name", "send_at", "prefix"}
-	param := map[string]interface{}{
-		"prefix":   meta.Prefix,
-		"username": username,
+	data := MessageTDData{
+		S: pageSize,
+	}
+	ex := g.Ex{
+		"prefix":    meta.Prefix,
+		"username":  username,
+		"is_delete": 0,
 	}
 	if ty != 0 {
-		param["ty"] = ty
+		ex["ty"] = ty
 	}
-	sortFields := map[string]bool{
-		"is_read": true,
-		"send_at": false,
+	t := dialect.From("messages")
+	if page == 1 {
+		query, _, _ := t.Select(g.COUNT("ts")).Where(ex).ToSQL()
+		fmt.Println(query)
+		err := meta.MerchantTD.Get(&data.T, query)
+		if err != nil && err != sql.ErrNoRows {
+			return data, pushLog(err, helper.DBErr)
+		}
+
+		if data.T == 0 {
+			return data, nil
+		}
 	}
+
+	offset := (page - 1) * pageSize
+	query, _, _ := t.Select(colsMessageTD...).Where(ex).Offset(uint(offset)).Limit(uint(pageSize)).Order(g.C("ts").Desc()).ToSQL()
 	if ty == 0 {
-		sortFields = map[string]bool{
-			"is_top":  false,
-			"send_at": false,
-		}
+		query, _, _ = t.Select(colsMessageTD...).Where(ex).Offset(uint(offset)).Limit(uint(pageSize)).Order(g.C("is_top").Desc(), g.C("send_at").Desc()).ToSQL()
 	}
-	total, esData, _, err := esSearch(esPrefixIndex("messages"), sortFields, page, pageSize, fields, param, map[string][]interface{}{}, map[string]string{})
+	fmt.Println(query)
+	err := meta.MerchantTD.Select(&data.D, query)
 	if err != nil {
-		return `{"t":0,"d":[]}`, pushLog(err, helper.ESErr)
+		return data, pushLog(err, helper.DBErr)
 	}
 
-	data := MessageEsData{}
-	data.S = pageSize
-	data.T = total
-	for _, v := range esData {
-		msg := MessageEs{}
-		msg.ID = v.Id
-		err = helper.JsonUnmarshal(v.Source, &msg)
-		if err != nil {
-			fmt.Printf("json : %s \n, error : %v \n", string(v.Source), err)
-			continue
-		}
-		data.D = append(data.D, msg)
-	}
-
-	b, err := jettison.Marshal(data)
-	if err != nil {
-		return "", errors.New(helper.FormatErr)
-	}
-
-	return string(b), nil
+	return data, nil
 }
 
 func MessageNum(username string) (int64, error) {
 
-	param := map[string]interface{}{
-		"prefix":   meta.Prefix,
-		"username": username,
-		"is_read":  0,
+	var num int64
+	ex := g.Ex{
+		"prefix":    meta.Prefix,
+		"username":  username,
+		"is_read":   0,
+		"is_delete": 0,
+	}
+	query, _, _ := dialect.From("messages").Select(g.COUNT("ts")).Where(ex).ToSQL()
+	fmt.Println(query)
+	err := meta.MerchantTD.Get(&num, query)
+	if err != nil && err != sql.ErrNoRows {
+		return num, pushLog(err, helper.DBErr)
 	}
 
-	total, _, _, err := esSearch(esPrefixIndex("messages"), map[string]bool{}, 1, 0, []string{}, param, map[string][]interface{}{}, map[string]string{})
-	if err != nil {
-		return total, pushLog(err, helper.ESErr)
-	}
-
-	return total, nil
+	return num, nil
 }
 
 //MessageRead  站内信已读
-func MessageRead(id, username string) error {
+func MessageRead(ts string) error {
 
-	boolQuery := elastic.NewBoolQuery().Must(
-		elastic.NewTermQuery("_id", id),
-		elastic.NewTermQuery("username", username),
-		elastic.NewTermQuery("prefix", meta.Prefix))
-
-	_, err := meta.ES.UpdateByQuery(esPrefixIndex("messages")).Query(boolQuery).
-		Script(elastic.NewScript("ctx._source['is_read']=1;ctx._source['is_top']=0;")).ProceedOnVersionConflict().Do(ctx)
+	t, _ := time.ParseInLocation(time.RFC3339, ts, loc)
+	record := g.Record{
+		"ts":        t.UnixMilli(),
+		"is_delete": 1,
+	}
+	query, _, _ := dialect.Insert("messages").Rows(record).ToSQL()
+	fmt.Println(query)
+	_, err := meta.MerchantTD.Exec(query)
 	if err != nil {
-		return pushLog(err, helper.ESErr)
+		return pushLog(err, helper.DBErr)
 	}
 
 	return nil
 }
 
 // 站内信删除已读
-func MessageDelete(ids []interface{}, username string, flag int) error {
+func MessageDelete(username string, ids []string, flag int) error {
 
-	query := elastic.NewBoolQuery().Filter(
-		elastic.NewTermsQuery("_id", ids...),
-		elastic.NewTermQuery("username", username),
-		elastic.NewTermQuery("prefix", meta.Prefix))
 	if flag == 2 {
-		query = elastic.NewBoolQuery().Must(
-			elastic.NewTermQuery("is_read", 1),
-			elastic.NewTermQuery("username", username),
-			elastic.NewTermQuery("prefix", meta.Prefix))
+		ex := g.Ex{
+			"prefix":   meta.Prefix,
+			"is_read":  1,
+			"username": username,
+		}
+		query, _, _ := dialect.From("messages").Select("ts").Where(ex).ToSQL()
+		fmt.Println(query)
+		err := meta.MerchantTD.Select(&ids, query)
+		if err != nil {
+			return pushLog(err, helper.DBErr)
+		}
 	}
-
-	_, err := meta.ES.DeleteByQuery(esPrefixIndex("messages")).Query(query).ProceedOnVersionConflict().Do(ctx)
+	var records []g.Record
+	for _, v := range ids {
+		t, _ := time.ParseInLocation(time.RFC3339, v, loc)
+		record := g.Record{
+			"ts":        t.UnixMilli(),
+			"is_delete": 1,
+		}
+		records = append(records, record)
+	}
+	query, _, _ := dialect.Insert("messages").Rows(records).ToSQL()
+	fmt.Println(query)
+	_, err := meta.MerchantTD.Exec(query)
 	if err != nil {
-		return pushLog(err, helper.ESErr)
+		return pushLog(err, helper.DBErr)
 	}
 
 	return nil

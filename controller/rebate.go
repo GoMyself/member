@@ -62,7 +62,7 @@ func (that *RebateController) Update(ctx *fasthttp.RequestCtx) {
 
 	//fmt.Println("Update = ", string(ctx.PostBody()))
 
-	if !helper.CtypeAlnum(subName) {
+	if !validator.CheckUName(subName, 5, 14) {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}

@@ -3,7 +3,6 @@ package controller
 import (
 	"github.com/valyala/fasthttp"
 	"member/contrib/helper"
-	"member/contrib/validator"
 	"member/model"
 	"strings"
 )
@@ -40,13 +39,13 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 	if pageSize < 1 {
 		pageSize = 1
 	}
-	s, err := model.MessageList(ty, page, pageSize, mb.Username)
+	data, err := model.MessageList(ty, page, pageSize, mb.Username)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
 
-	helper.PrintJson(ctx, true, s)
+	helper.Print(ctx, true, data)
 }
 
 // 站内信已读
@@ -70,14 +69,14 @@ func (that *MessageController) Num(ctx *fasthttp.RequestCtx) {
 // 站内信已读
 func (that *MessageController) Read(ctx *fasthttp.RequestCtx) {
 
-	id := string(ctx.QueryArgs().Peek("id"))
-	mb, err := model.MemberCache(ctx, "")
+	ts := string(ctx.QueryArgs().Peek("ts"))
+	_, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}
 
-	err = model.MessageRead(id, mb.Username)
+	err = model.MessageRead(ts)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -90,7 +89,7 @@ func (that *MessageController) Read(ctx *fasthttp.RequestCtx) {
 func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 
 	flag := ctx.QueryArgs().GetUintOrZero("flag") // 1 精确删除 2 删除所有已读
-	ids := string(ctx.QueryArgs().Peek("ids"))
+	tss := string(ctx.QueryArgs().Peek("tss"))
 
 	flags := map[int]bool{
 		1: true,
@@ -101,30 +100,13 @@ func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	var s []interface{}
-	if flag == 1 {
-		if ids == "" {
-			helper.Print(ctx, false, helper.IDErr)
-			return
-		}
-
-		for _, v := range strings.Split(ids, ",") {
-			if !validator.CtypeDigit(v) {
-				helper.Print(ctx, false, helper.IDErr)
-				return
-			}
-
-			s = append(s, v)
-		}
-	}
-
 	mb, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
 		return
 	}
 
-	err = model.MessageDelete(s, mb.Username, flag)
+	err = model.MessageDelete(mb.Username, strings.Split(tss, ","), flag)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

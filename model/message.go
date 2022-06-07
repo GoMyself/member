@@ -72,7 +72,10 @@ func MessageNum(username string) (int64, error) {
 //MessageRead  站内信已读
 func MessageRead(ts string) error {
 
-	t, _ := time.ParseInLocation(`"2006-01-02T15:04:05.999 07:00"`, ts, loc)
+	t, err := time.ParseInLocation(`"2006-01-02T15:04:05.999 07:00"`, ts, loc)
+	if err != nil {
+		return pushLog(err, helper.DateTimeErr)
+	}
 	fmt.Println(t.Date())
 	record := g.Record{
 		"ts":        t.UnixMilli(),
@@ -80,7 +83,7 @@ func MessageRead(ts string) error {
 	}
 	query, _, _ := dialect.Insert("messages").Rows(record).ToSQL()
 	fmt.Println(query)
-	_, err := meta.MerchantTD.Exec(query)
+	_, err = meta.MerchantTD.Exec(query)
 	if err != nil {
 		return pushLog(err, helper.DBErr)
 	}

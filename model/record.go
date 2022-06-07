@@ -593,8 +593,10 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 	var t int64
 	var esResult []*elastic.SearchHit
 	var err2 error
-
+	fmt.Printf("sortField:%+v\n, username:%+v\n", sortField, username)
 	if sortField != "" && username == "" {
+		fmt.Printf("tbl_report_agency:%+v, %+v, %+v, %+v, %+v\n", ascending, page, pageSize, reportAgencyListFields, query)
+
 		t, esResult, _, err2 = EsMemberListSort(
 			esPrefixIndex("tbl_report_agency"), sortField, ascending, page, pageSize, reportAgencyListFields, query, nil)
 

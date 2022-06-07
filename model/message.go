@@ -72,7 +72,7 @@ func MessageNum(username string) (int64, error) {
 //MessageRead  站内信已读
 func MessageRead(ts string) error {
 
-	t, err := time.ParseInLocation("2006-01-02T15:04:05.999Z07:00", ts, loc)
+	t, err := time.ParseInLocation("2006-01-02T15:04:05.999 07:00", ts, loc)
 	if err != nil {
 		return pushLog(err, helper.DateTimeErr)
 	}

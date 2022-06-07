@@ -19,6 +19,7 @@ type ReportAgency struct {
 	RegistCount       int64   `json:"regist_count" db:"regist_count"`
 	MemCount          int64   `json:"mem_count" db:"mem_count"`
 	Rebate            float64 `json:"rebate" db:"rebate"`
+	TeamRebate        float64 `json:"team_rebate" db:"team_rebate"`
 	NetAmount         float64 `json:"net_amount" db:"net_amount"`
 	DividendAmount    float64 `json:"dividend_amount" db:"dividend_amount"`
 	BalanceTotal      float64 `json:"balance_total" db:"balance_total"`
@@ -109,6 +110,29 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 	}
 	//fmt.Println(data)
 	data.Profit, _ = decimal.NewFromFloat(data.NetAmount).Sub(decimal.NewFromFloat(data.Rebate)).Sub(decimal.NewFromFloat(data.DividendAmount)).Float64()
+
+	var myRebate sql.NullFloat64
+	// 获取统计数据
+	and = g.And(
+		g.C("report_type").Eq(reportType),
+		g.C("prefix").Eq(meta.Prefix),
+		g.C("report_time").Eq(startAt),
+		g.C("uid").Eq(mb.UID),
+		g.C("data_type").Eq(2),
+	)
+
+	query, _, _ = dialect.From("tbl_report_agency").Where(and).
+		Select(
+			g.C("rebate_amount").As("rebate"), //返水
+		).
+		ToSQL()
+	fmt.Println(query)
+	err = meta.ReportDB.Get(&myRebate, query)
+	if err != nil && err != sql.ErrNoRows {
+		fmt.Println(err.Error())
+		return data, pushLog(err, helper.DBErr)
+	}
+	data.TeamRebate, _ = decimal.NewFromFloat(data.Rebate).Sub(decimal.NewFromFloat(myRebate.Float64)).Float64()
 
 	return data, nil
 }

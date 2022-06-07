@@ -109,7 +109,6 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	}
 
 	statusCoce := BankcardCheck(fctx, bankcardNo, data.BankID, realName)
-	fmt.Println("BankcardCheck = ", statusCoce)
 	if statusCoce != helper.Success {
 		return errors.New(statusCoce)
 	}

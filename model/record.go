@@ -566,8 +566,8 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 	return errors.New(helper.PhoneVerificationErr)
 }
 
-/// starc 会员列表查询执行
-func EsMemberList(page, pageSize int, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
+// starc 会员列表查询执行
+func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
 
 	data := MemberListData{}
 	if startTime != "" && endTime != "" {
@@ -585,7 +585,6 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 		if startAt >= endAt {
 			return data, errors.New(helper.QueryTimeRangeErr)
 		}
-
 		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
 	}
 	data.S = pageSize
@@ -594,31 +593,78 @@ func EsMemberList(page, pageSize int, username, startTime, endTime, sortField st
 	var t int64
 	var esResult []*elastic.SearchHit
 	var err2 error
+
 	if sortField != "" && username == "" {
 		t, esResult, _, err2 = EsMemberListSort(
-			esPrefixIndex("tbl_report_agency"), sortField, page, pageSize, depositFields, query, nil)
+			esPrefixIndex("tbl_report_agency"), sortField, ascending, page, pageSize, reportAgencyListFields, query, nil)
+
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
 		}
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
-			esPrefixIndex("tbl_members"), "created_at", page, pageSize, depositFields, query, nil)
+			esPrefixIndex("tbl_members"), "created_at", page, pageSize, []string{"uid", "username"}, query, nil)
+
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
 		}
 	}
 
 	var names []string
-	//new_t :=
 	data.T = int(t)
 	for _, v := range esResult {
 
 		record := MemberListCol{}
 		_ = helper.JsonUnmarshal(v.Source, &record)
-		//record.ID = v.Id
 		data.D = append(data.D, record)
 		names = append(names, record.Username)
 	}
 
+	if len(data.D) == 0 {
+		return data, nil
+	}
+
+	// 获取用户的反水比例
+	var ids []string
+	for _, v := range data.D {
+		ids = append(ids, v.UID)
+	}
+	rebates, err := MemberRebateExistRedis(ids)
+	if err != nil {
+		return data, err
+	}
+
+	for i, v := range data.D {
+		if rb, ok := rebates[v.UID]; ok {
+			data.D[i].DJ = rb.DJ
+			data.D[i].TY = rb.TY
+			data.D[i].ZR = rb.ZR
+			data.D[i].QP = rb.QP
+			data.D[i].DZ = rb.DZ
+			data.D[i].CP = rb.CP
+			data.D[i].FC = rb.FC
+			data.D[i].BY = rb.BY
+			data.D[i].CGHighRebate = rb.CGHighRebate
+			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
+		}
+	}
 	return data, nil
+}
+
+func MemberRebateExistRedis(ids []string) (map[string]MemberRebate, error) {
+	pipe := meta.MerchantRedis.Pipeline()
+	defer pipe.Close()
+	mm := make(map[string]MemberRebate)
+	//// 任何一个错误的id 都将返回一个错误
+	for i, idd := range ids {
+		m, ee := MemberRebateGetCache(idd)
+		if ee != nil {
+			msg := fmt.Sprintf("%d ,errtype:%s", i, helper.RedisErr)
+			return nil, pushLog(ee, msg)
+		} else {
+			mm[idd] = m
+		}
+
+	}
+	return mm, nil
 }

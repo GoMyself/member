@@ -72,7 +72,7 @@ func MessageNum(username string) (int64, error) {
 //MessageRead  站内信已读
 func MessageRead(ts string) error {
 
-	t, _ := time.ParseInLocation(time.RFC3339Nano, ts, loc)
+	t, _ := time.ParseInLocation(`"2006-01-02T15:04:05.999 07:00"`, ts, loc)
 	fmt.Println(t.Date())
 	record := g.Record{
 		"ts":        t.UnixMilli(),

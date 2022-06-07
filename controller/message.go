@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/valyala/fasthttp"
 	"member/contrib/helper"
 	"member/model"
@@ -76,6 +77,7 @@ func (that *MessageController) Read(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	fmt.Println(ts)
 	err = model.MessageRead(ts)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
@@ -91,6 +93,7 @@ func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 	flag := ctx.PostArgs().GetUintOrZero("flag") // 1 精确删除 2 删除所有已读
 	tss := string(ctx.PostArgs().Peek("tss"))
 
+	fmt.Println(flag, tss)
 	flags := map[int]bool{
 		1: true,
 		2: true,

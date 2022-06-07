@@ -109,7 +109,7 @@ func MessageDelete(username string, ids []string, flag int) error {
 	}
 	var records []g.Record
 	for _, v := range ids {
-		t, _ := time.ParseInLocation(time.RFC3339, v, loc)
+		t, _ := time.ParseInLocation("2006-01-02T15:04:05.999 07:00", v, loc)
 		fmt.Println(t.Date())
 		record := g.Record{
 			"ts":        t.UnixMilli(),

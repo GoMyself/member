@@ -73,6 +73,7 @@ func MessageNum(username string) (int64, error) {
 func MessageRead(ts string) error {
 
 	t, _ := time.ParseInLocation(time.RFC3339, ts, loc)
+	fmt.Println(t.Date())
 	record := g.Record{
 		"ts":        t.UnixMilli(),
 		"is_delete": 1,
@@ -106,6 +107,7 @@ func MessageDelete(username string, ids []string, flag int) error {
 	var records []g.Record
 	for _, v := range ids {
 		t, _ := time.ParseInLocation(time.RFC3339, v, loc)
+		fmt.Println(t.Date())
 		record := g.Record{
 			"ts":        t.UnixMilli(),
 			"is_delete": 1,

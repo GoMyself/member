@@ -561,7 +561,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	// 获取数据
 	query.Filter(elastic.NewTermQuery("parent_name", currentUsername))
 
-	data, err2 := model.EsMemberList(page, pageSize, ascending, currentUsername, startTime, endTime, sortField, query)
+	data, err2 := model.EsMemberList(page, pageSize, ascending, username, startTime, endTime, sortField, query)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())
 		return

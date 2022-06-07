@@ -1076,6 +1076,11 @@ func MemberAgg(username string) (MemberAggData, error) {
 
 func MemberUpdateInfo(user Member, password string, mr MemberRebateResult_t) error {
 
+	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)
+	if meta.MerchantRedis.Exists(ctx, key).Val() == 0 {
+		return errors.New(helper.MemberRebateModDisable)
+	}
+
 	tx, err := meta.MerchantDB.Begin() // 开启事务
 	if err != nil {
 		return pushLog(err, helper.DBErr)

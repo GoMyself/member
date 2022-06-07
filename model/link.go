@@ -172,7 +172,7 @@ func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
 	key := fmt.Sprintf("%s:lk:%s", meta.Prefix, sess.UID)
 	err = meta.MerchantRedis.Do(ctx, "JSON.DEL", key, "$"+id).Err()
 	if err != nil {
-		_ = pushLog(err, helper.DBErr)
+		_ = pushLog(err, helper.RedisErr)
 	}
 
 	return nil

@@ -431,10 +431,11 @@ type MemberAdjust struct {
 
 // MemberListData 会员列表
 type MemberListData struct {
-	T   int             `json:"t"`
-	S   int             `json:"s"`
-	D   []MemberListCol `json:"d"`
-	Agg MemberAggData   `json:"agg"`
+	T         int             `json:"t"`
+	S         int             `json:"s"`
+	EnableMod bool            `json:"enable_mod"`
+	D         []MemberListCol `json:"d"`
+	Agg       MemberAggData   `json:"agg"`
 }
 
 type MemberListCol struct {

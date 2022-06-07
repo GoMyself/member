@@ -648,6 +648,12 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
 		}
 	}
+
+	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)
+	if meta.MerchantRedis.Exists(ctx, key).Val() > 0 {
+		data.EnableMod = true
+	}
+
 	return data, nil
 }
 

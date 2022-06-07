@@ -180,11 +180,11 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 站内信-列表
 	get("/member/message/list", msgCtl.List)
 	// 站内信-读取
-	get("/member/message/read", msgCtl.Read)
+	post("/member/message/read", msgCtl.Read)
 	// 站内信-未读数
 	get("/member/message/num", msgCtl.Num)
 	// 站内信-删除
-	get("/member/message/delete", msgCtl.Delete)
+	post("/member/message/delete", msgCtl.Delete)
 
 	// 编辑会员密码，返水
 	get("/member/rebate/detail", rebateCtl.Detail)

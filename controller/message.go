@@ -69,7 +69,7 @@ func (that *MessageController) Num(ctx *fasthttp.RequestCtx) {
 // 站内信已读
 func (that *MessageController) Read(ctx *fasthttp.RequestCtx) {
 
-	ts := string(ctx.QueryArgs().Peek("ts"))
+	ts := string(ctx.PostArgs().Peek("ts"))
 	_, err := model.MemberCache(ctx, "")
 	if err != nil {
 		helper.Print(ctx, false, helper.UsernameErr)
@@ -88,8 +88,8 @@ func (that *MessageController) Read(ctx *fasthttp.RequestCtx) {
 // 站内信删除
 func (that *MessageController) Delete(ctx *fasthttp.RequestCtx) {
 
-	flag := ctx.QueryArgs().GetUintOrZero("flag") // 1 精确删除 2 删除所有已读
-	tss := string(ctx.QueryArgs().Peek("tss"))
+	flag := ctx.PostArgs().GetUintOrZero("flag") // 1 精确删除 2 删除所有已读
+	tss := string(ctx.PostArgs().Peek("tss"))
 
 	flags := map[int]bool{
 		1: true,

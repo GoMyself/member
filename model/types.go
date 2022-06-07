@@ -477,19 +477,19 @@ type MemberLoginLog struct {
 }
 
 type MessageTD struct {
-	Ts       string `json:"ts" db:"ts"`               //会员站内信id
-	MsgID    string `json:"message_id" db:"msg_id"`   //站内信id
-	Username string `json:"username" db:"username"`   //会员名
-	Title    string `json:"title" db:"title"`         //标题
-	SubTitle string `json:"sub_title" db:"sub_title"` //标题
-	Content  string `json:"content" db:"content"`     //内容
-	IsTop    int    `json:"is_top" db:"is_top"`       //0不置顶 1置顶
-	IsVip    int    `json:"is_vip" db:"is_vip"`       //0非vip站内信 1vip站内信
-	Ty       int    `json:"ty" db:"ty"`               //1站内消息 2活动消息
-	IsRead   int    `json:"is_read" db:"is_read"`     //是否已读 0未读 1已读
-	SendName string `json:"send_name" db:"send_name"` //发送人名
-	SendAt   int64  `json:"send_at" db:"send_at"`     //发送时间
-	Prefix   string `json:"prefix" db:"prefix"`       //商户前缀
+	Ts       string `json:"ts" db:"ts"`                 //会员站内信id
+	MsgID    string `json:"message_id" db:"message_id"` //站内信id
+	Username string `json:"username" db:"username"`     //会员名
+	Title    string `json:"title" db:"title"`           //标题
+	SubTitle string `json:"sub_title" db:"sub_title"`   //标题
+	Content  string `json:"content" db:"content"`       //内容
+	IsTop    int    `json:"is_top" db:"is_top"`         //0不置顶 1置顶
+	IsVip    int    `json:"is_vip" db:"is_vip"`         //0非vip站内信 1vip站内信
+	Ty       int    `json:"ty" db:"ty"`                 //1站内消息 2活动消息
+	IsRead   int    `json:"is_read" db:"is_read"`       //是否已读 0未读 1已读
+	SendName string `json:"send_name" db:"send_name"`   //发送人名
+	SendAt   int64  `json:"send_at" db:"send_at"`       //发送时间
+	Prefix   string `json:"prefix" db:"prefix"`         //商户前缀
 }
 
 type MessageTDData struct {

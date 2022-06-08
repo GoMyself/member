@@ -569,7 +569,17 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 // starc 会员列表查询执行
 func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
 
-	data := MemberListData{}
+	var (
+		data  = MemberListData{}
+		names []string
+		ids   []string
+		idMap = make(map[string]string)
+	)
+	// 补全数据
+
+	fmt.Println("receive param:", page, pageSize, ascending, username, startTime, endTime, "sortField:", sortField)
+	fmt.Printf("query:%+v\n", query)
+
 	if startTime != "" && endTime != "" {
 
 		startAt, err := helper.TimeToLoc(startTime, loc)
@@ -588,18 +598,32 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
 	}
 	data.S = pageSize
-
 	query.Filter(elastic.NewTermQuery("prefix", meta.Prefix))
-	var t int64
-	var esResult []*elastic.SearchHit
-	var err2 error
-
+	var (
+		t        int64
+		esResult []*elastic.SearchHit
+		err2     error
+	)
+	fmt.Printf("sortField:%+v\n, username:%+v\n", sortField, username)
 	if sortField != "" && username == "" {
+		fmt.Printf("tbl_report_agency:%+v, %+v, %+v, %+v, %+v\n", ascending, page, pageSize, reportAgencyListFields, query)
+
 		t, esResult, _, err2 = EsMemberListSort(
 			esPrefixIndex("tbl_report_agency"), sortField, ascending, page, pageSize, reportAgencyListFields, query, nil)
 
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
+		}
+		for _, v := range esResult {
+
+			record := MemberListCol{}
+			_ = helper.JsonUnmarshal(v.Source, &record)
+			data.D = append(data.D, record)
+			names = append(names, record.Username)
+		}
+
+		if len(data.D) == 0 {
+			return data, nil
 		}
 	} else {
 		t, esResult, _, err2 = EsMemberListSearch(
@@ -608,31 +632,70 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		if err2 != nil {
 			return data, pushLog(err2, helper.DBErr)
 		}
+		for _, v := range esResult {
+
+			record := MemberListCol{}
+			_ = helper.JsonUnmarshal(v.Source, &record)
+			data.D = append(data.D, record)
+			names = append(names, record.Username)
+		}
+
+		if len(data.D) == 0 {
+			return data, nil
+		}
+		fmt.Printf("es 补全前tbl_members的数据:%+v\n", data)
+
+		// 补全数据
+		for _, member := range data.D {
+			ids = append(ids, member.UID)
+			idMap[member.UID] = member.Username
+		}
+		fmt.Printf("es 补全 uid和username的数据:%+v\n", data)
+
+		// 获取统计数据
+		query_report := elastic.NewBoolQuery()
+		if startTime != "" && endTime != "" {
+			startAt, err := helper.TimeToLoc(startTime, loc)
+			if err != nil {
+				return data, errors.New(helper.TimeTypeErr)
+			}
+			endAt, err := helper.TimeToLoc(endTime, loc)
+			if err != nil {
+				return data, errors.New(helper.TimeTypeErr)
+			}
+			if startAt >= endAt {
+				return data, errors.New(helper.QueryTimeRangeErr)
+			}
+			query_report.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
+		}
+		query_report.Filter(elastic.NewTermQuery("uid", ids))
+		query_report.Filter(elastic.NewTermQuery("report_type", 2)) // 1投注时间2结算时间3投注时间月报4结算时间月报
+		query_report.Filter(elastic.NewTermQuery("data_type", 1))
+
+		t, esResult, _, err2 = EsMemberListSort(
+			esPrefixIndex("tbl_report_agency"), sortField, ascending, page, pageSize, reportAgencyListFields, query_report, nil)
+
+		if err2 != nil {
+			return data, pushLog(err2, helper.DBErr)
+		}
+		for _, v := range esResult {
+			record := MemberListCol{}
+			_ = helper.JsonUnmarshal(v.Source, &record)
+			data.D = append(data.D, record)
+			names = append(names, record.Username)
+		}
+		fmt.Printf("es 补全 tbl_report_agency的数据:%+v\n", data)
 	}
 
-	var names []string
 	data.T = int(t)
-	for _, v := range esResult {
-
-		record := MemberListCol{}
-		_ = helper.JsonUnmarshal(v.Source, &record)
-		data.D = append(data.D, record)
-		names = append(names, record.Username)
-	}
-
-	if len(data.D) == 0 {
-		return data, nil
-	}
+	fmt.Printf("es 获取返水前的数据:%+v\n", data)
 
 	// 获取用户的反水比例
-	var ids []string
-	for _, v := range data.D {
-		ids = append(ids, v.UID)
-	}
 	rebates, err := MemberRebateExistRedis(ids)
 	if err != nil {
 		return data, err
 	}
+	fmt.Printf("es 从redis 获取返水数据:%+v\n", rebates)
 
 	for i, v := range data.D {
 		if rb, ok := rebates[v.UID]; ok {
@@ -653,7 +716,22 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 	if meta.MerchantRedis.Exists(ctx, key).Val() > 0 {
 		data.EnableMod = true
 	}
+	fmt.Printf("es 获取返水后的数据:%+v\n", data)
 
+	if len(ids) == len(data.D) {
+		return data, nil
+	}
+	// 可能有会员未生成报表数据 这时需要给未生成报表的会员 赋值默认返回值
+	//否则会出现total和data length 不一致的问题
+	for _, v := range data.D {
+		if _, ok := idMap[v.UID]; ok {
+			delete(idMap, v.UID)
+		}
+	}
+
+	for id, username := range idMap {
+		data.D = append(data.D, MemberListCol{UID: id, Username: username})
+	}
 	return data, nil
 }
 

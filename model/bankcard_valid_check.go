@@ -80,10 +80,10 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	}
 	if val, ok := bankcardCode[bankId]; ok {
 		data.BankCode = val
-		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("ok bankcode %v", val), 0)
+		BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("ok bankcode %v", val), 0)
 	} else {
 		// 插入记录 银行卡校验失败日志
-		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("RecordNotExistErr %v", helper.RecordNotExistErr), 0)
+		BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("RecordNotExistErr %v", helper.RecordNotExistErr), 0)
 		return helper.RecordNotExistErr
 	}
 
@@ -91,29 +91,29 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	if err != nil {
 		// 插入记录 银行卡校验失败日志
 		errmsg := fmt.Sprintf("BankcardTaskCreate BankcardValidErr %v %v %v ", helper.BankcardValidErr, id, err.Error())
-		MemberCardLogInsert(fctx, name, bankCard, errmsg[:59], 0)
+		BankcardTaskLogInsert(fctx, name, bankCard, errmsg[:59], 0)
 		return helper.BankcardValidErr
 	}
 
 	for i := 0; i < 5; i++ {
 		ts = fmt.Sprintf("%d", fctx.Time().In(loc).UnixMilli())
 		valid, err := BankcardTaskQuery(ts, id)
-		MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("try ts %v valid %v", ts, valid), 0)
+		BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("try ts %v valid %v", ts, valid), 0)
 		if err == nil {
 			if valid {
 				//插入记录 校验成功日志
-				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("try at %d Success %v", i, helper.Success), 1)
+				BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("try at %d Success %v", i, helper.Success), 1)
 				return helper.Success
 			} else {
 				//插入记录 校验失败日志
-				MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("try %d BankcardValidErr %v", i, helper.BankcardValidErr), 0)
+				BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("try %d BankcardValidErr %v", i, helper.BankcardValidErr), 0)
 				return helper.BankcardValidErr
 			}
 		}
 		time.Sleep(2 * time.Second)
 	}
 	// 插入记录 银行卡校验失败日志
-	MemberCardLogInsert(fctx, name, bankCard, fmt.Sprintf("Final BankcardValidErr %v", helper.BankcardValidErr), 0)
+	BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("Final BankcardValidErr %v", helper.BankcardValidErr), 0)
 	return helper.BankcardValidErr
 }
 
@@ -193,13 +193,7 @@ func BankcardTaskCreate(ts string, res bankcard_check_t) (string, error) {
 	return "", err
 }
 
-/**
- * @Description: MemberCardList // 新增会员 银行卡 记录
- * @Author: starc
- * @Date: 2022/5/31 16:38
- * @LastEditTime: 2022/6/1 20:00
- * @LastEditors: starc
- */
+// 新增会员 银行卡 校验记录
 func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg string, Status int) error {
 
 	var Username, RealName, Ip string
@@ -223,65 +217,47 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 	}
 
 	RealName = d["realname"]
-	Ip = helper.FromRequest(ctx)
-	ts := ctx.Time().In(loc).UnixMilli()
+	Ip = helper.FromRequest(fctx)
+	ts := fctx.Time().In(loc).UnixMilli()
 	/// 获取设备名称并保存
-	DeviceName := string(ctx.Request.Header.Peek("d"))
+	DeviceName := string(fctx.Request.Header.Peek("d"))
 	device_i, err := strconv.Atoi(DeviceName)
 	if err != nil {
-		helper.Print(ctx, false, helper.DeviceTypeErr)
+		helper.Print(fctx, false, helper.DeviceTypeErr)
 		return err
 	}
 
 	if _, ok := Devices[device_i]; !ok {
-		helper.Print(ctx, false, helper.DeviceTypeErr)
+		helper.Print(fctx, false, helper.DeviceTypeErr)
 		return err
 	}
 
 	record := g.Record{
 		"ts":        ts,
-		"username":  username,
-		"realname":  realname,
-		"bankname":  bankname,
-		"bank_no":   bank_no,
-		"ip":        ip,
+		"username":  Username,
+		"realname":  RealName,
+		"bankname":  BankName,
+		"bank_no":   BankNo,
+		"ip":        Ip,
 		"msg":       msg,
-		"status":    status,
-		"device":    device,
+		"status":    Status,
+		"device":    device_i,
 		"create_at": ts / 1000,
 	}
 
-	//存入
-	err2 := MemberCardCheckInsertLog(record)
+	//写库
+	err2 := BankcardTaskCheckInsertLog(record)
 	if err2 != nil {
-		helper.Print(ctx, false, err2.Error())
+		helper.Print(fctx, false, err2.Error())
 		return err2
 	}
-	helper.Print(ctx, true, true)
+	helper.Print(fctx, true, true)
 	return nil
 }
 
-/**
- * @Description: MemberCardList // 会员管理-会员银行卡 新增校验记录日志
- * @Author: starc
- * @Date: 2022/6/1 12:38
- * @LastEditTime: 2022/6/1 19:00
- * @LastEditors: starc
- */
-func MemberCardCheckInsertLog(username, realname, bankname, bank_no, ip, msg string, status, device int, ts int64) error {
+// 会员管理-会员银行卡 新增校验记录日志 写TD库
+func BankcardTaskCheckInsertLog(record g.Record) error {
 
-	record := g.Record{
-		"ts":        ts,
-		"username":  username,
-		"realname":  realname,
-		"bankname":  bankname,
-		"bank_no":   bank_no,
-		"ip":        ip,
-		"msg":       msg,
-		"status":    status,
-		"device":    device,
-		"create_at": ts / 1000,
-	}
 	query2, param, errs := dialect.Insert("bandcardcheck_log").Rows(record).ToSQL()
 	if errs != nil {
 		return pushLog(fmt.Errorf("errorr:%s, To insert Sql:, %s, param:[%s] ", errs.Error(), query2, param), helper.DBErr)

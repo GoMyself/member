@@ -70,11 +70,7 @@ var (
 func Constructor(mt *MetaTable, rpcconn string) {
 
 	meta = mt
-	if meta.Lang == "cn" {
-		loc, _ = time.LoadLocation("Asia/Shanghai")
-	} else if meta.Lang == "vn" || meta.Lang == "th" {
-		loc, _ = time.LoadLocation("Asia/Bangkok")
-	}
+	loc, _ = time.LoadLocation("Asia/Bangkok")
 
 	rpchttp.RegisterHandler()
 	RegisterTransport()
@@ -117,11 +113,11 @@ func pushLog(err error, code string) error {
 		"ts":       ts.In(loc).UnixMicro(),
 	}
 
-	query, _, _ := dialect.Insert("goerror").Rows(&fields).ToSQL()
-	//fmt.Println(query)
+	query, _, _ := dialect.Insert("goerror").Rows(fields).ToSQL()
+	fmt.Println(query)
 	_, err1 := meta.MerchantTD.Exec(query)
 	if err1 != nil {
-		fmt.Println("insert SMS = ", err1.Error(), fields)
+		fmt.Println("insert SMS = ", err1.Error(), query)
 	}
 
 	note := fmt.Sprintf("Hệ thống lỗi %s", id)

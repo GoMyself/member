@@ -72,14 +72,15 @@ func MessageNum(username string) (int64, error) {
 //MessageRead  站内信已读
 func MessageRead(ts string) error {
 
-	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999 07:00", ts, loc)
+	fmt.Println(ts)
+	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", ts, loc)
 	if err != nil {
 		return pushLog(err, helper.DateTimeErr)
 	}
 	fmt.Println(t.Date())
 	record := g.Record{
-		"ts":        t.UnixMilli(),
-		"is_delete": 1,
+		"ts":      t.UnixMicro(),
+		"is_read": 1,
 	}
 	query, _, _ := dialect.Insert("messages").Rows(record).ToSQL()
 	fmt.Println(query)
@@ -92,24 +93,37 @@ func MessageRead(ts string) error {
 }
 
 // 站内信删除已读
-func MessageDelete(username string, ids []string, flag int) error {
+func MessageDelete(username string, tss []string, flag int) error {
 
+	fmt.Println("MessageDelete", username, tss)
 	if flag == 2 {
+		var data []string
 		ex := g.Ex{
 			"prefix":   meta.Prefix,
 			"is_read":  1,
 			"username": username,
 		}
 		query, _, _ := dialect.From("messages").Select("ts").Where(ex).ToSQL()
-		fmt.Println(query)
-		err := meta.MerchantTD.Select(&ids, query)
+		fmt.Println("MessageDelete", query)
+		err := meta.MerchantTD.Select(&data, query)
 		if err != nil {
 			return pushLog(err, helper.DBErr)
 		}
+
+		return messageDelete(data)
 	}
+
+	fmt.Println("MessageDelete", tss)
+
+	return messageDelete(tss)
+}
+
+func messageDelete(tss []string) error {
+
 	var records []g.Record
-	for _, v := range ids {
-		t, err := time.ParseInLocation("2006-01-02T15:04:05.999999 07:00", v, loc)
+	for _, v := range tss {
+		fmt.Println("MessageDelete", v)
+		t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", v, loc)
 		if err != nil {
 			return pushLog(err, helper.DateTimeErr)
 		}
@@ -121,7 +135,7 @@ func MessageDelete(username string, ids []string, flag int) error {
 		records = append(records, record)
 	}
 	query, _, _ := dialect.Insert("messages").Rows(records).ToSQL()
-	fmt.Println(query)
+	fmt.Println("MessageDelete", query)
 	_, err := meta.MerchantTD.Exec(query)
 	if err != nil {
 		return pushLog(err, helper.DBErr)

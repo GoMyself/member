@@ -481,7 +481,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	}
 	//currentUsername := "jasper01"
 	ex["parent_name"] = currentUsername
-
+	fmt.Printf("query ex:%+v\n", ex)
 	data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
@@ -496,7 +496,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		}
 		data.Agg = aggData
 	}
-
+	fmt.Printf("mysql return data:%+v\n", data)
 	helper.Print(ctx, true, data)
 }
 
@@ -577,6 +577,7 @@ func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 		}
 		data.Agg = aggData
 	}
+	fmt.Printf("es return data:%+v\n", data)
 
 	helper.Print(ctx, true, data)
 }

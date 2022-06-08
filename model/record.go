@@ -629,6 +629,8 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		return data, nil
 	}
 
+	fmt.Printf("es 获取返水前的数据:%+v\n", data)
+
 	// 获取用户的反水比例
 	var ids []string
 	for _, v := range data.D {
@@ -638,6 +640,7 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 	if err != nil {
 		return data, err
 	}
+	fmt.Printf("es 从redis 获取返水数据:%+v\n", rebates)
 
 	for i, v := range data.D {
 		if rb, ok := rebates[v.UID]; ok {
@@ -658,6 +661,7 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 	if meta.MerchantRedis.Exists(ctx, key).Val() > 0 {
 		data.EnableMod = true
 	}
+	fmt.Printf("es 获取返水后的数据:%+v\n", data)
 
 	return data, nil
 }

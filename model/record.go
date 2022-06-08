@@ -569,6 +569,8 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 // starc 会员列表查询执行
 func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
 
+	fmt.Println("receive param:", page, pageSize, ascending, username, startTime, endTime, "sortField:", sortField)
+	fmt.Printf("query:%+v\n", query)
 	data := MemberListData{}
 	if startTime != "" && endTime != "" {
 
@@ -588,11 +590,12 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
 	}
 	data.S = pageSize
-
 	query.Filter(elastic.NewTermQuery("prefix", meta.Prefix))
-	var t int64
-	var esResult []*elastic.SearchHit
-	var err2 error
+	var (
+		t        int64
+		esResult []*elastic.SearchHit
+		err2     error
+	)
 	fmt.Printf("sortField:%+v\n, username:%+v\n", sortField, username)
 	if sortField != "" && username == "" {
 		fmt.Printf("tbl_report_agency:%+v, %+v, %+v, %+v, %+v\n", ascending, page, pageSize, reportAgencyListFields, query)

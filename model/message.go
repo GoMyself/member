@@ -72,6 +72,7 @@ func MessageNum(username string) (int64, error) {
 //MessageRead  站内信已读
 func MessageRead(ts string) error {
 
+	fmt.Println(ts)
 	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", ts, loc)
 	if err != nil {
 		return pushLog(err, helper.DateTimeErr)
@@ -94,6 +95,7 @@ func MessageRead(ts string) error {
 // 站内信删除已读
 func MessageDelete(username string, ids []string, flag int) error {
 
+	fmt.Println(username, ids)
 	if flag == 2 {
 		ex := g.Ex{
 			"prefix":   meta.Prefix,

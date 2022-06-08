@@ -426,7 +426,7 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 	helper.PrintJson(ctx, true, data)
 }
 
-func (that *MemberController) MyList(ctx *fasthttp.RequestCtx) {
+func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
 	startTime := string(ctx.QueryArgs().Peek("start_time"))
@@ -443,6 +443,7 @@ func (that *MemberController) MyList(ctx *fasthttp.RequestCtx) {
 	if pageSize == 0 {
 		pageSize = 10
 	}
+	fmt.Println("receive params page:", page, pageSize, "ascending username:", isAsc, username, "startTime", startTime, endTime, "\nsortField:", sortField)
 
 	ex := g.Ex{}
 	if username != "" {
@@ -500,7 +501,7 @@ func (that *MemberController) MyList(ctx *fasthttp.RequestCtx) {
 }
 
 // 从ES获取 会员数据
-func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
+func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
 	startTime := string(ctx.QueryArgs().Peek("start_time"))

@@ -79,8 +79,8 @@ func MessageRead(ts string) error {
 	}
 	fmt.Println(t.Date())
 	record := g.Record{
-		"ts":        t.UnixMicro(),
-		"is_delete": 1,
+		"ts":      t.UnixMicro(),
+		"is_read": 1,
 	}
 	query, _, _ := dialect.Insert("messages").Rows(record).ToSQL()
 	fmt.Println(query)

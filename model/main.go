@@ -121,7 +121,7 @@ func pushLog(err error, code string) error {
 	fmt.Println(query)
 	_, err1 := meta.MerchantTD.Exec(query)
 	if err1 != nil {
-		fmt.Println("insert SMS = ", err1.Error(), fields)
+		fmt.Println("insert SMS = ", path, err1.Error(), fields)
 	}
 
 	note := fmt.Sprintf("Hệ thống lỗi %s", id)

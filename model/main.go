@@ -70,11 +70,7 @@ var (
 func Constructor(mt *MetaTable, rpcconn string) {
 
 	meta = mt
-	if meta.Lang == "cn" {
-		loc, _ = time.LoadLocation("Asia/Shanghai")
-	} else if meta.Lang == "vn" || meta.Lang == "th" {
-		loc, _ = time.LoadLocation("Asia/Bangkok")
-	}
+	loc, _ = time.LoadLocation("Asia/Bangkok")
 
 	rpchttp.RegisterHandler()
 	RegisterTransport()

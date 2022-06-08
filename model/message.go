@@ -95,7 +95,7 @@ func MessageRead(ts string) error {
 // 站内信删除已读
 func MessageDelete(username string, tss []string, flag int) error {
 
-	fmt.Println(username, tss)
+	fmt.Println("MessageDelete", username, tss)
 	if flag == 2 {
 		ex := g.Ex{
 			"prefix":   meta.Prefix,
@@ -113,6 +113,7 @@ func MessageDelete(username string, tss []string, flag int) error {
 	fmt.Println("MessageDelete", tss)
 	var records []g.Record
 	for _, v := range tss {
+		fmt.Println("MessageDelete", v)
 		t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", v, loc)
 		if err != nil {
 			return pushLog(err, helper.DateTimeErr)

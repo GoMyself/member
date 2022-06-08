@@ -97,6 +97,7 @@ func MessageDelete(username string, tss []string, flag int) error {
 
 	fmt.Println("MessageDelete", username, tss)
 	if flag == 2 {
+		var data []string
 		ex := g.Ex{
 			"prefix":   meta.Prefix,
 			"is_read":  1,
@@ -104,13 +105,21 @@ func MessageDelete(username string, tss []string, flag int) error {
 		}
 		query, _, _ := dialect.From("messages").Select("ts").Where(ex).ToSQL()
 		fmt.Println("MessageDelete", query)
-		err := meta.MerchantTD.Select(&tss, query)
+		err := meta.MerchantTD.Select(&data, query)
 		if err != nil {
 			return pushLog(err, helper.DBErr)
 		}
+
+		return messageDelete(data)
 	}
 
 	fmt.Println("MessageDelete", tss)
+
+	return messageDelete(tss)
+}
+
+func messageDelete(tss []string) error {
+
 	var records []g.Record
 	for _, v := range tss {
 		fmt.Println("MessageDelete", v)

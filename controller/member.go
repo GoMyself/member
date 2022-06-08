@@ -522,7 +522,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	if isAsc == 1 {
 		ascending = true
 	}
-
+	fmt.Println("receive params page:", page, pageSize, "ascending username:", ascending, username, "startTime", startTime, endTime, "\nsortField:", sortField)
 	// 从 es 查询
 	query := elastic.NewBoolQuery()
 	if username != "" {
@@ -560,6 +560,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	}
 	// 获取数据
 	query.Filter(elastic.NewTermQuery("parent_name", currentUsername))
+	fmt.Printf("es query:%+v\n", query)
 
 	data, err2 := model.EsMemberList(page, pageSize, ascending, username, startTime, endTime, sortField, query)
 	if err2 != nil {

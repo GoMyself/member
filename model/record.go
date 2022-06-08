@@ -661,7 +661,6 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 			if err != nil {
 				return data, errors.New(helper.TimeTypeErr)
 			}
-
 			endAt, err := helper.TimeToLoc(endTime, loc)
 			if err != nil {
 				return data, errors.New(helper.TimeTypeErr)

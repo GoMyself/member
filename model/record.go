@@ -643,12 +643,15 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		if len(data.D) == 0 {
 			return data, nil
 		}
+		fmt.Printf("es 补全前tbl_members的数据:%+v\n", data)
+
 		// 补全数据
 
 		for _, member := range data.D {
 			ids = append(ids, member.UID)
 			idMap[member.UID] = member.Username
 		}
+		fmt.Printf("es 补全 uid和username的数据:%+v\n", data)
 
 		// 获取统计数据
 		query_report := elastic.NewBoolQuery()
@@ -680,12 +683,12 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 			return data, pushLog(err2, helper.DBErr)
 		}
 		for _, v := range esResult {
-
 			record := MemberListCol{}
 			_ = helper.JsonUnmarshal(v.Source, &record)
 			data.D = append(data.D, record)
 			names = append(names, record.Username)
 		}
+		fmt.Printf("es 补全 tbl_report_agency的数据:%+v\n", data)
 	}
 
 	data.T = int(t)

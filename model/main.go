@@ -118,7 +118,7 @@ func pushLog(err error, code string) error {
 	}
 
 	query, _, _ := dialect.Insert("goerror").Rows(&fields).ToSQL()
-	//fmt.Println(query)
+	fmt.Println(query)
 	_, err1 := meta.MerchantTD.Exec(query)
 	if err1 != nil {
 		fmt.Println("insert SMS = ", err1.Error(), fields)

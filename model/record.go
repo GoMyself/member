@@ -646,17 +646,15 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		fmt.Printf("es 补全前tbl_members的数据:%+v\n", data)
 
 		// 补全数据
-
 		for _, member := range data.D {
 			ids = append(ids, member.UID)
 			idMap[member.UID] = member.Username
 		}
-		fmt.Printf("es 补全 uid和username的数据:%+v\n", data)
+		//fmt.Printf("es 补全 uid和username的数据:%+v\n", data)
 
 		// 获取统计数据
 		query_report := elastic.NewBoolQuery()
 		if startTime != "" && endTime != "" {
-
 			startAt, err := helper.TimeToLoc(startTime, loc)
 			if err != nil {
 				return data, errors.New(helper.TimeTypeErr)
@@ -665,7 +663,6 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 			if err != nil {
 				return data, errors.New(helper.TimeTypeErr)
 			}
-
 			if startAt >= endAt {
 				return data, errors.New(helper.QueryTimeRangeErr)
 			}
@@ -691,7 +688,6 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 	}
 
 	data.T = int(t)
-
 	fmt.Printf("es 获取返水前的数据:%+v\n", data)
 
 	// 获取用户的反水比例

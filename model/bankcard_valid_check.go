@@ -223,12 +223,12 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 	DeviceName := string(fctx.Request.Header.Peek("d"))
 	device_i, err := strconv.Atoi(DeviceName)
 	if err != nil {
-		helper.Print(fctx, false, helper.DeviceTypeErr)
+		//helper.Print(fctx, false, helper.DeviceTypeErr)
 		return err
 	}
 
 	if _, ok := Devices[device_i]; !ok {
-		helper.Print(fctx, false, helper.DeviceTypeErr)
+		//helper.Print(fctx, false, helper.DeviceTypeErr)
 		return err
 	}
 
@@ -248,10 +248,10 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 	//写库
 	err2 := BankcardTaskCheckInsertLog(record)
 	if err2 != nil {
-		helper.Print(fctx, false, err2.Error())
+		//helper.Print(fctx, false, err2.Error())
 		return err2
 	}
-	helper.Print(fctx, true, true)
+	//helper.Print(fctx, true, true)
 	return nil
 }
 

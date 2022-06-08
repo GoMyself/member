@@ -2,7 +2,7 @@ package controller
 
 import (
 	"fmt"
-	"github.com/olivere/elastic/v7"
+	g "github.com/doug-martin/goqu/v9"
 	"net/url"
 	"strconv"
 	"strings"
@@ -425,7 +425,6 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 	helper.PrintJson(ctx, true, data)
 }
 
-// 从ES获取 会员数据
 func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
@@ -444,19 +443,13 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		pageSize = 10
 	}
 
-	ascending := false
-	if isAsc == 1 {
-		ascending = true
-	}
-	fmt.Println("receive params page:", page, pageSize, "ascending username:", ascending, username, "startTime", startTime, endTime, "\nsortField:", sortField)
-	// 从 es 查询
-	query := elastic.NewBoolQuery()
+	ex := g.Ex{}
 	if username != "" {
 		if !validator.CheckUName(username, 5, 14) {
 			helper.Print(ctx, false, helper.UsernameErr)
 			return
 		}
-		query.Filter(elastic.NewTermQuery("username", username))
+		ex["username"] = username
 	}
 
 	if sortField != "" {
@@ -484,13 +477,12 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
 	}
-	// 获取数据
-	query.Filter(elastic.NewTermQuery("parent_name", currentUsername))
-	fmt.Printf("es query:%+v\n", query)
+	//currentUsername := "jasper01"
+	ex["parent_name"] = currentUsername
 
-	data, err2 := model.EsMemberList(page, pageSize, ascending, username, startTime, endTime, sortField, query)
-	if err2 != nil {
-		helper.Print(ctx, false, err2.Error())
+	data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
+	if err != nil {
+		helper.Print(ctx, false, err.Error())
 		return
 	}
 
@@ -502,7 +494,6 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		}
 		data.Agg = aggData
 	}
-	fmt.Printf("es return data:%+v\n", data)
 
 	helper.Print(ctx, true, data)
 }

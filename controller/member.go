@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	g "github.com/doug-martin/goqu/v9"
 	"github.com/olivere/elastic/v7"
 	"net/url"
 	"strconv"
@@ -424,80 +423,6 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 
 	data := model.Nav()
 	helper.PrintJson(ctx, true, data)
-}
-
-func (that *MemberController) MyList(ctx *fasthttp.RequestCtx) {
-
-	username := string(ctx.QueryArgs().Peek("username"))
-	startTime := string(ctx.QueryArgs().Peek("start_time"))
-	endTime := string(ctx.QueryArgs().Peek("end_time"))
-	page := ctx.QueryArgs().GetUintOrZero("page")
-	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
-	sortField := string(ctx.QueryArgs().Peek("sort_field"))
-	isAsc := ctx.QueryArgs().GetUintOrZero("is_asc")
-	agg := ctx.QueryArgs().GetUintOrZero("agg")
-	if page == 0 {
-		page = 1
-	}
-
-	if pageSize == 0 {
-		pageSize = 10
-	}
-	fmt.Println("receive params page:", page, pageSize, "ascending username:", isAsc, username, "startTime", startTime, endTime, "\nsortField:", sortField)
-
-	ex := g.Ex{}
-	if username != "" {
-		if !validator.CheckUName(username, 5, 14) {
-			helper.Print(ctx, false, helper.UsernameErr)
-			return
-		}
-		ex["username"] = username
-	}
-
-	if sortField != "" {
-		sortFields := map[string]bool{
-			"deposit":    true,
-			"withdraw":   true,
-			"dividend":   true,
-			"rebate":     true,
-			"net_amount": true,
-		}
-
-		if _, ok := sortFields[sortField]; !ok {
-			helper.Print(ctx, false, helper.ParamErr)
-			return
-		}
-
-		if !validator.CheckIntScope(strconv.Itoa(isAsc), 0, 1) {
-			helper.Print(ctx, false, helper.ParamErr)
-			return
-		}
-	}
-
-	currentUsername := string(ctx.UserValue("token").([]byte))
-	if currentUsername == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-	//currentUsername := "jasper01"
-	ex["parent_name"] = currentUsername
-	fmt.Printf("query ex:%+v\n", ex)
-	data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
-	if err != nil {
-		helper.Print(ctx, false, err.Error())
-		return
-	}
-
-	if agg == 1 {
-		aggData, err := model.MemberAgg(currentUsername)
-		if err != nil {
-			helper.Print(ctx, false, err.Error())
-			return
-		}
-		data.Agg = aggData
-	}
-	fmt.Printf("mysql return data:%+v\n", data)
-	helper.Print(ctx, true, data)
 }
 
 // 从ES获取 会员数据

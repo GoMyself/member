@@ -221,13 +221,11 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 	DeviceName := string(fctx.Request.Header.Peek("d"))
 	device_i, err := strconv.Atoi(DeviceName)
 	if err != nil {
-		helper.Print(fctx, false, helper.DeviceTypeErr)
-		return err
+		return errors.New(helper.DeviceTypeErr)
 	}
 
 	if _, ok := Devices[device_i]; !ok {
-		helper.Print(fctx, false, helper.DeviceTypeErr)
-		return err
+		return errors.New(helper.DeviceTypeErr)
 	}
 
 	record := g.Record{

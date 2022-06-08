@@ -650,7 +650,7 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 			ids = append(ids, member.UID)
 			idMap[member.UID] = member.Username
 		}
-		//fmt.Printf("es 补全 uid和username的数据:%+v\n", data)
+		fmt.Printf("es 补全 uid和username的数据:%+v\n", data)
 
 		// 获取统计数据
 		query_report := elastic.NewBoolQuery()

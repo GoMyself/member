@@ -257,10 +257,10 @@ func BankcardTaskCheckInsertLog(record g.Record) error {
 	if errs != nil {
 		return pushLog(fmt.Errorf("errorr:%s, To insert Sql:, %s, param:[%s] ", errs.Error(), query, param), helper.DBErr)
 	}
-	_, err2 := meta.MerchantTD.Exec(query)
-	if err2 != nil {
-		fmt.Println("insert td = ", err2.Error(), query)
-		return pushLog(fmt.Errorf("%s,[%s]", err2.Error(), query), helper.DBErr)
+	_, err := meta.MerchantTD.Exec(query)
+	if err != nil {
+		fmt.Println("insert td = ", err.Error(), query)
+		return pushLog(fmt.Errorf("%s,[%s]", err.Error(), query), helper.DBErr)
 	}
 	return nil
 }

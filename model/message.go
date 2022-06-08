@@ -72,7 +72,7 @@ func MessageNum(username string) (int64, error) {
 //MessageRead  站内信已读
 func MessageRead(ts string) error {
 
-	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999 07:00", ts, loc)
+	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", ts, loc)
 	if err != nil {
 		return pushLog(err, helper.DateTimeErr)
 	}
@@ -109,7 +109,7 @@ func MessageDelete(username string, ids []string, flag int) error {
 	}
 	var records []g.Record
 	for _, v := range ids {
-		t, err := time.ParseInLocation("2006-01-02T15:04:05.999999 07:00", v, loc)
+		t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", v, loc)
 		if err != nil {
 			return pushLog(err, helper.DateTimeErr)
 		}

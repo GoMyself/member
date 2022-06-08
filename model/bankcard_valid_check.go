@@ -80,10 +80,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	}
 	if val, ok := bankcardCode[bankId]; ok {
 		data.BankCode = val
-		BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("ok bankcode %v", val), 0)
 	} else {
-		// 插入记录 银行卡校验失败日志
-		BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("RecordNotExistErr %v", helper.RecordNotExistErr), 0)
 		return helper.RecordNotExistErr
 	}
 
@@ -96,9 +93,10 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	}
 
 	for i := 0; i < 5; i++ {
+
 		ts = fmt.Sprintf("%d", fctx.Time().In(loc).UnixMilli())
 		valid, err := BankcardTaskQuery(ts, id)
-		BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("try ts %v valid %v", ts, valid), 0)
+
 		if err == nil {
 			if valid {
 				//插入记录 校验成功日志
@@ -218,7 +216,7 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 
 	RealName = d["realname"]
 	Ip = helper.FromRequest(fctx)
-	ts := fctx.Time().In(loc).UnixMilli()
+	ts := fctx.Time()
 	/// 获取设备名称并保存
 	DeviceName := string(fctx.Request.Header.Peek("d"))
 	device_i, err := strconv.Atoi(DeviceName)
@@ -233,7 +231,7 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 	}
 
 	record := g.Record{
-		"ts":        ts,
+		"ts":        ts.In(loc).UnixMicro(),
 		"username":  Username,
 		"realname":  RealName,
 		"bankname":  BankName,
@@ -242,30 +240,29 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 		"msg":       msg,
 		"status":    Status,
 		"device":    device_i,
-		"create_at": ts / 1000,
+		"create_at": ts.In(loc).Unix(),
+		"prefix":    meta.Prefix,
 	}
 
 	//写库
-	err2 := BankcardTaskCheckInsertLog(record)
-	if err2 != nil {
-		helper.Print(fctx, false, err2.Error())
-		return err2
+	err = BankcardTaskCheckInsertLog(record)
+	if err != nil {
+		return err
 	}
-	helper.Print(fctx, true, true)
 	return nil
 }
 
 // 会员管理-会员银行卡 新增校验记录日志 写TD库
 func BankcardTaskCheckInsertLog(record g.Record) error {
 
-	query2, param, errs := dialect.Insert("bandcardcheck_log").Rows(record).ToSQL()
+	query, param, errs := dialect.Insert("bandcardcheck_log").Rows(record).ToSQL()
 	if errs != nil {
-		return pushLog(fmt.Errorf("errorr:%s, To insert Sql:, %s, param:[%s] ", errs.Error(), query2, param), helper.DBErr)
+		return pushLog(fmt.Errorf("errorr:%s, To insert Sql:, %s, param:[%s] ", errs.Error(), query, param), helper.DBErr)
 	}
-	er, err2 := meta.MerchantTD.Exec(query2)
+	_, err2 := meta.MerchantTD.Exec(query)
 	if err2 != nil {
-		fmt.Println("insert td = ", err2.Error(), query2)
-		return pushLog(fmt.Errorf("%s,[%s],result:%s", err2.Error(), query2, er), helper.DBErr)
+		fmt.Println("insert td = ", err2.Error(), query)
+		return pushLog(fmt.Errorf("%s,[%s]", err2.Error(), query), helper.DBErr)
 	}
 	return nil
 }

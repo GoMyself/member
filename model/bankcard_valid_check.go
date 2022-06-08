@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"time"
 
+	g "github.com/doug-martin/goqu/v9"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fastjson"
 )
@@ -199,11 +200,11 @@ func BankcardTaskCreate(ts string, res bankcard_check_t) (string, error) {
  * @LastEditTime: 2022/6/1 20:00
  * @LastEditors: starc
  */
-func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo, msg string, Status int) error {
+func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg string, Status int) error {
 
 	var Username, RealName, Ip string
 
-	mb, err := MemberCache(ctx, "")
+	mb, err := MemberCache(fctx, "")
 	if err != nil {
 		return err
 	}
@@ -236,12 +237,59 @@ func MemberCardLogInsert(ctx *fasthttp.RequestCtx, BankName, BankNo, msg string,
 		helper.Print(ctx, false, helper.DeviceTypeErr)
 		return err
 	}
+
+	record := g.Record{
+		"ts":        ts,
+		"username":  username,
+		"realname":  realname,
+		"bankname":  bankname,
+		"bank_no":   bank_no,
+		"ip":        ip,
+		"msg":       msg,
+		"status":    status,
+		"device":    device,
+		"create_at": ts / 1000,
+	}
+
 	//存入
-	err2 := MemberCardCheckInsertLog(Username, RealName, BankName, BankNo, Ip, msg, Status, device_i, ts)
+	err2 := MemberCardCheckInsertLog(record)
 	if err2 != nil {
 		helper.Print(ctx, false, err2.Error())
 		return err2
 	}
 	helper.Print(ctx, true, true)
+	return nil
+}
+
+/**
+ * @Description: MemberCardList // 会员管理-会员银行卡 新增校验记录日志
+ * @Author: starc
+ * @Date: 2022/6/1 12:38
+ * @LastEditTime: 2022/6/1 19:00
+ * @LastEditors: starc
+ */
+func MemberCardCheckInsertLog(username, realname, bankname, bank_no, ip, msg string, status, device int, ts int64) error {
+
+	record := g.Record{
+		"ts":        ts,
+		"username":  username,
+		"realname":  realname,
+		"bankname":  bankname,
+		"bank_no":   bank_no,
+		"ip":        ip,
+		"msg":       msg,
+		"status":    status,
+		"device":    device,
+		"create_at": ts / 1000,
+	}
+	query2, param, errs := dialect.Insert("bandcardcheck_log").Rows(record).ToSQL()
+	if errs != nil {
+		return pushLog(fmt.Errorf("errorr:%s, To insert Sql:, %s, param:[%s] ", errs.Error(), query2, param), helper.DBErr)
+	}
+	er, err2 := meta.MerchantTD.Exec(query2)
+	if err2 != nil {
+		fmt.Println("insert td = ", err2.Error(), query2)
+		return pushLog(fmt.Errorf("%s,[%s],result:%s", err2.Error(), query2, er), helper.DBErr)
+	}
 	return nil
 }

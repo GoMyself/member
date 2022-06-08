@@ -426,7 +426,7 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 	helper.PrintJson(ctx, true, data)
 }
 
-func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
+func (that *MemberController) MyList(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
 	startTime := string(ctx.QueryArgs().Peek("start_time"))
@@ -501,7 +501,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 }
 
 // 从ES获取 会员数据
-func (that *MemberController) EsList(ctx *fasthttp.RequestCtx) {
+func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
 	username := string(ctx.QueryArgs().Peek("username"))
 	startTime := string(ctx.QueryArgs().Peek("start_time"))

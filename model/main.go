@@ -114,7 +114,7 @@ func pushLog(err error, code string) error {
 		"project":  meta.Program,
 		"flags":    code,
 		"filename": path,
-		"ts":       ts.In(loc).UnixMilli(),
+		"ts":       ts.In(loc).UnixMicro(),
 	}
 
 	query, _, _ := dialect.Insert("goerror").Rows(&fields).ToSQL()

@@ -93,9 +93,9 @@ func MessageRead(ts string) error {
 }
 
 // 站内信删除已读
-func MessageDelete(username string, ids []string, flag int) error {
+func MessageDelete(username string, tss []string, flag int) error {
 
-	fmt.Println(username, ids)
+	fmt.Println(username, tss)
 	if flag == 2 {
 		ex := g.Ex{
 			"prefix":   meta.Prefix,
@@ -103,14 +103,16 @@ func MessageDelete(username string, ids []string, flag int) error {
 			"username": username,
 		}
 		query, _, _ := dialect.From("messages").Select("ts").Where(ex).ToSQL()
-		fmt.Println(query)
-		err := meta.MerchantTD.Select(&ids, query)
+		fmt.Println("MessageDelete", query)
+		err := meta.MerchantTD.Select(&tss, query)
 		if err != nil {
 			return pushLog(err, helper.DBErr)
 		}
 	}
+
+	fmt.Println("MessageDelete", tss)
 	var records []g.Record
-	for _, v := range ids {
+	for _, v := range tss {
 		t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", v, loc)
 		if err != nil {
 			return pushLog(err, helper.DateTimeErr)
@@ -123,7 +125,7 @@ func MessageDelete(username string, ids []string, flag int) error {
 		records = append(records, record)
 	}
 	query, _, _ := dialect.Insert("messages").Rows(records).ToSQL()
-	fmt.Println(query)
+	fmt.Println("MessageDelete", query)
 	_, err := meta.MerchantTD.Exec(query)
 	if err != nil {
 		return pushLog(err, helper.DBErr)

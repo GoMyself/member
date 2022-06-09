@@ -116,6 +116,7 @@ func MessageDelete(username string, tss []string, flag int) error {
 			return pushLog(err, helper.DBErr)
 		}
 
+		fmt.Println("MessageDelete", data)
 		return messageDelete(data)
 	}
 

@@ -231,6 +231,7 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 	record := g.Record{
 		"ts":          ts.In(loc).UnixMicro(),
 		"username":    Username,
+		"uid":         mb.UID,
 		"realname":    RealName,
 		"bank_name":   BankName,
 		"bankcard_no": BankNo,

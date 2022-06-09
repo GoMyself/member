@@ -2,7 +2,6 @@ package model
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	g "github.com/doug-martin/goqu/v9"
 	"member/contrib/helper"
@@ -74,11 +73,8 @@ func MessageNum(username string) (int64, error) {
 func MessageRead(ts string) error {
 
 	fmt.Println(ts)
-	if len(ts) != 32 {
-		return errors.New(helper.DateTimeErr)
-	}
-
-	ts = ts[:26] + "+" + ts[27:]
+	l := len(ts)
+	ts = ts[:l-6] + "+" + ts[l-5:]
 	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", ts, loc)
 	if err != nil {
 		return pushLog(err, helper.DateTimeErr)
@@ -130,11 +126,8 @@ func messageDelete(tss []string) error {
 	var records []g.Record
 	for _, ts := range tss {
 		fmt.Println("MessageDelete", ts)
-		if len(ts) != 32 {
-			return errors.New(helper.DateTimeErr)
-		}
-
-		ts = ts[:26] + "+" + ts[27:]
+		l := len(ts)
+		ts = ts[:l-6] + "+" + ts[l-5:]
 		t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", ts, loc)
 		if err != nil {
 			return pushLog(err, helper.DateTimeErr)

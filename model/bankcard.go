@@ -12,7 +12,6 @@ import (
 	"github.com/valyala/fastjson"
 
 	"member/contrib/helper"
-	"member/contrib/validator"
 )
 
 func BankcardUpdateCache(username string) {
@@ -95,12 +94,13 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	}
 
 	// 会员未绑定真实姓名，更新第一次绑定银行卡的真实姓名到会员信息
-	if mb.RealnameHash == "0" || mb.BankcardTotal == 0 {
+	if mb.RealnameHash == "0" {
 		// 第一次新增银行卡判断真实姓名是否为越南语
-		if meta.Lang == "vn" && !validator.CheckStringVName(realName) {
-			return errors.New(helper.RealNameFMTErr)
-		}
-
+		/*
+			if meta.Lang == "vn" && !validator.CheckStringVName(realName) {
+				return errors.New(helper.RealNameFMTErr)
+			}
+		*/
 		encRes = append(encRes, []string{"realname", realName})
 		// 会员信息更新真实姓名和真实姓名hash
 		memberRecord["realname_hash"] = fmt.Sprintf("%d", MurmurHash(realName, 0))

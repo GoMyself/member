@@ -74,7 +74,7 @@ func MessageNum(username string) (int64, error) {
 func MessageRead(ts string) error {
 
 	fmt.Println(ts)
-	if len(ts) != 31 {
+	if len(ts) != 32 {
 		return errors.New(helper.DateTimeErr)
 	}
 
@@ -129,7 +129,7 @@ func messageDelete(tss []string) error {
 	var records []g.Record
 	for _, ts := range tss {
 		fmt.Println("MessageDelete", ts)
-		if len(ts) != 31 {
+		if len(ts) != 32 {
 			return errors.New(helper.DateTimeErr)
 		}
 

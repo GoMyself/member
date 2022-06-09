@@ -220,7 +220,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
-	phoneExist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", "phoneExist", phone).Val()
+	key = fmt.Sprintf("%s:phoneExist", meta.Prefix)
+	phoneExist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, phone).Val()
 	if v, ok := phoneExist.(int64); ok && v == 1 {
 		return "", errors.New(helper.PhoneExist)
 	}
@@ -372,7 +373,8 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 		return "", errors.New(helper.GetRPCErr)
 	}
 
-	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", "phoneExist", phone).Err()
+	key = fmt.Sprintf("%s:phoneExist", meta.Prefix)
+	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", key, phone).Err()
 	_ = MemberRebateUpdateCache2(m.UID, mr)
 	MemberUpdateCache(uid, "")
 

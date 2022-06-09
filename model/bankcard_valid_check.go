@@ -229,17 +229,17 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 	}
 
 	record := g.Record{
-		"ts":        ts.In(loc).UnixMicro(),
-		"username":  Username,
-		"realname":  RealName,
-		"bankname":  BankName,
-		"bank_no":   BankNo,
-		"ip":        Ip,
-		"msg":       msg,
-		"status":    Status,
-		"device":    device_i,
-		"create_at": ts.In(loc).Unix(),
-		"prefix":    meta.Prefix,
+		"ts":          ts.In(loc).UnixMicro(),
+		"username":    Username,
+		"realname":    RealName,
+		"bank_name":   BankName,
+		"bankcard_no": BankNo,
+		"ip":          Ip,
+		"msg":         msg,
+		"status":      Status,
+		"device":      device_i,
+		"created_at":  ts.In(loc).Unix(),
+		"prefix":      meta.Prefix,
 	}
 
 	//写库
@@ -253,7 +253,7 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 // 会员管理-会员银行卡 新增校验记录日志 写TD库
 func BankcardTaskCheckInsertLog(record g.Record) error {
 
-	query, param, errs := dialect.Insert("bandcardcheck_log").Rows(record).ToSQL()
+	query, param, errs := dialect.Insert("bankcard_log").Rows(record).ToSQL()
 	if errs != nil {
 		return pushLog(fmt.Errorf("errorr:%s, To insert Sql:, %s, param:[%s] ", errs.Error(), query, param), helper.DBErr)
 	}

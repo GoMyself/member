@@ -423,7 +423,7 @@ func regLink(uid, linkID string, createdAt uint32) (Member, MemberRebate, error)
 
 	mr = MemberRebate{
 		UID:              uid,
-		ParentUID:        m.ParentUid,
+		ParentUID:        m.UID,
 		ZR:               lk.ZR,
 		QP:               lk.QP,
 		TY:               lk.TY,
@@ -463,7 +463,7 @@ func regRoot(uid, topId string, createdAt uint32) (Member, MemberRebate, error) 
 
 	mr = MemberRebate{
 		UID:              uid,
-		ParentUID:        m.ParentUid,
+		ParentUID:        m.UID,
 		ZR:               rootRebate.ZR,
 		QP:               rootRebate.QP,
 		TY:               rootRebate.TY,

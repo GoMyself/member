@@ -22,7 +22,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/olivere/elastic/v7"
 	"github.com/spaolacci/murmur3"
-	"github.com/valyala/gorpc"
 )
 
 type bankcardValidAPI_t struct {
@@ -31,10 +30,11 @@ type bankcardValidAPI_t struct {
 }
 
 var grpc_t struct {
-	View       func(uid, field string) ([]string, error)
-	Encrypt    func(uid string, data [][]string) error
-	Decrypt    func(uid string, hide bool, field []string) (map[string]string, error)
-	DecryptAll func(uids []string, hide bool, field []string) (map[string]map[string]string, error)
+	View        func(uid, field string) ([]string, error)
+	Encrypt     func(uid string, data [][]string) error
+	Decrypt     func(uid string, hide bool, field []string) (map[string]string, error)
+	DecryptAll  func(uids []string, hide bool, field []string) (map[string]map[string]string, error)
+	ShortURLGen func(rCtx context.Context, id string, uri string) (string, error)
 }
 
 type MetaTable struct {
@@ -43,7 +43,6 @@ type MetaTable struct {
 	ReportDB       *sqlx.DB
 	MerchantTD     *sqlx.DB
 	CardValid      bankcardValidAPI_t
-	Grpc           *gorpc.DispatcherClient
 	ES             *elastic.Client
 	AutoCommission bool
 	Prefix         string

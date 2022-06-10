@@ -22,7 +22,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/olivere/elastic/v7"
 	"github.com/spaolacci/murmur3"
-	"github.com/valyala/gorpc"
 )
 
 type bankcardValidAPI_t struct {
@@ -43,7 +42,6 @@ type MetaTable struct {
 	ReportDB       *sqlx.DB
 	MerchantTD     *sqlx.DB
 	CardValid      bankcardValidAPI_t
-	Grpc           *gorpc.DispatcherClient
 	ES             *elastic.Client
 	AutoCommission bool
 	Prefix         string

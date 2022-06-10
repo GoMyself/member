@@ -34,7 +34,7 @@ var grpc_t struct {
 	Encrypt     func(uid string, data [][]string) error
 	Decrypt     func(uid string, hide bool, field []string) (map[string]string, error)
 	DecryptAll  func(uids []string, hide bool, field []string) (map[string]map[string]string, error)
-	ShortURLGen func(rCtx context.Context, id string, uri string) (string, error)
+	ShortURLGen func(rCtx context.Context, uri string) (string, error)
 }
 
 type MetaTable struct {

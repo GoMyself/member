@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func ShortURLGen(id, uri string) (string, error) {
+func ShortURLGen(uri string) (string, error) {
 
 	clientContext := core.NewClientContext()
 	header := make(http.Header)
@@ -14,7 +14,7 @@ func ShortURLGen(id, uri string) (string, error) {
 	clientContext.Items().Set("httpRequestHeaders", header)
 	rCtx := core.WithContext(context.Background(), clientContext)
 
-	recs, err := grpc_t.ShortURLGen(rCtx, id, uri)
+	recs, err := grpc_t.ShortURLGen(rCtx, uri)
 	if err != nil {
 		return "", err
 	}

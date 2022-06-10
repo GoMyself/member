@@ -16,6 +16,7 @@ type Link_t struct {
 	ID               string `db:"id" json:"id" required:"0"`
 	UID              string `db:"uid" json:"uid" required:"0"`
 	Username         string `db:"username" json:"username" required:"0"`
+	ShortURL         string `db:"short_url" json:"short_url" required:"0"`
 	Prefix           string `db:"prefix" json:"prefix" required:"0"`
 	ZR               string `name:"zr" db:"zr" json:"zr" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //真人返水
 	QP               string `name:"qp" db:"qp" json:"qp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //棋牌返水
@@ -95,10 +96,18 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		return errors.New(helper.RebateOutOfRange)
 	}
 
+	uri := fmt.Sprintf("%s/entry/register?id=%s|%s", string(ctx.Referer()), sess.UID, data.ID)
+	fmt.Println(uri)
+	shortURL, err := ShortURLGen(uri)
+	if err != nil {
+		return pushLog(err, helper.GetRPCErr)
+	}
+
 	lk := Link_t{
 		ID:               data.ID,
 		UID:              sess.UID,
 		Username:         sess.Username,
+		ShortURL:         shortURL,
 		CreatedAt:        data.CreatedAt,
 		ZR:               zr.StringFixed(1),
 		QP:               qp.StringFixed(1),

@@ -57,7 +57,7 @@ var bankcardCode = map[string]string{
 	"1038": "LPB",
 	"1039": "ABBANK",
 	"1040": "CAP",
-	"1041": "HDBANK",
+	"1041": "HD", // 原运营提供的BankCode  HDBANK
 	"1042": "SCB",
 	"1043": "DONGA",
 	"1044": "SHBank",

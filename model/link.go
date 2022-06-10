@@ -97,6 +97,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 	}
 
 	uri := fmt.Sprintf("https://%s/entry/register?id=%s|%s", string(ctx.Referer()), sess.UID, data.ID)
+	fmt.Println(uri)
 	shortURL, err := ShortURLGen(uri)
 	if err != nil {
 		return pushLog(err, helper.GetRPCErr)

@@ -81,6 +81,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	if val, ok := bankcardCode[bankId]; ok {
 		data.BankCode = val
 	} else {
+		BankcardTaskLogInsert(fctx, name, "NotSupport", bankCard, "1122 .RecordNotExistErr", 0)
 		return helper.RecordNotExistErr
 	}
 
@@ -88,7 +89,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	if err != nil {
 		// 插入记录 银行卡校验失败日志
 		errmsg := fmt.Sprintf("BankcardTaskCreate BankcardValidErr %v %v %v ", helper.BankcardValidErr, id, err.Error())
-		BankcardTaskLogInsert(fctx, name, bankCard, errmsg[:59], 0)
+		BankcardTaskLogInsert(fctx, name, bankcardCode[bankId], bankCard, errmsg[:59], 0)
 		return helper.BankcardValidErr
 	}
 
@@ -100,18 +101,18 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 		if err == nil {
 			if valid {
 				//插入记录 校验成功日志
-				BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("try at %d Success %v", i, helper.Success), 1)
+				BankcardTaskLogInsert(fctx, name, bankcardCode[bankId], bankCard, fmt.Sprintf("try at %d Success %v", i, helper.Success), 1)
 				return helper.Success
 			} else {
 				//插入记录 校验失败日志
-				BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("try %d BankcardValidErr %v", i, helper.BankcardValidErr), 0)
+				BankcardTaskLogInsert(fctx, name, bankcardCode[bankId], bankCard, fmt.Sprintf("try %d BankcardValidErr %v", i, helper.BankcardValidErr), 0)
 				return helper.BankcardValidErr
 			}
 		}
 		time.Sleep(2 * time.Second)
 	}
 	// 插入记录 银行卡校验失败日志
-	BankcardTaskLogInsert(fctx, name, bankCard, fmt.Sprintf("Final BankcardValidErr %v", helper.BankcardValidErr), 0)
+	BankcardTaskLogInsert(fctx, name, bankcardCode[bankId], bankCard, fmt.Sprintf("Final BankcardValidErr %v", helper.BankcardValidErr), 0)
 	return helper.BankcardValidErr
 }
 
@@ -192,29 +193,30 @@ func BankcardTaskCreate(ts string, res bankcard_check_t) (string, error) {
 }
 
 // 新增会员 银行卡 校验记录
-func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg string, Status int) error {
+func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, realname, BankName, BankNo, msg string, Status int) error {
 
-	var Username, RealName, Ip string
-
+	var Username, Ip string
 	mb, err := MemberCache(fctx, "")
 	if err != nil {
 		return err
 	}
 	Username = mb.Username
 
-	// 获取用户真实信息
-	d, err := grpc_t.Decrypt(mb.UID, true, []string{"realname"})
+	if realname == "" {
+		// 获取用户真实信息
 
-	fmt.Println("grpc_t.Decrypt uids = ", mb.UID)
-	fmt.Println("grpc_t.Decrypt d = ", d)
-	fmt.Printf("and mb:%+v\n", mb)
+		d, err := grpc_t.Decrypt(mb.UID, true, []string{"realname"})
+		fmt.Println("grpc_t.Decrypt uids = ", mb.UID)
+		fmt.Println("grpc_t.Decrypt d = ", d)
+		fmt.Printf("and mb:%+v\n", mb)
 
-	if err != nil {
-		fmt.Println("grpc_t.Decrypt err = ", err)
-		return errors.New(helper.GetRPCErr)
+		if err != nil {
+			fmt.Println("grpc_t.Decrypt err = ", err)
+			return errors.New(helper.GetRPCErr)
+		}
+		realname = d["realname"]
 	}
 
-	RealName = d["realname"]
 	Ip = helper.FromRequest(fctx)
 	ts := fctx.Time()
 	/// 获取设备名称并保存
@@ -232,7 +234,7 @@ func BankcardTaskLogInsert(fctx *fasthttp.RequestCtx, BankName, BankNo, msg stri
 		"ts":          ts.In(loc).UnixMicro(),
 		"username":    Username,
 		"uid":         mb.UID,
-		"realname":    RealName,
+		"realname":    realname,
 		"bank_name":   BankName,
 		"bankcard_no": BankNo,
 		"ip":          Ip,

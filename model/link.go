@@ -96,7 +96,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		return errors.New(helper.RebateOutOfRange)
 	}
 
-	uri := fmt.Sprintf("https://%s/entry/register?id=%s|%s", string(ctx.Referer()), sess.UID, data.ID)
+	uri := fmt.Sprintf("%s/entry/register?id=%s|%s", string(ctx.Referer()), sess.UID, data.ID)
 	fmt.Println(uri)
 	shortURL, err := ShortURLGen(uri)
 	if err != nil {

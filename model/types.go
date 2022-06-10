@@ -441,11 +441,11 @@ type MemberListData struct {
 type MemberListCol struct {
 	UID              string  `json:"uid" db:"uid"`
 	Username         string  `json:"username" db:"username"`
-	Deposit          float64 `json:"deposit" db:"deposit"`
-	Withdraw         float64 `json:"withdraw" db:"withdraw"`
-	Dividend         float64 `json:"dividend" db:"dividend"`
-	Rebate           float64 `json:"rebate" db:"rebate"`
-	NetAmount        float64 `json:"net_amount" db:"net_amount"`
+	DepositAmount    float64 `json:"deposit_amount" db:"deposit_amount"`
+	WithdrawalAmount float64 `json:"withdrawal_amount" db:"withdrawal_amount"`
+	DividendAmount   float64 `json:"dividend_amount" db:"dividend_amount"`
+	RebateAmount     float64 `json:"rebate_amount" db:"rebate_amount"`
+	CompanyNetAmount float64 `json:"company_net_amount" db:"company_net_amount"`
 	TY               string  `json:"ty" db:"ty"`
 	ZR               string  `json:"zr" db:"zr"`
 	QP               string  `json:"qp" db:"qp"`

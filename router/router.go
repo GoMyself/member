@@ -196,8 +196,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 
 	// 代理报表
 	post("/member/agency/report", reportCtl.Report)
-	// 获取短域名
-	post("/member/shorturl/gen", shortURL.Gen)
+	// 获取短链域名
+	post("/member/short/domain", shortURL.Domain)
 	buildInfo = b
 
 	return router

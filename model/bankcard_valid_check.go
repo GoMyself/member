@@ -86,6 +86,7 @@ func BankcardCheck(fctx *fasthttp.RequestCtx, bankCard, bankId, name string) str
 	}
 
 	id, err := BankcardTaskCreate(ts, data)
+	fmt.Printf("WARNING bankcark check:ts:%+v, card data:%+v", ts, data)
 	if err != nil {
 		// 插入记录 银行卡校验失败日志
 		errmsg := fmt.Sprintf("BankcardTaskCreate BankcardValidErr %v %v %v ", helper.BankcardValidErr, id, err.Error())
@@ -132,6 +133,7 @@ func BankcardTaskQuery(ts, id string) (bool, error) {
 	b := fmt.Sprintf("{\"orderNo\":\"%s\", \"sign\":\"%s\"}", id, sign)
 
 	body, statusCode, err := helper.HttpDoTimeout([]byte(b), "POST", uri, headers, 5*time.Second)
+	fmt.Printf("WARNING bank check:str %+v uri: %+v, sign: %+v,  body:%+v, status:%+v, err:%+v", str, uri, sign, body, statusCode, err)
 	if err != nil {
 		return false, pushLog(err, helper.GetRPCErr)
 	}

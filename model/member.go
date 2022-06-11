@@ -156,15 +156,14 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 		"top_name":    mb.TopName,
 		"parent_uid":  mb.ParentUid,
 		"parent_name": mb.ParentName,
-		"ts":          ts.In(loc).UnixMilli(),
+		"ts":          ts.In(loc).UnixMicro(),
 		"create_at":   ts.In(loc).Unix(),
 	}
 
-	query, _, _ = dialect.Insert("member_login_log").Rows(&data).ToSQL()
-	//fmt.Println(query)
+	query, _, _ = dialect.Insert("member_login_log").Rows(data).ToSQL()
 	_, err = meta.MerchantTD.Exec(query)
 	if err != nil {
-		fmt.Println("insert SMS = ", err.Error())
+		fmt.Println("insert member_login_log = ", err.Error())
 	}
 
 	MemberUpdateCache(mb.UID, "")

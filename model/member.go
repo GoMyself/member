@@ -962,11 +962,11 @@ func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page
 	query, _, _ := dialect.From("tbl_report_agency").Select(
 		"uid",
 		"username",
-		g.SUM("deposit_amount").As("deposit"),
-		g.SUM("withdrawal_amount").As("withdraw"),
-		g.SUM("dividend_amount").As("dividend"),
-		g.SUM("rebate_amount").As("rebate"),
-		g.SUM("company_net_amount").As("net_amount"),
+		g.SUM("deposit_amount").As("deposit_amount"),
+		g.SUM("withdrawal_amount").As("withdrawal_amount"),
+		g.SUM("dividend_amount").As("dividend_amount"),
+		g.SUM("rebate_amount").As("rebate_amount"),
+		g.SUM("company_net_amount").As("company_net_amount"),
 	).GroupBy("uid").
 		Where(ex).
 		Offset(uint(offset)).
@@ -1028,11 +1028,11 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 		Select(
 			"uid",
 			"username",
-			g.SUM("deposit_amount").As("deposit"),
-			g.SUM("withdrawal_amount").As("withdraw"),
-			g.SUM("dividend_amount").As("dividend"),
-			g.SUM("rebate_amount").As("rebate"),
-			g.SUM("company_net_amount").As("net_amount"),
+			g.SUM("deposit_amount").As("deposit_amount"),
+			g.SUM("withdrawal_amount").As("withdrawal_amount"),
+			g.SUM("dividend_amount").As("dividend_amount"),
+			g.SUM("rebate_amount").As("rebate_amount"),
+			g.SUM("company_net_amount").As("company_net_amount"),
 		).GroupBy("uid").
 		ToSQL()
 

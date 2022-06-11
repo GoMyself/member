@@ -16,6 +16,7 @@ type Link_t struct {
 	ID               string `db:"id" json:"id" required:"0"`
 	UID              string `db:"uid" json:"uid" required:"0"`
 	Username         string `db:"username" json:"username" required:"0"`
+	ShortURL         string `db:"short_url" json:"short_url" required:"0"`
 	Prefix           string `db:"prefix" json:"prefix" required:"0"`
 	ZR               string `name:"zr" db:"zr" json:"zr" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //真人返水
 	QP               string `name:"qp" db:"qp" json:"qp" rule:"float" required:"1" min:"3" max:"3" msg:""`                                                 //棋牌返水
@@ -30,7 +31,7 @@ type Link_t struct {
 	CreatedAt        string `db:"created_at" json:"created_at" rule:"none" required:"0"`                                                                   //
 }
 
-func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
+func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) error {
 
 	zr, _ := decimal.NewFromString(data.ZR)
 	qp, _ := decimal.NewFromString(data.QP)
@@ -95,10 +96,21 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		return errors.New(helper.RebateOutOfRange)
 	}
 
+	regURL := fmt.Sprintf("%s?id=%s|%s", uri, sess.UID, data.ID)
+	if device == DeviceTypeAndroidFlutter || device == DeviceTypeIOSFlutter {
+		regURL = fmt.Sprintf("%s?c=%s|%s", uri, sess.UID, data.ID)
+	}
+	fmt.Println(regURL)
+	shortURL, err := ShortURLGen(regURL)
+	if err != nil {
+		return pushLog(err, helper.GetRPCErr)
+	}
+
 	lk := Link_t{
 		ID:               data.ID,
 		UID:              sess.UID,
 		Username:         sess.Username,
+		ShortURL:         shortURL,
 		CreatedAt:        data.CreatedAt,
 		ZR:               zr.StringFixed(1),
 		QP:               qp.StringFixed(1),

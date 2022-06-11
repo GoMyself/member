@@ -84,6 +84,10 @@ func main() {
 	}
 	fmt.Printf("gitReversion = %s\r\nbuildGoVersion = %s\r\nbuildTime = %s\r\n", gitReversion, buildGoVersion, buildTime)
 	fmt.Println("member2 running", cfg.Port.Member)
+
+	service := model.NewService(gitReversion, buildTime, buildGoVersion, 1)
+	go service.Start()
+
 	if err := srv.ListenAndServe(cfg.Port.Member); err != nil {
 		log.Fatalf("Error in ListenAndServe: %s", err)
 	}

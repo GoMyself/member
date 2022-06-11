@@ -38,9 +38,6 @@ func MessageList(ty, page, pageSize int, username string) (MessageTDData, error)
 
 	offset := (page - 1) * pageSize
 	query, _, _ := t.Select(colsMessageTD...).Where(ex).Offset(uint(offset)).Limit(uint(pageSize)).Order(g.C("ts").Desc()).ToSQL()
-	if ty == 0 {
-		//query, _, _ = t.Select(colsMessageTD...).Where(ex).Offset(uint(offset)).Limit(uint(pageSize)).Order(g.C("is_top").Desc(), g.C("send_at").Desc()).ToSQL()
-	}
 	fmt.Println(query)
 	err := meta.MerchantTD.Select(&data.D, query)
 	if err != nil {

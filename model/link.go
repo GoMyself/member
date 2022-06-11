@@ -208,6 +208,12 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 		return data, nil
 	}
 
+	key = meta.Prefix + ":shorturl:domain"
+	shortDomain, err := meta.MerchantRedis.Get(ctx, key).Result()
+	if err != nil && err != redis.Nil {
+		return data, pushLog(err, helper.RedisErr)
+	}
+
 	mp := map[string]Link_t{}
 	err = helper.JsonUnmarshal([]byte(res), &mp)
 	if err != nil {
@@ -215,6 +221,7 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 	}
 
 	for _, v := range mp {
+		v.ShortURL = shortDomain + v.ShortURL
 		data = append(data, v)
 	}
 

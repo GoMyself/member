@@ -47,6 +47,29 @@ func MessageList(ty, page, pageSize int, username string) (MessageTDData, error)
 	return data, nil
 }
 
+// 紧急站内信
+func MessageEmergency(username string) (MessageTD, error) {
+
+	data := MessageTD{}
+	ex := g.Ex{
+		"prefix":   meta.Prefix,
+		"username": username,
+		"is_top":   1,
+	}
+	query, _, _ := dialect.From("messages").Select(colsMessageTD...).Where(ex).Order(g.C("ts").Desc()).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.MerchantTD.Get(&data, query)
+	if err != nil && err != sql.ErrNoRows {
+		return data, pushLog(err, helper.DBErr)
+	}
+
+	if err == sql.ErrNoRows {
+		return data, err
+	}
+
+	return data, nil
+}
+
 func MessageNum(username string) (int64, error) {
 
 	var num int64

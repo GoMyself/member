@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/valyala/fasthttp"
 	"member/contrib/helper"
@@ -42,6 +43,29 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 	}
 	data, err := model.MessageList(ty, page, pageSize, mb.Username)
 	if err != nil {
+		helper.Print(ctx, false, err.Error())
+		return
+	}
+
+	helper.Print(ctx, true, data)
+}
+
+// 站内信已读
+func (that *MessageController) Emergency(ctx *fasthttp.RequestCtx) {
+
+	mb, err := model.MemberCache(ctx, "")
+	if err != nil {
+		helper.Print(ctx, false, helper.UsernameErr)
+		return
+	}
+
+	data, err := model.MessageEmergency(mb.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			helper.Print(ctx, true, nil)
+			return
+		}
+
 		helper.Print(ctx, false, err.Error())
 		return
 	}

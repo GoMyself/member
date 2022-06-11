@@ -38,13 +38,33 @@ func MessageList(ty, page, pageSize int, username string) (MessageTDData, error)
 
 	offset := (page - 1) * pageSize
 	query, _, _ := t.Select(colsMessageTD...).Where(ex).Offset(uint(offset)).Limit(uint(pageSize)).Order(g.C("ts").Desc()).ToSQL()
-	if ty == 0 {
-		//query, _, _ = t.Select(colsMessageTD...).Where(ex).Offset(uint(offset)).Limit(uint(pageSize)).Order(g.C("is_top").Desc(), g.C("send_at").Desc()).ToSQL()
-	}
 	fmt.Println(query)
 	err := meta.MerchantTD.Select(&data.D, query)
 	if err != nil {
 		return data, pushLog(err, helper.DBErr)
+	}
+
+	return data, nil
+}
+
+// 紧急站内信
+func MessageEmergency(username string) (MessageTD, error) {
+
+	data := MessageTD{}
+	ex := g.Ex{
+		"prefix":   meta.Prefix,
+		"username": username,
+		"is_top":   1,
+	}
+	query, _, _ := dialect.From("messages").Select(colsMessageTD...).Where(ex).Order(g.C("ts").Desc()).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.MerchantTD.Get(&data, query)
+	if err != nil && err != sql.ErrNoRows {
+		return data, pushLog(err, helper.DBErr)
+	}
+
+	if err == sql.ErrNoRows {
+		return data, err
 	}
 
 	return data, nil

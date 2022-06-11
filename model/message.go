@@ -55,6 +55,7 @@ func MessageEmergency(username string) (MessageTD, error) {
 		"prefix":   meta.Prefix,
 		"username": username,
 		"is_top":   1,
+		"is_read":  0,
 	}
 	query, _, _ := dialect.From("messages").Select(colsMessageTD...).Where(ex).Order(g.C("ts").Desc()).Limit(1).ToSQL()
 	fmt.Println(query)

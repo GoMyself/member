@@ -451,14 +451,13 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		}
 		ex["username"] = username
 	}
-
 	if sortField != "" {
 		sortFields := map[string]bool{
-			"deposit":    true,
-			"withdraw":   true,
-			"dividend":   true,
-			"rebate":     true,
-			"net_amount": true,
+			"deposit_amount":     true,
+			"withdrawal_amount":  true,
+			"dividend_amount":    true,
+			"rebate_amount":      true,
+			"company_net_amount": true,
 		}
 
 		if _, ok := sortFields[sortField]; !ok {

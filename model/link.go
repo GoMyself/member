@@ -31,7 +31,7 @@ type Link_t struct {
 	CreatedAt        string `db:"created_at" json:"created_at" rule:"none" required:"0"`                                                                   //
 }
 
-func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
+func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) error {
 
 	zr, _ := decimal.NewFromString(data.ZR)
 	qp, _ := decimal.NewFromString(data.QP)
@@ -96,9 +96,12 @@ func LinkInsert(ctx *fasthttp.RequestCtx, data Link_t) error {
 		return errors.New(helper.RebateOutOfRange)
 	}
 
-	uri := fmt.Sprintf("%s/entry/register?id=%s|%s", string(ctx.Referer()), sess.UID, data.ID)
-	fmt.Println(uri)
-	shortURL, err := ShortURLGen(uri)
+	regURL := fmt.Sprintf("%s?id=%s|%s", uri, sess.UID, data.ID)
+	if device == DeviceTypeAndroidFlutter || device == DeviceTypeIOSFlutter {
+		regURL = fmt.Sprintf("%s?c=%s|%s", uri, sess.UID, data.ID)
+	}
+	fmt.Println(regURL)
+	shortURL, err := ShortURLGen(regURL)
 	if err != nil {
 		return pushLog(err, helper.GetRPCErr)
 	}

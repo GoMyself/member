@@ -93,8 +93,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	reportCtl := new(controller.ReportController)
 	// vip
 	vipCtl := new(controller.VipController)
-	// 短域名
-	shortURL := new(controller.ShortURLController)
 
 	get("/member/version", Version)
 
@@ -196,8 +194,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 
 	// 代理报表
 	post("/member/agency/report", reportCtl.Report)
-	// 获取短链域名
-	post("/member/short/domain", shortURL.Domain)
 	buildInfo = b
 
 	return router

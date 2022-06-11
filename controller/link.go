@@ -2,11 +2,11 @@ package controller
 
 import (
 	"fmt"
+	"github.com/valyala/fasthttp"
 	"member/contrib/helper"
 	"member/contrib/validator"
 	"member/model"
-
-	"github.com/valyala/fasthttp"
+	"strconv"
 )
 
 type LinkController struct{}
@@ -20,9 +20,23 @@ func (that *LinkController) Insert(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
+	uri := string(ctx.PostArgs().Peek("url"))
+
+	device := string(ctx.Request.Header.Peek("d"))
+	i, err := strconv.Atoi(device)
+	if err != nil {
+		helper.Print(ctx, false, helper.DeviceTypeErr)
+		return
+	}
+
+	if _, ok := model.Devices[i]; !ok {
+		helper.Print(ctx, false, helper.DeviceTypeErr)
+		return
+	}
+
 	params.ID = helper.GenId()
 	params.CreatedAt = fmt.Sprintf("%d", ctx.Time().Unix())
-	err = model.LinkInsert(ctx, params)
+	err = model.LinkInsert(ctx, uri, i, params)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

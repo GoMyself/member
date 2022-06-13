@@ -14,7 +14,8 @@ BuildGoVersion=`go version`
 go build -ldflags "-X main.gitReversion=${GitReversion}  -X 'main.buildTime=${BuildTime}' -X 'main.buildGoVersion=${BuildGoVersion}'" -o $PROJECT
 # shellcheck disable=SC2164
 cd /opt/deploy/cg/$PROJECT
-git pull
+git checkout master
+git pull origin master
 mv $DIR/$PROJECT /opt/deploy/cg/$PROJECT
 git commit -am "${GitReversion}"
 git push

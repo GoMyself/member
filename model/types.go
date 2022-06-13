@@ -342,32 +342,24 @@ type DividendData struct {
 type Dividend struct {
 	ID            string  `db:"id" json:"id"`
 	UID           string  `db:"uid" json:"uid"`
+	Prefix        string  `db:"prefix" json:"prefix"`
+	Ty            int     `db:"ty" json:"ty"`
 	Username      string  `db:"username" json:"username"`
 	TopUid        string  `db:"top_uid" json:"top_uid"`         //总代uid
 	TopName       string  `db:"top_name" json:"top_name"`       //总代代理
 	ParentUid     string  `db:"parent_uid" json:"parent_uid"`   //上级uid
 	ParentName    string  `db:"parent_name" json:"parent_name"` //上级代理
-	Prefix        string  `db:"prefix" json:"prefix"`
-	Wallet        int     `db:"wallet" json:"wallet"`
-	Ty            int     `db:"ty" json:"ty"`
-	WaterLimit    uint8   `db:"water_limit" json:"water_limit"`
-	PlatformID    string  `db:"platform_id" json:"platform_id"`
 	Amount        float64 `db:"amount" json:"amount"`
-	HandOutAmount float64 `db:"hand_out_amount" json:"hand_out_amount"`
+	ReviewAt      uint64  `db:"review_at" json:"review_at"`
+	ReviewUid     string  `db:"review_uid" json:"review_uid"`
+	ReviewName    string  `db:"review_name" json:"review_name"`
 	WaterFlow     float64 `db:"water_flow" json:"water_flow"`
-	Notify        uint8   `db:"notify" json:"notify"`
+	WaterMultiple int     `db:"water_multiple" json:"water_multiple"`
 	State         int     `db:"state" json:"state"`
-	HandOutState  int     `db:"hand_out_state" json:"hand_out_state"`
-	Automatic     int     `db:"automatic" json:"automatic"`
-	Remark        string  `db:"remark" json:"remark"`
 	ReviewRemark  string  `db:"review_remark" json:"review_remark"`
 	ApplyAt       uint64  `db:"apply_at" json:"apply_at"`
 	ApplyUid      string  `db:"apply_uid" json:"apply_uid"`
 	ApplyName     string  `db:"apply_name" json:"apply_name"`
-	ReviewAt      uint64  `db:"review_at" json:"review_at"`
-	ReviewUid     string  `db:"review_uid" json:"review_uid"`
-	ReviewName    string  `db:"review_name" json:"review_name"`
-	IsRisk        int     `db:"-" json:"is_risk"`
 }
 
 // 返水数据

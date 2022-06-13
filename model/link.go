@@ -1,11 +1,11 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-	"member/contrib/helper"
-
 	"github.com/go-redis/redis/v8"
+	"member/contrib/helper"
 
 	g "github.com/doug-martin/goqu/v9"
 	"github.com/shopspring/decimal"
@@ -163,33 +163,6 @@ func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) e
 	return nil
 }
 
-func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
-
-	sess, err := MemberInfo(ctx)
-	if err != nil {
-		return err
-	}
-
-	query, _, _ := dialect.Delete("tbl_member_link").Where(g.Ex{
-		"id":     id,
-		"uid":    sess.UID,
-		"prefix": meta.Prefix,
-	}).ToSQL()
-
-	_, err = meta.MerchantDB.Exec(query)
-	if err != nil {
-		return pushLog(err, helper.DBErr)
-	}
-
-	key := fmt.Sprintf("%s:lk:%s", meta.Prefix, sess.UID)
-	err = meta.MerchantRedis.Do(ctx, "JSON.DEL", key, "$"+id).Err()
-	if err != nil {
-		_ = pushLog(err, helper.RedisErr)
-	}
-
-	return nil
-}
-
 func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 
 	var data []Link_t
@@ -226,4 +199,71 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 	}
 
 	return data, nil
+}
+
+func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
+
+	sess, err := MemberInfo(ctx)
+	if err != nil {
+		return err
+	}
+
+	query, _, _ := dialect.Delete("tbl_member_link").Where(g.Ex{
+		"id":     id,
+		"uid":    sess.UID,
+		"prefix": meta.Prefix,
+	}).ToSQL()
+
+	_, err = meta.MerchantDB.Exec(query)
+	if err != nil {
+		return pushLog(err, helper.DBErr)
+	}
+
+	LoadMemberLinks(sess.UID)
+
+	return nil
+}
+
+func LoadMemberLinks(uid string) {
+
+	ex := g.Ex{
+		"uid":    uid,
+		"prefix": meta.Prefix,
+	}
+	var data []Link_t
+	query, _, _ := dialect.From("tbl_member_link").Where(ex).Select(colsLink...).ToSQL()
+	fmt.Println(query)
+	err := meta.MerchantDB.Select(&data, query)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			_ = pushLog(err, helper.DBErr)
+		}
+		return
+	}
+
+	links := make(map[string]Link_t)
+	for _, v := range data {
+		links["$"+v.ID] = v
+	}
+
+	value, err := helper.JsonMarshal(&links)
+	if err != nil {
+		_ = pushLog(err, helper.FormatErr)
+		return
+	}
+
+	key := fmt.Sprintf("%s:lk:%s", meta.Prefix, uid)
+	pipe := meta.MerchantRedis.TxPipeline()
+	pipe.Unlink(ctx, key)
+	pipe.Do(ctx, "JSON.SET", key, ".", string(value))
+	pipe.Persist(ctx, key)
+
+	_, err = pipe.Exec(ctx)
+	if err != nil {
+		fmt.Println(key, string(value), err)
+		_ = pushLog(err, helper.RedisErr)
+		return
+	}
+
+	_ = pipe.Close()
 }

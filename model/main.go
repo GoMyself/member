@@ -62,6 +62,7 @@ var (
 	colsBankcard     = helper.EnumFields(BankCard{})
 	colsMemberRebate = helper.EnumFields(MemberRebate{})
 	colsMessageTD    = helper.EnumFields(MessageTD{})
+	colsLink         = helper.EnumFields(Link_t{})
 
 	colsEsCommissionTransaction = []string{"id", "bill_no", "uid", "username", "cash_type", "amount", "before_amount", "after_amount", "created_at"}
 )

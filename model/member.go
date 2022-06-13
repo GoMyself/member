@@ -220,8 +220,9 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
 	key = fmt.Sprintf("%s:phoneExist", meta.Prefix)
-	phoneExist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, phone).Val()
-	if v, ok := phoneExist.(int64); ok && v == 1 {
+	phoneExist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, phone)
+	fmt.Println(phoneExist.String())
+	if v, ok := phoneExist.Val().(int64); ok && v == 1 {
 		return "", errors.New(helper.PhoneExist)
 	}
 

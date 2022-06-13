@@ -252,7 +252,6 @@ func RecordTrade(uid, startTime, endTime string, flag, page, pageSize int) (Trad
 
 	case RecordTradeDividend: // 红利
 		param["state"] = DividendReviewPass
-		param["hand_out_state"] = DividendSuccess
 		rangeParam := map[string][]interface{}{"apply_at": {startAtMs, endAtMs}}
 		return recordTradeDividend(flag, page, pageSize, param, rangeParam, nil)
 
@@ -425,22 +424,15 @@ func recordTradeDividend(flag, page, pageSize int,
 		item := trade{
 			Flag:       flag,
 			ID:         v.ID,
-			Ty:         v.Wallet,
+			Ty:         1,
 			BillNo:     v.ID,
-			PlatformId: v.PlatformID,
+			PlatformId: "",
 			Amount:     fmt.Sprintf("%.4f", v.Amount),
 			CreatedAt:  fmt.Sprintf("%d", v.ApplyAt),
 			State:      v.State,
 		}
 
-		// 中心钱包
-		if v.Wallet == 1 {
-			// 中心钱包红利
-			item.TransferType = helper.TransactionDividend
-		} else { //场馆钱包
-			// 场馆红利
-			item.TransferType = TransferDividend
-		}
+		item.TransferType = helper.TransactionDividend
 
 		data.D = append(data.D, item)
 	}

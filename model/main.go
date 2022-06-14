@@ -14,8 +14,6 @@ import (
 	rpchttp "github.com/hprose/hprose-golang/v3/rpc/http"
 	. "github.com/hprose/hprose-golang/v3/rpc/http/fasthttp"
 
-	"errors"
-
 	g "github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	"github.com/go-redis/redis/v8"
@@ -76,8 +74,6 @@ func Constructor(mt *MetaTable, rpcconn string) {
 	RegisterTransport()
 
 	client := core.NewClient(rpcconn)
-	//client.Use(log.Plugin)
-
 	client.UseService(&grpc_t)
 }
 
@@ -120,8 +116,7 @@ func pushLog(err error, code string) error {
 		fmt.Println("insert SMS = ", err1.Error(), query)
 	}
 
-	note := fmt.Sprintf("Hệ thống lỗi %s", id)
-	return errors.New(note)
+	return fmt.Errorf("hệ thống lỗi %s", id)
 }
 
 func tdInsert(tbl string, record g.Record) {

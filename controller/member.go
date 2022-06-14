@@ -451,14 +451,13 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		}
 		ex["username"] = username
 	}
-
 	if sortField != "" {
 		sortFields := map[string]bool{
-			"deposit":    true,
-			"withdraw":   true,
-			"dividend":   true,
-			"rebate":     true,
-			"net_amount": true,
+			"deposit_amount":     true,
+			"withdrawal_amount":  true,
+			"dividend_amount":    true,
+			"rebate_amount":      true,
+			"company_net_amount": true,
 		}
 
 		if _, ok := sortFields[sortField]; !ok {
@@ -472,13 +471,13 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	currentUsername := string(ctx.UserValue("token").([]byte))
-	if currentUsername == "" {
+	user := string(ctx.UserValue("token").([]byte))
+	if user == "" {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
 	}
-	//currentUsername := "jasper01"
-	ex["parent_name"] = currentUsername
+	//user := "jasper01"
+	ex["parent_name"] = user
 
 	data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
 	if err != nil {
@@ -487,7 +486,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	}
 
 	if agg == 1 {
-		aggData, err := model.MemberAgg(currentUsername)
+		aggData, err := model.MemberAgg(user)
 		if err != nil {
 			helper.Print(ctx, false, err.Error())
 			return

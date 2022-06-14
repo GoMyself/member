@@ -900,13 +900,13 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 	for _, v := range data.D {
 		ids = append(ids, v.UID)
 	}
-	fmt.Printf("mysql 获取返水前的数据:%+v\n", data)
+	//fmt.Printf("mysql 获取返水前的数据:%+v\n", data)
 	// 获取用户的反水比例
 	rebate, err := MemberRebateSelect(ids)
 	if err != nil {
 		return data, err
 	}
-	fmt.Printf("meysql 从表 tbl_member_rebate_info 获取返水数据:%+v\n", rebate)
+	//fmt.Printf("mysql 从表 tbl_member_rebate_info 获取返水数据:%+v\n", rebate)
 
 	for i, v := range data.D {
 		if rb, ok := rebate[v.UID]; ok {
@@ -922,7 +922,12 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
 		}
 	}
-	fmt.Printf("mysql 获取返水后的数据:%+v\n", data)
+	//fmt.Printf("mysql 获取返水后的数据:%+v\n", data)
+
+	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)
+	if meta.MerchantRedis.Exists(ctx, key).Val() > 0 {
+		data.EnableMod = true
+	}
 
 	return data, nil
 }

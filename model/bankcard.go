@@ -266,7 +266,6 @@ func BankCardExistRedis(bankcardNo string) error {
 
 	ex1 := ex1Temp.Val()
 	ex2 := ex2Temp.Val()
-	fmt.Printf("WARNING redis bankcard ex1 %+v of key %+v, ex2:%+v of ex2Temp key %+v\n", ex1, ex1Temp, ex2, ex2Temp)
 	if v, ok := ex1.(int64); ok && v == 1 {
 		return errors.New(helper.BankCardExistErr)
 	}

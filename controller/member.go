@@ -471,13 +471,13 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		}
 	}
 
-	currentUsername := string(ctx.UserValue("token").([]byte))
-	if currentUsername == "" {
+	user := string(ctx.UserValue("token").([]byte))
+	if user == "" {
 		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
 	}
-	//currentUsername := "jasper01"
-	ex["parent_name"] = currentUsername
+	//user := "jasper01"
+	ex["parent_name"] = user
 
 	data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
 	if err != nil {
@@ -486,7 +486,7 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	}
 
 	if agg == 1 {
-		aggData, err := model.MemberAgg(currentUsername)
+		aggData, err := model.MemberAgg(user)
 		if err != nil {
 			helper.Print(ctx, false, err.Error())
 			return

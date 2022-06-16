@@ -16,7 +16,8 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
-	ty := ctx.QueryArgs().GetUintOrZero("ty") //1 站内消息 2 活动消息
+	ty := ctx.QueryArgs().GetUintOrZero("ty")         //1 站内消息 2 活动消息
+	isRead := string(ctx.QueryArgs().Peek("is_read")) //0 未读 1已读
 
 	if ty > 0 {
 		tys := map[int]bool{
@@ -27,6 +28,11 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 			helper.Print(ctx, false, helper.ParamErr)
 			return
 		}
+	}
+
+	if isRead != "0" && isRead != "1" {
+		helper.Print(ctx, false, helper.ParamErr)
+		return
 	}
 
 	mb, err := model.MemberCache(ctx, "")
@@ -41,7 +47,7 @@ func (that *MessageController) List(ctx *fasthttp.RequestCtx) {
 	if pageSize < 1 {
 		pageSize = 1
 	}
-	data, err := model.MessageList(ty, page, pageSize, mb.Username)
+	data, err := model.MessageList(ty, page, pageSize, isRead, mb.Username)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

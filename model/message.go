@@ -9,7 +9,7 @@ import (
 )
 
 //MessageList  站内信列表
-func MessageList(ty, page, pageSize int, username string) (MessageTDData, error) {
+func MessageList(ty, page, pageSize int, isRead, username string) (MessageTDData, error) {
 
 	data := MessageTDData{
 		S: pageSize,
@@ -18,6 +18,7 @@ func MessageList(ty, page, pageSize int, username string) (MessageTDData, error)
 		"prefix":    meta.Prefix,
 		"username":  username,
 		"is_delete": 0,
+		"is_read":   isRead,
 	}
 	if ty != 0 {
 		ex["ty"] = ty

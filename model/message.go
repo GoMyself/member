@@ -144,6 +144,10 @@ func MessageDelete(username string, tss []string, flag int) error {
 
 func messageDelete(tss []string) error {
 
+	if len(tss) == 0 {
+		return nil
+	}
+
 	var records []g.Record
 	for _, ts := range tss {
 		fmt.Println("MessageDelete", ts)

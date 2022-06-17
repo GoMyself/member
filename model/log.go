@@ -25,9 +25,14 @@ func EsMemberListSearch(index, sortField string,
 		fmt.Println(err)
 		return 0, nil, nil, pushLog(err, helper.ESErr)
 	}
+	fmt.Printf("receive offset %+v total hits value:%d ,\n", offset, resOrder.Hits.TotalHits.Value)
 
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil
+	}
+
+	for i, h := range resOrder.Hits.Hits {
+		fmt.Println("i %d hits:%+v\n", i, *h)
 	}
 	return resOrder.Hits.TotalHits.Value, resOrder.Hits.Hits, resOrder.Aggregations, nil
 }

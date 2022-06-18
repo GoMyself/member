@@ -9,7 +9,7 @@ import (
 	"member/contrib/helper"
 )
 
-// starc 会员列表查询执行
+// 会员列表查询执行
 func EsMemberListSearch(index, sortField string,
 	page, pageSize int,
 	fields []string,
@@ -32,9 +32,6 @@ func EsMemberListSearch(index, sortField string,
 		fmt.Println(err)
 		return 0, nil, nil, pushLog(err, helper.ESErr)
 	}
-	fmt.Printf("receive offset %+v total hits value:%d ,\n", offset, resOrder.Hits.TotalHits.Value)
-
-	fmt.Printf("search receive agg %+v total value:%d ,\n", agg, resOrder.Hits.TotalHits.Value)
 
 	if resOrder.Status != 0 || resOrder.Hits.TotalHits.Value <= int64(offset) {
 		return resOrder.Hits.TotalHits.Value, nil, nil, nil

@@ -491,7 +491,7 @@ func (that *MemberController) List(fctx *fasthttp.RequestCtx) {
 		}
 		data.Agg = aggData
 	}
-	fmt.Printf("es return data:%+v\n", data)
+	//fmt.Printf("es return data:%+v\n", data)
 
 	helper.Print(fctx, true, data)
 }

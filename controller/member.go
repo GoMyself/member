@@ -425,16 +425,16 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 }
 
 // 从ES获取 会员数据
-func (that *MemberController) List(fctx *fasthttp.RequestCtx) {
+func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
-	username := string(fctx.QueryArgs().Peek("username"))
-	startTime := string(fctx.QueryArgs().Peek("start_time"))
-	endTime := string(fctx.QueryArgs().Peek("end_time"))
-	page := fctx.QueryArgs().GetUintOrZero("page")
-	pageSize := fctx.QueryArgs().GetUintOrZero("page_size")
-	sortField := string(fctx.QueryArgs().Peek("sort_field"))
-	isAsc := fctx.QueryArgs().GetUintOrZero("is_asc")
-	agg := fctx.QueryArgs().GetUintOrZero("agg") // 是否聚合显示活跃成员
+	username := string(ctx.QueryArgs().Peek("username"))
+	startTime := string(ctx.QueryArgs().Peek("start_time"))
+	endTime := string(ctx.QueryArgs().Peek("end_time"))
+	page := ctx.QueryArgs().GetUintOrZero("page")
+	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
+	sortField := string(ctx.QueryArgs().Peek("sort_field"))
+	isAsc := ctx.QueryArgs().GetUintOrZero("is_asc")
+	agg := ctx.QueryArgs().GetUintOrZero("agg") // 是否聚合显示活跃成员
 	if page == 0 {
 		page = 1
 	}
@@ -445,13 +445,13 @@ func (that *MemberController) List(fctx *fasthttp.RequestCtx) {
 
 	if username != "" {
 		if !validator.CheckUName(username, 5, 14) {
-			helper.Print(fctx, false, helper.UsernameErr)
+			helper.Print(ctx, false, helper.UsernameErr)
 			return
 		}
 	}
-	user := string(fctx.UserValue("token").([]byte))
+	user := string(ctx.UserValue("token").([]byte))
 	if user == "" {
-		helper.Print(fctx, false, helper.AccessTokenExpires)
+		helper.Print(ctx, false, helper.AccessTokenExpires)
 		return
 	}
 	// 获取数据
@@ -465,12 +465,12 @@ func (that *MemberController) List(fctx *fasthttp.RequestCtx) {
 		}
 
 		if _, ok := sortFields[sortField]; !ok {
-			helper.Print(fctx, false, helper.ParamErr)
+			helper.Print(ctx, false, helper.ParamErr)
 			return
 		}
 
 		if !validator.CheckIntScope(strconv.Itoa(isAsc), 0, 1) {
-			helper.Print(fctx, false, helper.ParamErr)
+			helper.Print(ctx, false, helper.ParamErr)
 			return
 		}
 	}
@@ -478,7 +478,7 @@ func (that *MemberController) List(fctx *fasthttp.RequestCtx) {
 	// 获取返水 和 聚合信息
 	data, err := model.EsMemberList(page, pageSize, isAsc, username, user, startTime, endTime, sortField)
 	if err != nil {
-		helper.Print(fctx, false, err.Error())
+		helper.Print(ctx, false, err.Error())
 		return
 	}
 
@@ -486,12 +486,12 @@ func (that *MemberController) List(fctx *fasthttp.RequestCtx) {
 		// 更新活跃人数
 		aggData, err := model.MemberAgg(user)
 		if err != nil {
-			helper.Print(fctx, false, err.Error())
+			helper.Print(ctx, false, err.Error())
 			return
 		}
 		data.Agg = aggData
 	}
 	//fmt.Printf("es return data:%+v\n", data)
 
-	helper.Print(fctx, true, data)
+	helper.Print(ctx, true, data)
 }

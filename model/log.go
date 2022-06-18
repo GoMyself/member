@@ -16,7 +16,7 @@ func EsMemberListSearch(index, sortField string,
 	query *elastic.BoolQuery,
 	agg map[string]*elastic.SumAggregation) (int64, []*elastic.SearchHit, elastic.Aggregations, error) {
 
-	query.Filter(elastic.NewTermQuery("prefix", "w88"))
+	query.Filter(elastic.NewTermQuery("prefix", meta.Prefix))
 	fsc := elastic.NewFetchSourceContext(true).Include(fields...)
 	offset := (page - 1) * pageSize
 	esService := meta.ES.Search().FetchSourceContext(fsc).Query(query).From(offset).Size(pageSize).

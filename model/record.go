@@ -574,10 +574,7 @@ func EsMemberList(page, pageSize, isAsc int, username, user, startTime, endTime,
 
 	query := elastic.NewBoolQuery()
 	if username != "" {
-		if validator.CheckUName(username, 5, 14) {
-			fmt.Println("add username to es filter", username)
-			query.Filter(elastic.NewTermQuery("username", username))
-		}
+		query.Filter(elastic.NewTermQuery("username", username))
 	}
 
 	query.Filter(elastic.NewTermQuery("parent_name", user))

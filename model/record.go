@@ -3,6 +3,8 @@ package model
 import (
 	"errors"
 	"fmt"
+	g "github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"member/contrib/helper"
 	"member/contrib/validator"
 	"strings"
@@ -558,161 +560,110 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 	return errors.New(helper.PhoneVerificationErr)
 }
 
-// starc 会员列表查询执行
-func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTime, sortField string, query *elastic.BoolQuery) (MemberListData, error) {
+// 会员列表查询执行
+func EsMemberList(page, pageSize, isAsc int, username, user, startTime, endTime, sortField string) (MemberListData, error) {
 
 	var (
-		data  = MemberListData{}
-		names []string
-		ids   []string
-		idMap = make(map[string]string)
+		data              = MemberListData{}
+		ids               []string
+		idMap             = make(map[string]string)
+		t, startAt, endAt int64
+		err               error
+		esResult          []*elastic.SearchHit
 	)
-	// 补全数据
 
-	fmt.Println("receive param:", page, pageSize, ascending, username, startTime, endTime, "sortField:", sortField)
-	fmt.Printf("query:%+v\n", query)
+	query := elastic.NewBoolQuery()
+	if username != "" {
+		query.Filter(elastic.NewTermQuery("username", username))
+	}
+
+	query.Filter(elastic.NewTermQuery("parent_name", user))
 
 	if startTime != "" && endTime != "" {
-
-		startAt, err := helper.TimeToLoc(startTime, loc)
+		startAt, err = helper.TimeToLoc(startTime, loc)
 		if err != nil {
 			return data, errors.New(helper.TimeTypeErr)
 		}
-
-		endAt, err := helper.TimeToLoc(endTime, loc)
+		endAt, err = helper.TimeToLoc(endTime, loc)
 		if err != nil {
 			return data, errors.New(helper.TimeTypeErr)
 		}
-
 		if startAt >= endAt {
 			return data, errors.New(helper.QueryTimeRangeErr)
 		}
-		query.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
 	}
 	data.S = pageSize
-	query.Filter(elastic.NewTermQuery("prefix", meta.Prefix))
-	var (
-		t        int64
-		esResult []*elastic.SearchHit
-		err2     error
-	)
-	fmt.Printf("sortField:%+v\n, username:%+v\n", sortField, username)
-	if sortField != "" && username == "" {
-		fmt.Printf("tbl_report_agency:%+v, %+v, %+v, %+v, %+v\n", ascending, page, pageSize, reportAgencyListFields, query)
 
-		t, esResult, _, err2 = EsMemberListSort(
-			esPrefixIndex("tbl_report_agency"), sortField, ascending, page, pageSize, reportAgencyListFields, query, nil)
+	// 从es查下级成员
+	var members []Member
+	t, esResult, _, err = EsMemberListSearch(
+		esPrefixIndex("tbl_members"), "created_at", page, pageSize, []string{"uid", "username"}, query, nil)
 
-		if err2 != nil {
-			return data, pushLog(err2, helper.DBErr)
-		}
-		for _, v := range esResult {
-
-			record := MemberListCol{}
-			_ = helper.JsonUnmarshal(v.Source, &record)
-			data.D = append(data.D, record)
-			names = append(names, record.Username)
-		}
-
-		if len(data.D) == 0 {
-			return data, nil
-		}
-	} else {
-		t, esResult, _, err2 = EsMemberListSearch(
-			esPrefixIndex("tbl_members"), "created_at", page, pageSize, []string{"uid", "username"}, query, nil)
-
-		if err2 != nil {
-			return data, pushLog(err2, helper.DBErr)
-		}
-		for _, v := range esResult {
-
-			record := MemberListCol{}
-			_ = helper.JsonUnmarshal(v.Source, &record)
-			data.D = append(data.D, record)
-			names = append(names, record.Username)
-		}
-
-		if len(data.D) == 0 {
-			return data, nil
-		}
-		fmt.Printf("es 补全前tbl_members的数据:%+v\n", data)
-
-		// 补全数据
-		for _, member := range data.D {
-			ids = append(ids, member.UID)
-			idMap[member.UID] = member.Username
-		}
-		fmt.Printf("es 补全 uid和username的数据:%+v\n", data)
-
-		// 获取统计数据
-		query_report := elastic.NewBoolQuery()
-		if startTime != "" && endTime != "" {
-			startAt, err := helper.TimeToLoc(startTime, loc)
-			if err != nil {
-				return data, errors.New(helper.TimeTypeErr)
-			}
-			endAt, err := helper.TimeToLoc(endTime, loc)
-			if err != nil {
-				return data, errors.New(helper.TimeTypeErr)
-			}
-			if startAt >= endAt {
-				return data, errors.New(helper.QueryTimeRangeErr)
-			}
-			query_report.Filter(elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt))
-		}
-		query_report.Filter(elastic.NewTermQuery("uid", ids))
-		query_report.Filter(elastic.NewTermQuery("report_type", 2)) // 1投注时间2结算时间3投注时间月报4结算时间月报
-		query_report.Filter(elastic.NewTermQuery("data_type", 1))
-
-		t, esResult, _, err2 = EsMemberListSort(
-			esPrefixIndex("tbl_report_agency"), sortField, ascending, page, pageSize, reportAgencyListFields, query_report, nil)
-
-		if err2 != nil {
-			return data, pushLog(err2, helper.DBErr)
-		}
-		for _, v := range esResult {
-			record := MemberListCol{}
-			_ = helper.JsonUnmarshal(v.Source, &record)
-			data.D = append(data.D, record)
-			names = append(names, record.Username)
-		}
-		fmt.Printf("es 补全 tbl_report_agency的数据:%+v\n", data)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
 	}
 
 	data.T = int(t)
-	fmt.Printf("es 获取返水前的数据:%+v\n", data)
+	if len(esResult) == 0 {
+		return data, nil
+	}
+	for _, v := range esResult {
+		record := MemberListCol{}
+		_ = helper.JsonUnmarshal(v.Source, &record)
+		data.D = append(data.D, record)
+		members = append(members, Member{UID: record.UID, Username: record.Username})
+		ids = append(ids, record.UID)
+		idMap[record.UID] = record.Username
 
-	// 获取用户的反水比例
+	}
+
+	// 补全数据
+	if len(ids) == 0 {
+		return data, nil
+	}
+	// 补全报表聚合数据
+	if sortField != "" && username == "" {
+		ex := g.Ex{"username": username, "parent_name": user}
+		data.D, data.T, err = memberListSort(ex, sortField, startAt, endAt, isAsc, page, pageSize)
+		if err != nil {
+			return data, err
+		}
+	} else {
+		// 获取统计数据
+		ex := g.Ex{
+			"report_time": g.Op{"between": exp.NewRangeVal(startAt, endAt)},
+			"uid":         ids,
+			"report_type": 2, // 1投注时间2结算时间3投注时间月报4结算时间月报
+			"data_type":   1,
+		}
+		data.D, data.T, err = MemberAggList(ex, isAsc, page, pageSize)
+		if err != nil {
+			return data, err
+		}
+
+	}
+	// 从redis获取用户的反水比例
 	rebates, err := MemberRebateExistRedis(ids)
 	if err != nil {
 		return data, err
 	}
-	fmt.Printf("es 从redis 获取返水数据:%+v\n", rebates)
-
-	for i, v := range data.D {
-		if rb, ok := rebates[v.UID]; ok {
-			data.D[i].DJ = rb.DJ
-			data.D[i].TY = rb.TY
-			data.D[i].ZR = rb.ZR
-			data.D[i].QP = rb.QP
-			data.D[i].DZ = rb.DZ
-			data.D[i].CP = rb.CP
-			data.D[i].FC = rb.FC
-			data.D[i].BY = rb.BY
-			data.D[i].CGHighRebate = rb.CGHighRebate
-			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
+	if len(data.D) == len(rebates) {
+		for i, v := range data.D {
+			if rb, ok := rebates[v.UID]; ok {
+				data.D[i].DJ = rb.DJ
+				data.D[i].TY = rb.TY
+				data.D[i].ZR = rb.ZR
+				data.D[i].QP = rb.QP
+				data.D[i].DZ = rb.DZ
+				data.D[i].CP = rb.CP
+				data.D[i].FC = rb.FC
+				data.D[i].BY = rb.BY
+				data.D[i].CGHighRebate = rb.CGHighRebate
+				data.D[i].CGOfficialRebate = rb.CGOfficialRebate
+			}
 		}
 	}
 
-	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)
-	if meta.MerchantRedis.Exists(ctx, key).Val() > 0 {
-		data.EnableMod = true
-	}
-	fmt.Printf("es 获取返水后的数据:%+v\n", data)
-
-	if len(ids) == len(data.D) {
-		return data, nil
-	}
 	// 可能有会员未生成报表数据 这时需要给未生成报表的会员 赋值默认返回值
 	//否则会出现total和data length 不一致的问题
 	for _, v := range data.D {
@@ -721,9 +672,15 @@ func EsMemberList(page, pageSize int, ascending bool, username, startTime, endTi
 		}
 	}
 
-	for id, username := range idMap {
-		data.D = append(data.D, MemberListCol{UID: id, Username: username})
+	for id, u := range idMap {
+		data.D = append(data.D, MemberListCol{UID: id, Username: u})
 	}
+
+	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)
+	if meta.MerchantRedis.Exists(ctx, key).Val() > 0 {
+		data.EnableMod = true
+	}
+
 	return data, nil
 }
 

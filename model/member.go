@@ -581,6 +581,9 @@ func MemberInfo(fctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 		res.RealName = recs["realname"]
 		res.Phone = recs["phone"]
 		res.Email = recs["email"]
+		if len(res.Phone) != 9 {
+			res.Phone += "****"
+		}
 	}
 
 	return res, nil

@@ -323,7 +323,14 @@ func (that *MemberController) BindEmail(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err = model.MemberUpdateEmail(params.Sid, params.Code, params.Email, ctx)
+	ip := helper.FromRequest(ctx)
+	err = model.CheckEmailCaptcha(ip, params.Sid, params.Email, params.Code)
+	if err != nil {
+		helper.Print(ctx, false, helper.EmailVerificationErr)
+		return
+	}
+
+	err = model.MemberUpdateEmail(params.Email, ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

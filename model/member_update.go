@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"member/contrib/helper"
 	"member/contrib/validator"
 	"strconv"
@@ -227,8 +228,26 @@ func MemberUpdateAvatar(avatar string, fctx *fasthttp.RequestCtx) error {
 	return nil
 }
 
+func CheckEmailCaptcha(ip, sid, email, code string) error {
+
+	key := fmt.Sprintf("%s:mail:%s%s%s", meta.Prefix, email, ip, sid)
+	cmd := meta.MerchantRedis.Get(ctx, key)
+	//fmt.Println(cmd.String())
+	val, err := cmd.Result()
+	if err != nil && err != redis.Nil {
+		_ = pushLog(err, helper.RedisErr)
+		return errors.New(helper.EmailVerificationErr)
+	}
+
+	if code == val {
+		return nil
+	}
+
+	return errors.New(helper.EmailVerificationErr)
+}
+
 // 更新用户信息
-func MemberUpdateEmail(sid, code, email string, fctx *fasthttp.RequestCtx) error {
+func MemberUpdateEmail(email string, fctx *fasthttp.RequestCtx) error {
 
 	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
 	ex := g.Ex{
@@ -239,12 +258,6 @@ func MemberUpdateEmail(sid, code, email string, fctx *fasthttp.RequestCtx) error
 	}
 
 	mb, err := MemberCache(fctx, "")
-	if err != nil {
-		return err
-	}
-
-	ip := helper.FromRequest(fctx)
-	err = emailCmp(sid, code, ip, email)
 	if err != nil {
 		return err
 	}
@@ -327,7 +340,7 @@ func MemberUpdateName(fctx *fasthttp.RequestCtx, birth, realName, address string
 	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
 	if err != nil {
-		return pushLog(err, helper.DBErr)
+		return pushLog(fmt.Errorf("query : %s , error : %s", query, err.Error()), helper.DBErr)
 	}
 
 	MemberUpdateCache(mb.UID, "")

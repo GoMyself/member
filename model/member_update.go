@@ -232,6 +232,7 @@ func CheckEmailCaptcha(ip, sid, email, code string) error {
 
 	key := fmt.Sprintf("%s:mail:%s%s%s", meta.Prefix, email, ip, sid)
 	cmd := meta.MerchantRedis.Get(ctx, key)
+	fmt.Println(cmd.String())
 	val, err := cmd.Result()
 	if err != nil && err != redis.Nil {
 		_ = pushLog(err, helper.RedisErr)

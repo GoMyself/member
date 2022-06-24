@@ -373,12 +373,10 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	MemberUpdateCache(uid, "")
 
 	fmt.Println("==== Reg TD Update ====")
-
-	its, ie := strconv.ParseInt(ts, 10, 64)
-	if ie != nil {
-		fmt.Println("parse int err:", ie)
+	its, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		fmt.Println("parse int err:", err)
 	}
-
 	tdInsert("sms_log", g.Record{
 		"ts":         its,
 		"state":      "1",

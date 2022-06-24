@@ -41,6 +41,7 @@ type forgetPassword struct {
 // 绑定邮箱
 type paramBindEmail struct {
 	Sid   string `json:"sid" name:"sid" rule:"none" msg:"phone error"`
+	Ts    string `json:"ts" name:"ts" rule:"digit" msg:"ts error"`
 	Code  string `json:"code" name:"code" rule:"none" min:"2" max:"8" msg:"code error"`
 	Email string `json:"email" name:"email" rule:"none"`
 }
@@ -330,7 +331,7 @@ func (that *MemberController) BindEmail(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	err = model.MemberUpdateEmail(params.Email, ctx)
+	err = model.MemberUpdateEmail(params.Email, params.Ts, ctx)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

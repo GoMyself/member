@@ -248,7 +248,7 @@ func CheckEmailCaptcha(ip, sid, email, code string) error {
 }
 
 // 更新用户信息
-func MemberUpdateEmail(email string, fctx *fasthttp.RequestCtx) error {
+func MemberUpdateEmail(email, ts string, fctx *fasthttp.RequestCtx) error {
 
 	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
 	ex := g.Ex{
@@ -285,6 +285,17 @@ func MemberUpdateEmail(email string, fctx *fasthttp.RequestCtx) error {
 	}
 
 	MemberUpdateCache(mb.UID, "")
+	fmt.Println("==== Bind email TD Update ====")
+	its, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		fmt.Println("parse int err:", err)
+	}
+	tdInsert("sms_log", g.Record{
+		"ts":         its,
+		"state":      "1",
+		"updated_at": time.Now().Unix(),
+	})
+	fmt.Println("==== Bind email TD Update End ====")
 	return nil
 }
 

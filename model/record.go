@@ -216,21 +216,15 @@ func RecordTrade(uid, startTime, endTime string, flag, page, pageSize int) (Trad
 		return data, errors.New(helper.DateTimeErr)
 	}
 
-	endAtMs, err := helper.TimeToLocMs(endTime, loc)
-	if err != nil {
-		return data, errors.New(helper.DateTimeErr)
-	}
+	endAtMs := helper.DaySET(endTime, loc).UnixMilli()
 
 	startAt, err := helper.TimeToLoc(startTime, loc)
 	if err != nil {
 		return data, errors.New(helper.DateTimeErr)
 	}
 
-	endAt, err := helper.TimeToLoc(endTime, loc)
-	if err != nil {
-		return data, errors.New(helper.DateTimeErr)
-	}
-
+	endAt := helper.DaySET(endTime, loc).Unix()
+	fmt.Println(endAt)
 	if startAtMs >= endAtMs || startAt >= endAt {
 		return data, errors.New(helper.QueryTimeRangeErr)
 	}
@@ -454,6 +448,14 @@ func recordTradeRebate(flag, page, pageSize int, uid string, startAt, endAt int6
 		elastic.NewBoolQuery().Should(
 			elastic.NewTermQuery("cash_type", 161),
 			elastic.NewTermQuery("cash_type", 170),
+			elastic.NewTermQuery("cash_type", 642),
+			elastic.NewTermQuery("cash_type", 643),
+			elastic.NewTermQuery("cash_type", 644),
+			elastic.NewTermQuery("cash_type", 645),
+			elastic.NewTermQuery("cash_type", 646),
+			elastic.NewTermQuery("cash_type", 647),
+			elastic.NewTermQuery("cash_type", 648),
+			elastic.NewTermQuery("cash_type", 649),
 		),
 	)
 

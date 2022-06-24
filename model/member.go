@@ -69,8 +69,7 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 
 	ts := fctx.Time()
 	key := fmt.Sprintf("%s:merchant:ip_blacklist", meta.Prefix)
-	ipBlackListEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, ip).Val()
-	if v, ok := ipBlackListEx.(int64); ok && v == 1 {
+	if meta.MerchantRedis.SIsMember(ctx, key, ip).Val() {
 		return "", errors.New(helper.IpBanErr)
 	}
 
@@ -79,8 +78,7 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 
 		// 检查设备号黑名单
 		key := fmt.Sprintf("%s:merchant:device_blacklist", meta.Prefix)
-		deviceBlackListEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, deviceNo).Val()
-		if v, ok := deviceBlackListEx.(int64); ok && v == 1 {
+		if meta.MerchantRedis.SIsMember(ctx, key, deviceNo).Val() {
 			return "", errors.New(helper.DeviceBanErr)
 		}
 	}
@@ -213,16 +211,12 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 	topId := "4722355249852325"
 	key := fmt.Sprintf("%s:merchant:ip_blacklist", meta.Prefix)
-	ipBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, ip).Val()
-	if v, ok := ipBlacklistEx.(int64); ok && v == 1 {
+	if meta.MerchantRedis.SIsMember(ctx, key, ip).Val() {
 		return "", errors.New(helper.IpBanErr)
 	}
 
-	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
 	key = fmt.Sprintf("%s:phoneExist", meta.Prefix)
-	phoneExist := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, phone)
-	fmt.Println(phoneExist.String())
-	if v, ok := phoneExist.Val().(int64); ok && v == 1 {
+	if meta.MerchantRedis.SIsMember(ctx, key, phone).Val() {
 		return "", errors.New(helper.PhoneExist)
 	}
 
@@ -235,8 +229,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 
 		// 检查设备号黑名单
 		key := fmt.Sprintf("%s:merchant:device_blacklist", meta.Prefix)
-		deviceBlacklistEx := meta.MerchantRedis.Do(ctx, "CF.EXISTS", key, deviceNo).Val()
-		if v, ok := deviceBlacklistEx.(int64); ok && v == 1 {
+		if meta.MerchantRedis.SIsMember(ctx, key, deviceNo).Val() {
 			return "", errors.New(helper.DeviceBanErr)
 		}
 
@@ -270,6 +263,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	sourceID := devices[device]
 	lastLoginSource := device
 	uid := helper.GenId()
+	phoneHash := fmt.Sprintf("%d", MurmurHash(phone, 0))
 	m := Member{
 		UID:                 uid,
 		Username:            userName,
@@ -374,7 +368,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 
 	key = fmt.Sprintf("%s:phoneExist", meta.Prefix)
-	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", key, phone).Err()
+	_ = meta.MerchantRedis.SAdd(ctx, key, phone).Err()
 	_ = MemberRebateUpdateCache2(m.UID, mr)
 	MemberUpdateCache(uid, "")
 

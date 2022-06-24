@@ -187,6 +187,10 @@ func LinkList(fCtx *fasthttp.RequestCtx) ([]Link_t, error) {
 		return data, pushLog(err, helper.RedisErr)
 	}
 
+	if err == redis.Nil || shortDomain == "" {
+		shortDomain = "https://s.p3vn.co/"
+	}
+
 	mp := map[string]Link_t{}
 	err = helper.JsonUnmarshal([]byte(res), &mp)
 	if err != nil {

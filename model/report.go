@@ -111,7 +111,8 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 		return data, pushLog(err, helper.DBErr)
 	}
 	//fmt.Println(data)
-	data.Profit, _ = decimal.NewFromFloat(data.NetAmount).Sub(decimal.NewFromFloat(data.Rebate)).Sub(decimal.NewFromFloat(data.DividendAmount)).Float64()
+	data.NetAmount, _ = decimal.NewFromFloat(data.NetAmount).Mul(decimal.NewFromFloat(-1)).Float64()
+	data.Profit, _ = decimal.NewFromFloat(data.NetAmount).Add(decimal.NewFromFloat(data.Rebate)).Add(decimal.NewFromFloat(data.DividendAmount)).Float64()
 
 	var myRebate sql.NullFloat64
 	// 获取统计数据

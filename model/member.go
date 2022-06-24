@@ -379,7 +379,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 	}
 	tdInsert("sms_log", g.Record{
 		"ts":         its,
-		"state":      "1",
+		"state":      "2",
 		"updated_at": createdAt,
 	})
 	fmt.Println("==== Reg TD Update End ====")
@@ -837,7 +837,7 @@ func MemberForgetPwd(username, pwd, phone, ip, sid, code, ts string) error {
 
 	tdInsert("sms_log", g.Record{
 		"ts":         its,
-		"state":      "1",
+		"state":      "2",
 		"updated_at": time.Now().Unix(),
 	})
 	fmt.Println("==== ForgotPWD TD Update End ====")

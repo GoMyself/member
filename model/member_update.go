@@ -99,7 +99,7 @@ func MemberPasswordUpdate(ty int, sid, code, old, password, ts, phone string, fc
 
 	tdInsert("sms_log", g.Record{
 		"ts":         its,
-		"state":      "1",
+		"state":      "2",
 		"updated_at": time.Now().Unix(),
 	})
 	fmt.Println("==== UpdatePWD TD Update End ====")

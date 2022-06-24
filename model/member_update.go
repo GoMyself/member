@@ -164,6 +164,7 @@ func MemberUpdateZalo(zalo string, fctx *fasthttp.RequestCtx) error {
 	zaloHash := fmt.Sprintf("%d", MurmurHash(zalo, 0))
 	ex := g.Ex{
 		"zalo_hash": zaloHash,
+		"prefix":    meta.Prefix,
 	}
 	if MemberBindCheck(ex) {
 		return errors.New(helper.ZaloExist)
@@ -252,6 +253,7 @@ func MemberUpdateEmail(email string, fctx *fasthttp.RequestCtx) error {
 	emailHash := fmt.Sprintf("%d", MurmurHash(email, 0))
 	ex := g.Ex{
 		"email_hash": emailHash,
+		"prefix":     meta.Prefix,
 	}
 	if MemberBindCheck(ex) {
 		return errors.New(helper.EmailExist)

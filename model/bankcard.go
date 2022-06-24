@@ -175,7 +175,7 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 	BankcardUpdateCache(mb.Username)
 
 	key := fmt.Sprintf("%s:merchant:bankcard_exist", meta.Prefix)
-	_ = meta.MerchantRedis.Do(ctx, "CF.ADD", key, bankcardNo).Err()
+	_ = meta.MerchantRedis.SAdd(ctx, key, bankcardNo).Err()
 
 	return nil
 }
@@ -256,21 +256,19 @@ func BankCardExistRedis(bankcardNo string) error {
 	defer pipe.Close()
 
 	key := fmt.Sprintf("%s:merchant:bankcard_exist", meta.Prefix)
-	ex1Temp := pipe.Do(ctx, "CF.EXISTS", key, bankcardNo)
+	ex1Temp := pipe.SIsMember(ctx, key, bankcardNo)
 	key = fmt.Sprintf("%s:merchant:bankcard_blacklist", meta.Prefix)
-	ex2Temp := pipe.Do(ctx, "CF.EXISTS", key, bankcardNo)
+	ex2Temp := pipe.SIsMember(ctx, key, bankcardNo)
 	_, err := pipe.Exec(ctx)
 	if err != nil {
 		return pushLog(err, helper.RedisErr)
 	}
 
-	ex1 := ex1Temp.Val()
-	ex2 := ex2Temp.Val()
-	if v, ok := ex1.(int64); ok && v == 1 {
+	if ex1Temp.Val() {
 		return errors.New(helper.BankCardExistErr)
 	}
 
-	if v, ok := ex2.(int64); ok && v == 1 {
+	if ex2Temp.Val() {
 		return errors.New(helper.BankcardBan)
 	}
 	return nil

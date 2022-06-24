@@ -290,7 +290,7 @@ func MemberUpdateEmail(email, ts string, fctx *fasthttp.RequestCtx) error {
 	if err != nil {
 		fmt.Println("parse int err:", err)
 	}
-	tdInsert("sms_log", g.Record{
+	tdInsert("mail_log", g.Record{
 		"ts":         its,
 		"state":      "1",
 		"updated_at": time.Now().Unix(),

@@ -142,3 +142,41 @@ func Close() {
 	_ = meta.MerchantDB.Close()
 	_ = meta.MerchantRedis.Close()
 }
+
+func allOnline() ([]string, error) {
+
+	zRangeBy := &redis.ZRangeBy{
+		Min:    "0",
+		Max:    fmt.Sprintf("%d", time.Now().UnixMilli()),
+		Offset: 0,
+		Count:  10000,
+	}
+	zKey := meta.Prefix + ":online:clients"
+	uids, err := meta.MerchantRedis.ZRangeByScore(ctx, zKey, zRangeBy).Result()
+	if err != nil {
+		return nil, pushLog(err, helper.RedisErr)
+	}
+
+	return uids, nil
+}
+
+/*
+查询指定会员的在线设备
+*/
+func onlineDevices(uids []string) (map[string]string, error) {
+
+	hKey := meta.Prefix + ":online:hash"
+	devices, err := meta.MerchantRedis.HMGet(ctx, hKey, uids...).Result()
+	if err != nil {
+		return nil, pushLog(err, helper.RedisErr)
+	}
+
+	mp := make(map[string]string)
+	for k, v := range uids {
+		if devices[k] != nil {
+			mp[v] = devices[k].(string)
+		}
+	}
+
+	return mp, nil
+}

@@ -9,7 +9,7 @@ import (
 var (
 	transferFields    = []string{"id", "uid", "bill_no", "platform_id", "username", "transfer_type", "amount", "before_amount", "after_amount", "created_at", "state", "automatic", "confirm_name"}
 	transactionFields = []string{"id", "bill_no", "uid", "username", "cash_type", "amount", "before_amount", "after_amount", "created_at"}
-	gameRecordFields  = []string{"agency_uid", "agency_name", "agency_gid", "settle_time", "start_time", "resettle", "presettle", "ball_type", "odds", "handicap", "handicap_type", "game_name", "flow_quota", "is_use", "main_bill_no", "api_bill_no", "api_name", "updated_at", "created_at", "result", "prefix", "file_path", "copy_flag", "play_type", "flag", "valid_bet_amount", "bet_amount", "game_type", "bet_time", "net_amount", "uid", "name", "player_name", "api_type", "bill_no", "row_id", "id"}
+	gameRecordFields  = []string{"parent_uid", "parent_name", "settle_time", "start_time", "resettle", "presettle", "odds", "game_name", "api_bill_no", "api_name", "updated_at", "created_at", "result", "prefix", "play_type", "flag", "valid_bet_amount", "bet_amount", "game_type", "bet_time", "net_amount", "uid", "name", "player_name", "api_type", "bill_no", "row_id", "id"}
 	//rebateFields      = []string{"id", "agency_uid", "agency_name", "agency_gid", "level", "uid", "agency_type", "username", "rebate_at", "ration_at", "should_amount", "rebate_amount", "check_at", "state", "check_note", "ration_flag", "check_uid", "check_name", "create_at"}
 	dividendFields         = []string{"id", "uid", "prefix", "ty", "username", "top_uid", "top_name", "parent_uid", "parent_name", "amount", "review_at", "review_uid", "review_name", "water_multiple", "water_flow", "state", "apply_at", "apply_uid", "apply_name"}
 	adjustFields           = []string{"id", "uid", "username", "top_uid", "top_name", "parent_uid", "parent_name", "amount", "adjust_type", "adjust_mode", "is_turnover", "turnover_multi", "pid", "apply_remark", "review_remark", "state", "hand_out_state", "images", "apply_at", "apply_uid", "apply_name", "review_at", "review_uid", "review_name"}
@@ -75,12 +75,22 @@ func esSearch(index string, sortFields map[string]bool, page, pageSize int, fiel
 				continue
 			}
 
-			if vv, ok := v.([]interface{}); ok {
-				filters = append(filters, elastic.NewTermsQuery(k, vv...))
-				continue
-			}
+			if k != "parentUids" {
+				if vv, ok := v.([]interface{}); ok {
+					filters = append(filters, elastic.NewTermsQuery(k, vv...))
+					continue
+				}
 
-			terms = append(terms, elastic.NewTermQuery(k, v))
+				terms = append(terms, elastic.NewTermQuery(k, v))
+			} else if k == "parentUids" {
+				if vv, ok := v.([]string); ok {
+					shouldQuery := elastic.NewBoolQuery()
+					for _, v2 := range vv {
+						shouldQuery.Should(elastic.NewTermQuery("parent_uid", v2))
+					}
+					terms = append(terms, shouldQuery)
+				}
+			}
 		}
 	}
 

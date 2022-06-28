@@ -10,6 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"member/contrib/helper"
 	"member/contrib/validator"
+	"strings"
 )
 
 type ReportAgencyData struct {
@@ -538,15 +539,23 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, parentName string, p
 	ex["prefix"] = meta.Prefix
 	ex["report_time"] = startAt
 	ex["data_type"] = 1
-	if isOnline > 0 {
+	if isOnline == 1 {
 		uids, err := allOnline()
 		if err != nil {
 			return data, pushLog(err, helper.RedisErr)
 		}
 		ex["uid"] = uids
+	} else {
+		uids, err := allOnline()
+		if err != nil {
+			return data, pushLog(err, helper.RedisErr)
+		}
+		ex["uid"] = g.L("not in ?", uids)
 	}
 	if page == 1 {
 		query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+		query = strings.Replace(query, "= not in", "not in", 1)
+		fmt.Println(query)
 		err = meta.ReportDB.Get(&data.T, query)
 		if err != nil && err != sql.ErrNoRows {
 			fmt.Println(err.Error())
@@ -572,6 +581,7 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, parentName string, p
 			g.C("company_revenue").As("profit"),          //盈利
 		).Order(g.C("bet_mem_count").Desc()).Offset(uint(offset)).Limit(uint(pageSize)).
 		ToSQL()
+	query = strings.Replace(query, "= not in", "not in", 1)
 	fmt.Println(query)
 	err = meta.ReportDB.Select(&data.D, query)
 	if err != nil && err != sql.ErrNoRows {

@@ -210,6 +210,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 
 	root, err := fastjson.MustParse(bcs).Array()
 	if err != nil {
+		_ = pushLog(err, helper.FormatErr)
 		return data, nil
 	}
 

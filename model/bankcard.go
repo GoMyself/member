@@ -197,6 +197,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 
 	key := fmt.Sprintf("%s:merchant:cbc:%s", meta.Prefix, username)
 	cmd := meta.MerchantRedis.Get(ctx, key)
+	fmt.Println(cmd.String())
 	bcs, err := cmd.Result()
 	if err != nil && err != redis.Nil {
 		//fmt.Println("BankcardList GET err = ", err.Error())
@@ -238,7 +239,8 @@ func BankcardList(username string) ([]BankcardData, error) {
 
 	encRes, err := grpc_t.Decrypt(mb.UID, true, encField)
 	if err != nil {
-		_ = pushLog(fmt.Errorf("error : %s, encRes :%v", err, encRes), helper.GetRPCErr)
+		fmt.Println("get rpc error : ", err.Error())
+		_ = pushLog(fmt.Errorf("error : %s, encRes :%v", err.Error(), encRes), helper.GetRPCErr)
 		return data, errors.New(helper.GetRPCErr)
 	}
 

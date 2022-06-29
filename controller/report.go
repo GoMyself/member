@@ -112,12 +112,12 @@ func (that *ReportController) SubTradeRecord(ctx *fasthttp.RequestCtx) {
 func (that *ReportController) List(ctx *fasthttp.RequestCtx) {
 
 	ty := string(ctx.QueryArgs().Peek("ty")) //1今天2昨天3本月4上月
-	username := string(ctx.QueryArgs().Peek("username"))
+	playerName := string(ctx.QueryArgs().Peek("player_name"))
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
 	isOnline := ctx.QueryArgs().GetUintOrZero("is_online")
 
-	data, err := model.AgencyReportList(ty, ctx, username, page, pageSize, isOnline)
+	data, err := model.AgencyReportList(ty, ctx, playerName, page, pageSize, isOnline)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

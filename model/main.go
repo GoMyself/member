@@ -163,20 +163,17 @@ func allOnline() ([]string, error) {
 /*
 查询指定会员的在线设备
 */
-func onlineDevices(uids []string) (map[string]string, error) {
+func onlineDevices(uid string) (string, error) {
 
 	hKey := meta.Prefix + ":online:hash"
-	devices, err := meta.MerchantRedis.HMGet(ctx, hKey, uids...).Result()
+	devices, err := meta.MerchantRedis.HMGet(ctx, hKey, uid).Result()
 	if err != nil {
-		return nil, pushLog(err, helper.RedisErr)
+		return "", pushLog(err, helper.RedisErr)
 	}
 
-	mp := make(map[string]string)
-	for k, v := range uids {
-		if devices[k] != nil {
-			mp[v] = devices[k].(string)
-		}
+	if devices[0] == nil {
+		return "", nil
 	}
 
-	return mp, nil
+	return devices[0].(string), nil
 }

@@ -500,7 +500,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 	return data, errors.New(helper.GetDataFailed)
 }
 
-func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, parentName string, page, pageSize, isOnline int) (ReportAgencyData, error) {
+func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, page, pageSize, isOnline int) (ReportAgencyData, error) {
 
 	data := ReportAgencyData{}
 	mb, err := MemberCache(fCtx, "")
@@ -508,10 +508,10 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, parentName string, p
 		return data, errors.New(helper.AccessTokenExpires)
 	}
 	ex := g.Ex{}
-	if len(parentName) == 0 {
+	if len(playerName) == 0 {
 		ex["parent_name"] = mb.Username
 	} else {
-		ex["parent_name"] = parentName
+		ex["parent_name"] = playerName
 	}
 	offset := (page - 1) * pageSize
 
@@ -588,19 +588,18 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, parentName string, p
 		fmt.Println(err.Error())
 		return data, pushLog(err, helper.DBErr)
 	}
-	var uids []string
 	for i := 0; i < len(data.D); i++ {
 		data.D[i].Profit, _ = decimal.NewFromFloat(data.D[i].Profit).Mul(decimal.NewFromFloat(-1)).Float64()
 	}
 
-	ds, err := onlineDevices(uids)
-	if err != nil {
-		pushLog(err, helper.RedisErr)
-		return data, nil
-	}
-
 	for i := 0; i < len(data.D); i++ {
-		if _, ok := ds[data.D[i].Uid]; ok {
+		ds, err := onlineDevices(data.D[i].Uid)
+		if err != nil {
+			pushLog(err, helper.RedisErr)
+			return data, nil
+		}
+
+		if ds != "" {
 			data.D[i].IsOnline = 1
 		} else {
 			data.D[i].IsOnline = 2

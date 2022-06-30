@@ -304,17 +304,20 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	data := GameRecordData{}
 	//判断日期
 	var startAt int64
+	endAt := helper.DayTET(0, loc).UnixMilli() - 24*60*60*1000
+
 	switch dateType {
 	case 1: //今天
 		startAt = helper.DayTST(0, loc).UnixMilli()
 	case 2: //昨天
 		startAt = helper.DayTST(0, loc).UnixMilli() - 24*60*60*1000
+		endAt = helper.DayTET(0, loc).UnixMilli() - 24*60*60*1000
+
 	case 3: //七天
 		startAt = helper.DayTST(0, loc).UnixMilli() - 7*24*60*60*1000
 	default:
 		startAt = helper.DayTST(0, loc).UnixMilli()
 	}
-	endAt := helper.DayTET(0, loc).UnixMilli()
 
 	//查询条件
 	params := map[string]interface{}{}
@@ -427,17 +430,19 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 
 	//判断日期
 	var startAt int64
+	endAt := helper.DayTET(0, loc).Unix()
+
 	switch dateType {
 	case 1: //今天
 		startAt = helper.DayTST(0, loc).Unix()
 	case 2: //昨天
 		startAt = helper.DayTST(0, loc).Unix() - 24*60*60
+		endAt = helper.DayTET(0, loc).Unix() - 24*60*60
 	case 3: //七天
 		startAt = helper.DayTST(0, loc).Unix() - 7*24*60*60
 	default:
 		startAt = helper.DayTST(0, loc).Unix()
 	}
-	endAt := helper.DayTET(0, loc).Unix()
 
 	param := map[string]interface{}{}
 	if playerName != "" && validator.CheckUName(playerName, 5, 14) {

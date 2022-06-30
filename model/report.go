@@ -304,7 +304,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	data := GameRecordData{}
 	//判断日期
 	var startAt int64
-	endAt := helper.DayTET(0, loc).UnixMilli() - 24*60*60*1000
+	endAt := helper.DayTET(0, loc).UnixMilli()
 
 	switch dateType {
 	case 1: //今天

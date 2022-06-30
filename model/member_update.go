@@ -353,7 +353,7 @@ func MemberUpdateName(fctx *fasthttp.RequestCtx, birth, realName, address string
 	query, _, _ := dialect.Update("tbl_members").Set(record).Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
 	if err != nil {
-		return pushLog(fmt.Errorf("query : %s , error : %s", query, err.Error()), helper.DBErr)
+		return pushLog(fmt.Errorf("birth : %s ,query : %s ,error : %s", birth, query, err.Error()), helper.DBErr)
 	}
 
 	MemberUpdateCache(mb.UID, "")

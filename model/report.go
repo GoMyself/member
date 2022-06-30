@@ -203,6 +203,7 @@ func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.Request
 	switch flag {
 	case "1":
 		orderBy = "bet_amount"
+		ex["bet_amount"] = g.Op{"gt": 0}
 	//注册人数
 	case "2":
 		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
@@ -332,6 +333,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			"prefix":     meta.Prefix,
 		}
 		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
+		fmt.Println(query)
 		err = meta.MerchantDB.Get(&count, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
@@ -352,7 +354,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			return data, pushLog(err, helper.DBErr)
 		}
 		if maxLevel == 0 {
-			return data, errors.New(helper.NotDirectSubordinate)
+			maxLevel = 2
 		}
 		ex["lvl"] = g.Op{"between": exp.NewRangeVal(0, maxLevel-1)}
 		query, _, _ = dialect.From("tbl_members_tree").Select(g.C("descendant")).Where(ex).ToSQL()

@@ -180,28 +180,17 @@ type GameRecord struct {
 	ValidBetAmount float64 `db:"column:valid_bet_amount" json:"valid_bet_amount" form:"valid_bet_amount"`
 	Flag           int     `db:"column:flag" json:"flag" form:"flag"`
 	PlayType       string  `db:"column:play_type" json:"play_type" form:"play_type"`
-	CopyFlag       int     `db:"column:copy_flag" json:"copy_flag" form:"copy_flag"`
-	FilePath       string  `db:"column:file_path" json:"file_path" form:"file_path"`
 	Prefix         string  `db:"column:prefix" json:"prefix" form:"prefix"`
 	Result         string  `db:"column:result" json:"result" form:"result"`
-	CreatedAt      uint64  `db:"column:created_at" json:"created_at" form:"created_at"`
-	UpdatedAt      uint64  `db:"column:updated_at" json:"updated_at" form:"updated_at"`
 	ApiName        string  `db:"column:api_name" json:"api_name" form:"api_name"`
 	ApiBillNo      string  `db:"column:api_bill_no" json:"api_bill_no" form:"api_bill_no"`
-	MainBillNo     string  `db:"column:main_bill_no" json:"main_bill_no" form:"main_bill_no"`
-	IsUse          int     `db:"column:is_use" json:"is_use" form:"is_use"`
-	FlowQuota      int64   `db:"column:flow_quota" json:"flow_quota" form:"flow_quota"`
 	GameName       string  `db:"column:game_name" json:"game_name" form:"game_name"`
-	HandicapType   string  `db:"column:handicap_type" json:"handicap_type" form:"handicap_type"`
-	Handicap       string  `db:"column:handicap" json:"handicap" form:"handicap"`
 	Odds           float64 `db:"column:odds" json:"odds" form:"odds"`
-	BallType       int     `db:"column:ball_type" json:"ball_type" form:"ball_type"`
 	SettleTime     int64   `db:"column:settle_time" json:"settle_time" form:"settle_time"`
 	ApiBetTime     uint64  `db:"column:api_bet_time" json:"api_bet_time" form:"api_bet_time"`
 	ApiSettleTime  uint64  `db:"column:api_settle_time" json:"api_settle_time" form:"api_settle_time"`
-	AgencyUid      string  `db:"column:agency_uid" json:"agency_uid" form:"agency_uid"`
-	AgencyName     string  `db:"column:agency_name" json:"agency_name" form:"agency_name"`
-	AgencyGid      string  `db:"column:agency_gid" json:"agency_gid" form:"agency_gid"` //代理团队id
+	ParentUid      string  `db:"column:parent_uid" json:"parent_uid" form:"parent_uid"`
+	ParentName     string  `db:"column:parent_name" json:"parent_name" form:"parent_name"`
 	IsRisk         int     `db:"-" json:"is_risk"`
 }
 
@@ -527,4 +516,29 @@ type MemberCardOverviewData struct {
 	Ip       string `rule:"none" name:"ip" msg:"ip error"`
 	Status   int    `rule:"digit" min:"0" max:"1" default:"1" msg:"status error"`
 	Ts       string `rule:"none" nane:"ts" `
+}
+
+type ReportSubMemberData struct {
+	T int64             `json:"t"`
+	D []ReportSubMember `json:"d"`
+}
+
+type ReportSubMember struct {
+	Id                 string  `json:"-" db:"id"`
+	ReportTime         int64   `json:"-" db:"report_time"`
+	ReportType         int     `json:"-" db:"report_type"`
+	ParentName         string  `json:"parent_name" db:"parent_name"`
+	ParentUid          string  `json:"-" db:"parent_uid"`
+	BetAmount          float64 `json:"bet_amount" db:"bet_amount"`
+	Uid                string  `json:"-" db:"uid"`
+	CreatedAt          int64   `json:"created_at" db:"created_at"`
+	FirstDepositAt     int64   `json:"first_deposit_at" db:"first_deposit_at"`
+	FirstDepositAmount float64 `json:"first_deposit_amount" db:"first_deposit_amount"`
+	Username           string  `json:"username" db:"username"`
+	TopName            string  `json:"-" db:"top_name"`
+	TopUid             string  `json:"-" db:"top_uid"`
+	Tester             string  `json:"-" db:"tester"`
+	BetCount           int64   `json:"bet_count" db:"bet_count"`
+	Prefix             string  `json:"-" db:"prefix"`
+	MemCount           int64   `json:"mem_count" db:"mem_count"`
 }

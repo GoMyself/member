@@ -171,7 +171,6 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	get("/member/record/trade", recordCtl.Trade)
 	// 交易记录详情
 	get("/member/record/tradedetail", recordCtl.TradeDetail)
-
 	// 公告跑马灯
 	get("/member/notices", noticeCtl.List)
 
@@ -194,6 +193,15 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 
 	// 代理报表
 	post("/member/agency/report", reportCtl.Report)
+
+	// 下级明细【客户端-个人中心-代理报表】“投注人数”“首存人数”“注册人数”“下级人数”可以查看明细
+	get("/member/agency/report/sub", reportCtl.SubReport)
+	// 下级投注明细【客户端-个人中心-下层管理】新增“投注明细”
+	get("/member/agency/record/game", reportCtl.SubGameRecord)
+	// 下级充提记录【客户端-个人中心-下层管理】新增“交易明细”
+	get("/member/agency/record/trade", reportCtl.SubTradeRecord)
+	// 代理报表
+	get("/member/agency/report/list", reportCtl.List)
 	buildInfo = b
 
 	return router

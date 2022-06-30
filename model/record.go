@@ -25,6 +25,8 @@ type trade struct {
 	CreatedAt    string `json:"created_at"`    //创建时间
 	State        int    `json:"state"`         //0:失败1:成功2:处理中3:脚本确认中4:人工确认中',  只有ty = 2时需要判断
 	Remark       string `json:"remark"`
+	Username     string `json:"username"`
+	Balance      string `json:"balance"`
 }
 
 type TradeData struct {
@@ -321,7 +323,13 @@ func recordTradeWithdraw(flag, page, pageSize int,
 			CreatedAt:    fmt.Sprintf("%d", v.CreatedAt),
 			State:        v.State,
 			Remark:       v.WithdrawRemark,
+			Username:     v.Username,
 		}
+		mb, err := MemberCache(nil, v.Username)
+		if err != nil {
+			return data, err
+		}
+		item.Balance = mb.Balance
 
 		data.D = append(data.D, item)
 	}
@@ -357,7 +365,13 @@ func recordTradeDeposit(flag, page, pageSize int,
 			Amount:       fmt.Sprintf("%.4f", v.Amount),
 			CreatedAt:    fmt.Sprintf("%d", v.CreatedAt),
 			State:        v.State,
+			Username:     v.Username,
 		}
+		mb, err := MemberCache(nil, v.Username)
+		if err != nil {
+			return data, err
+		}
+		item.Balance = mb.Balance
 
 		data.D = append(data.D, item)
 	}

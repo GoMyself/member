@@ -27,6 +27,7 @@ func BankcardUpdateCache(username string) {
 	t := dialect.From("tbl_member_bankcard")
 	query, _, _ := t.Select(colsBankcard...).Where(ex).Order(g.C("created_at").Desc()).ToSQL()
 
+	query = "/* master */ " + query
 	err := meta.MerchantDB.Select(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println("BankcardUpdateCache err = ", err)

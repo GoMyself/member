@@ -552,7 +552,7 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 			return data, pushLog(err, helper.RedisErr)
 		}
 		ex["uid"] = uids
-	} else {
+	} else if isOnline == 2 {
 		uids, err := allOnline()
 		if err != nil {
 			return data, pushLog(err, helper.RedisErr)

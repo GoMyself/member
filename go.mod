@@ -13,16 +13,14 @@ require (
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/hprose/hprose-golang/v3 v3.0.8
 	github.com/jmoiron/sqlx v1.3.4
-	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 	github.com/json-iterator/go v1.1.12
+	github.com/meilisearch/meilisearch-go v0.19.1
 	github.com/olivere/elastic/v7 v7.0.31
 	github.com/shopspring/decimal v1.3.1
 	github.com/spaolacci/murmur3 v1.1.0
 	github.com/taosdata/driver-go/v2 v2.0.1-0.20220512023129-15f5b9c4b11c
-	github.com/valyala/fasthttp v1.34.0
+	github.com/valyala/fasthttp v1.36.0
 	github.com/valyala/fastjson v1.6.3
-	github.com/valyala/gorpc v0.0.0-20160519171614-908281bef774
-	github.com/wI2L/jettison v0.7.3
 	go.uber.org/automaxprocs v1.4.0
 	lukechampine.com/frand v1.4.2
 )
@@ -35,6 +33,7 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect

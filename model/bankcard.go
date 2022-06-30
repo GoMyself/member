@@ -27,6 +27,7 @@ func BankcardUpdateCache(username string) {
 	t := dialect.From("tbl_member_bankcard")
 	query, _, _ := t.Select(colsBankcard...).Where(ex).Order(g.C("created_at").Desc()).ToSQL()
 
+	query = "/* master */ " + query
 	err := meta.MerchantDB.Select(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println("BankcardUpdateCache err = ", err)
@@ -196,10 +197,12 @@ func BankcardList(username string) ([]BankcardData, error) {
 	}
 
 	key := fmt.Sprintf("%s:merchant:cbc:%s", meta.Prefix, username)
-	bcs, err := meta.MerchantRedis.Get(ctx, key).Result()
+	cmd := meta.MerchantRedis.Get(ctx, key)
+	fmt.Println(cmd.String())
+	bcs, err := cmd.Result()
 	if err != nil && err != redis.Nil {
 		//fmt.Println("BankcardList GET err = ", err.Error())
-		return data, pushLog(err, helper.RedisErr)
+		return data, pushLog(fmt.Errorf("%s, error : %s", cmd.String(), err.Error()), helper.RedisErr)
 	}
 
 	if err == redis.Nil {
@@ -208,6 +211,7 @@ func BankcardList(username string) ([]BankcardData, error) {
 
 	root, err := fastjson.MustParse(bcs).Array()
 	if err != nil {
+		_ = pushLog(err, helper.FormatErr)
 		return data, nil
 	}
 
@@ -237,6 +241,8 @@ func BankcardList(username string) ([]BankcardData, error) {
 
 	encRes, err := grpc_t.Decrypt(mb.UID, true, encField)
 	if err != nil {
+		fmt.Println("get rpc error : ", err.Error())
+		_ = pushLog(fmt.Errorf("error : %s, encRes :%v", err.Error(), encRes), helper.GetRPCErr)
 		return data, errors.New(helper.GetRPCErr)
 	}
 

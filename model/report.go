@@ -458,7 +458,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		if count == 0 {
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
-		param["player_name"] = playerName
+		param["username"] = playerName
 	} else {
 		var maxLevel int
 		var parentUids []string
@@ -552,22 +552,21 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 		}
 		ex["uid"] = g.L("not in ?", uids)
 	}
-	if page == 1 {
-		query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
-		query = strings.Replace(query, "= not in", "not in", 1)
-		fmt.Println(query)
-		err = meta.ReportDB.Get(&data.T, query)
-		if err != nil && err != sql.ErrNoRows {
-			fmt.Println(err.Error())
-			return data, pushLog(err, helper.DBErr)
-		}
 
-		if data.T == 0 {
-			return data, nil
-		}
+	query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	query = strings.Replace(query, "= not in", "not in", 1)
+	fmt.Println(query)
+	err = meta.ReportDB.Get(&data.T, query)
+	if err != nil && err != sql.ErrNoRows {
+		fmt.Println(err.Error())
+		return data, pushLog(err, helper.DBErr)
 	}
 
-	query, _, _ := dialect.From("tbl_report_agency").Where(ex).
+	if data.T == 0 {
+		return data, nil
+	}
+
+	query, _, _ = dialect.From("tbl_report_agency").Where(ex).
 		Select(
 			g.C("uid").As("uid"),
 			g.C("username").As("username"),

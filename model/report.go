@@ -357,7 +357,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			return data, pushLog(err, helper.DBErr)
 		}
 		if maxLevel == 0 {
-			maxLevel = 2
+			maxLevel = 5
 		}
 		ex["lvl"] = g.Op{"between": exp.NewRangeVal(0, maxLevel-1)}
 		query, _, _ = dialect.From("tbl_members_tree").Select(g.C("descendant")).Where(ex).ToSQL()

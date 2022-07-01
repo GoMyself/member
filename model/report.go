@@ -473,17 +473,9 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 			"ancestor": uid,
 			"prefix":   meta.Prefix,
 		}
-		query, _, _ := dialect.From("tbl_members_tree").Select(g.MAX("lvl")).Where(ex).Limit(1).ToSQL()
-		err := meta.MerchantDB.Get(&maxLevel, query)
-		if err != nil {
-			return data, pushLog(err, helper.DBErr)
-		}
-		if maxLevel == 0 {
-			return data, errors.New(helper.NotDirectSubordinate)
-		}
-		ex["lvl"] = g.Op{"between": exp.NewRangeVal(1, maxLevel-1)}
-		query, _, _ = dialect.From("tbl_members_tree").Select(g.C("descendant")).Where(ex).ToSQL()
-		err = meta.MerchantDB.Select(&parentUids, query)
+		ex["lvl"] = g.Op{"between": exp.NewRangeVal(0, maxLevel-1)}
+		query, _, _ := dialect.From("tbl_members_tree").Select(g.C("descendant")).Where(ex).ToSQL()
+		err := meta.MerchantDB.Select(&parentUids, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}

@@ -1,7 +1,7 @@
 #! /bin/bash
 
-git checkout main
-git pull origin main
+git checkout test
+git pull origin test
 git submodule init
 git submodule update --remote
 

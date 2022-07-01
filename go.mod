@@ -12,6 +12,7 @@ require (
 	github.com/fluent/fluent-logger-golang v1.9.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/hprose/hprose-golang/v3 v3.0.8
+	github.com/ip2location/ip2location-go/v9 v9.4.0
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/json-iterator/go v1.1.12
 	github.com/meilisearch/meilisearch-go v0.19.1

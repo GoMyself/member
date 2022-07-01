@@ -352,6 +352,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			"prefix":   meta.Prefix,
 		}
 		query, _, _ := dialect.From("tbl_members_tree").Select(g.MAX("lvl")).Where(ex).Limit(1).ToSQL()
+		fmt.Println(query)
 		err := meta.MerchantDB.Get(&maxLevel, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
@@ -361,6 +362,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		}
 		ex["lvl"] = g.Op{"between": exp.NewRangeVal(0, maxLevel-1)}
 		query, _, _ = dialect.From("tbl_members_tree").Select(g.C("descendant")).Where(ex).ToSQL()
+		fmt.Println(query)
 		err = meta.MerchantDB.Select(&parentUids, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)

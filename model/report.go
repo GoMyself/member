@@ -346,26 +346,21 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		}
 		params["player_name"] = playerName
 	} else {
-		var maxLevel int
 		ex := g.Ex{
-			"ancestor": uid,
-			"prefix":   meta.Prefix,
+			"top_uid":     uid,
+			"report_time": helper.DayTST(0, loc).Unix(),
+			"report_type": 2,
+			"bet_amount":  g.Op{"gte": 0},
+			"prefix":      meta.Prefix,
 		}
-		query, _, _ := dialect.From("tbl_members_tree").Select(g.MAX("lvl")).Where(ex).Limit(1).ToSQL()
+		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").ToSQL()
 		fmt.Println(query)
-		err := meta.MerchantDB.Get(&maxLevel, query)
+		err := meta.MerchantDB.Select(&parentUids, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}
-		if maxLevel == 0 {
-			maxLevel = 5
-		}
-		ex["lvl"] = g.Op{"between": exp.NewRangeVal(0, maxLevel-1)}
-		query, _, _ = dialect.From("tbl_members_tree").Select(g.C("descendant")).Where(ex).ToSQL()
-		fmt.Println(query)
-		err = meta.MerchantDB.Select(&parentUids, query)
-		if err != nil {
-			return data, pushLog(err, helper.DBErr)
+		if len(parentUids) > 0 {
+			params["parentUids"] = parentUids
 		}
 	}
 	rangeParam := map[string][]interface{}{
@@ -469,25 +464,17 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		}
 		param["username"] = playerName
 	} else {
-		var maxLevel int
 		var parentUids []string
 		ex := g.Ex{
-			"ancestor": uid,
-			"prefix":   meta.Prefix,
+			"top_uid":     uid,
+			"report_time": helper.DayTST(0, loc).Unix(),
+			"report_type": 2,
+			"bet_amount":  g.Op{"gte": 0},
+			"prefix":      meta.Prefix,
 		}
-		query, _, _ := dialect.From("tbl_members_tree").Select(g.MAX("lvl")).Where(ex).Limit(1).ToSQL()
+		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").ToSQL()
 		fmt.Println(query)
-		err := meta.MerchantDB.Get(&maxLevel, query)
-		if err != nil {
-			return data, pushLog(err, helper.DBErr)
-		}
-		if maxLevel == 0 {
-			maxLevel = 5
-		}
-		ex["lvl"] = g.Op{"between": exp.NewRangeVal(0, maxLevel-1)}
-		query, _, _ = dialect.From("tbl_members_tree").Select(g.C("descendant")).Where(ex).ToSQL()
-		fmt.Println(query)
-		err = meta.MerchantDB.Select(&parentUids, query)
+		err := meta.MerchantDB.Select(&parentUids, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}

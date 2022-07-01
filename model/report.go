@@ -321,7 +321,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 
 	//查询条件
 	params := map[string]interface{}{}
-	var parentUids []string
+	var uids []string
 
 	if playerName != "" && validator.CheckUName(playerName, 5, 14) {
 		//查搜索的用户是否他的下级。如果不是返回空
@@ -348,19 +348,22 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	} else {
 		ex := g.Ex{
 			"top_uid":     uid,
-			"report_time": helper.DayTST(0, loc).Unix(),
+			"report_time": g.Op{"between": exp.NewRangeVal(startAt/1000, endAt/1000)},
 			"report_type": 2,
-			"bet_amount":  g.Op{"gte": 0},
 			"prefix":      meta.Prefix,
+			"bet_amount":  g.Op{"gt": 0},
 		}
-		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").ToSQL()
+		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Limit(100).ToSQL()
 		fmt.Println(query)
-		err := meta.MerchantDB.Select(&parentUids, query)
+		err := meta.ReportDB.Select(&uids, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}
-		if len(parentUids) > 0 {
-			params["parentUids"] = parentUids
+		fmt.Println("uids:", uids)
+		if len(uids) > 1 {
+			params["uids"] = uids
+		} else {
+			return data, nil
 		}
 	}
 	rangeParam := map[string][]interface{}{
@@ -387,15 +390,8 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	if gameID > 0 {
 		params["api_type"] = gameID
 	}
-	if len(parentUids) > 0 {
-		params["parentUids"] = parentUids
-	}
 
-	agg := map[string]string{
-		"bet_amount_agg":       "bet_amount",
-		"net_amount_agg":       "net_amount",
-		"valid_bet_amount_agg": "valid_bet_amount",
-	}
+	agg := map[string]string{}
 
 	sortFields := map[string]bool{
 		"bet_time": false,
@@ -464,22 +460,24 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		}
 		param["username"] = playerName
 	} else {
-		var parentUids []string
+		var uids []string
 		ex := g.Ex{
 			"top_uid":     uid,
-			"report_time": helper.DayTST(0, loc).Unix(),
+			"report_time": g.Op{"between": exp.NewRangeVal(startAt, endAt)},
 			"report_type": 2,
-			"bet_amount":  g.Op{"gte": 0},
 			"prefix":      meta.Prefix,
 		}
-		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").ToSQL()
+		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Limit(100).ToSQL()
 		fmt.Println(query)
-		err := meta.MerchantDB.Select(&parentUids, query)
+		err := meta.ReportDB.Select(&uids, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}
-		if len(parentUids) > 0 {
-			param["parentUids"] = parentUids
+		fmt.Println("uids:", uids)
+		if len(uids) > 1 {
+			param["uids"] = uids
+		} else {
+			return data, nil
 		}
 	}
 	switch flag {

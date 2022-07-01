@@ -75,18 +75,21 @@ func esSearch(index string, sortFields map[string]bool, page, pageSize int, fiel
 				continue
 			}
 
-			if k != "parentUids" {
+			if k != "uids" {
 				if vv, ok := v.([]interface{}); ok {
 					filters = append(filters, elastic.NewTermsQuery(k, vv...))
 					continue
 				}
 
 				terms = append(terms, elastic.NewTermQuery(k, v))
-			} else if k == "parentUids" {
+			} else if k == "uids" {
+
 				if vv, ok := v.([]string); ok {
+
 					shouldQuery := elastic.NewBoolQuery()
 					for _, v2 := range vv {
-						shouldQuery.Should(elastic.NewTermQuery("parent_uid", v2))
+						fmt.Println(v2)
+						shouldQuery.Should(elastic.NewTermQuery("uid", v2))
 					}
 					terms = append(terms, shouldQuery)
 				}

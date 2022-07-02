@@ -3,7 +3,7 @@
 git checkout test
 git pull origin test
 git submodule init
-git submodule update --remote
+git submodule update
 
 PROJECT="member"
 GitReversion=`git rev-parse HEAD`

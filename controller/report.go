@@ -100,7 +100,7 @@ func (that *ReportController) SubTradeRecord(ctx *fasthttp.RequestCtx) {
 	if pageSize == 0 {
 		pageSize = 10
 	}
-	data, err := model.SubTradeRecord(user.UID, playerName, dateFlag, flag, pageSize, page)
+	data, err := model.SubTradeRecord(user.UID, playerName, dateFlag, flag, uint(pageSize), uint(page))
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

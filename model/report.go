@@ -322,7 +322,6 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	//查询条件
 	var uids []string
 	ex := g.Ex{}
-
 	if playerName != "" && validator.CheckUName(playerName, 5, 14) {
 		//查搜索的用户是否他的下级。如果不是返回空
 		var count int64
@@ -347,7 +346,6 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		ex = g.Ex{
 			"player_name": playerName,
 		}
-
 	} else {
 		ex = g.Ex{
 			"top_uid":     uid,
@@ -363,13 +361,17 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			return data, pushLog(err, helper.DBErr)
 		}
 		if len(uids) > 0 {
+			uids = append(uids, uid)
 			ex = g.Ex{
 				"uid": uids,
+			}
+		} else {
+			ex = g.Ex{
+				"uid": uid,
 			}
 		}
 	}
 	ex["bet_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
-
 	if flag == 1 {
 		ex["flag"] = 0
 	} else if flag == 2 { //未中奖
@@ -392,9 +394,12 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	if err != nil {
 		return data, pushLog(err, helper.DBErr)
 	}
+	if data.T == 0 {
+		return data, nil
+	}
 
 	offset := (page - 1) * pageSize
-	query, _, _ = dialect.From("tbl_game_record").Select(gameRecordFields).Where(ex).Order(g.C("bet_time").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	query, _, _ = dialect.From("tbl_game_record").Select(colsGameRecord...).Where(ex).Order(g.C("bet_time").Desc()).Offset(offset).Limit(pageSize).ToSQL()
 	fmt.Println(query)
 	err = meta.TiDB.Select(&data.D, query)
 	if err != nil {
@@ -415,7 +420,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	return data, nil
 }
 
-func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page int) (TradeData, error) {
+func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page uint) (TradeData, error) {
 
 	data := TradeData{}
 
@@ -435,7 +440,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		startAt = helper.DayTST(0, loc).Unix()
 	}
 
-	param := map[string]interface{}{}
+	ex := g.Ex{}
 	if playerName != "" && validator.CheckUName(playerName, 5, 14) {
 		//查搜索的用户是否他的下级。如果不是返回空
 		var count int64
@@ -456,7 +461,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		if count == 0 {
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
-		param["username"] = playerName
+		ex["username"] = playerName
 	} else {
 		var uids []string
 		ex := g.Ex{
@@ -471,23 +476,25 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}
-		fmt.Println("uids:", uids)
-		if len(uids) > 1 {
-			param["uids"] = uids
+		if len(uids) > 0 {
+			uids = append(uids, uid)
+			ex = g.Ex{
+				"uid": uids,
+			}
 		} else {
-			return data, nil
+			ex = g.Ex{
+				"uid": uid,
+			}
 		}
 	}
 	switch flag {
 	case 2: // 取款
-		rangeParam := map[string][]interface{}{"created_at": {startAt, endAt}}
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeWithdraw(flag, page, pageSize, param, rangeParam, aggField)
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		return recordTradeWithdraw(flag, page, pageSize, ex)
 
 	case 1: // 存款
-		rangeParam := map[string][]interface{}{"created_at": {startAt, endAt}}
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeDeposit(flag, page, pageSize, param, rangeParam, aggField)
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		return recordTradeDeposit(flag, page, pageSize, ex)
 	default:
 	}
 

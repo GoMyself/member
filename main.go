@@ -53,7 +53,6 @@ func main() {
 
 	bin := strings.Split(os.Args[0], "/")
 	mt.Program = bin[len(bin)-1]
-	mt.ES = conn.InitES(cfg.Es.Host, cfg.Es.Username, cfg.Es.Password)
 
 	mt.CardValid = cfg.BankcardValidAPI
 	model.Constructor(mt, cfg.RPC)

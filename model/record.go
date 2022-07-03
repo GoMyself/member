@@ -460,7 +460,7 @@ func recordTradeDividend(flag int, page, pageSize uint,
 	}
 
 	offset := (page - 1) * pageSize
-	query, _, _ = dialect.From("tbl_member_dividend").Select(colsTransfer...).Where(ex).Order(g.C("apply_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	query, _, _ = dialect.From("tbl_member_dividend").Select(colsDividend...).Where(ex).Order(g.C("apply_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
 	fmt.Println(query)
 	err = meta.TiDB.Select(&list, query)
 	if err != nil {

@@ -40,6 +40,7 @@ type MetaTable struct {
 	MerchantDB     *sqlx.DB
 	ReportDB       *sqlx.DB
 	MerchantTD     *sqlx.DB
+	TiDB           *sqlx.DB
 	CardValid      bankcardValidAPI_t
 	ES             *elastic.Client
 	AutoCommission bool

@@ -18,7 +18,6 @@ import (
 	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	"github.com/go-redis/redis/v8"
 	"github.com/jmoiron/sqlx"
-	"github.com/olivere/elastic/v7"
 	"github.com/spaolacci/murmur3"
 )
 
@@ -42,7 +41,6 @@ type MetaTable struct {
 	MerchantTD     *sqlx.DB
 	TiDB           *sqlx.DB
 	CardValid      bankcardValidAPI_t
-	ES             *elastic.Client
 	AutoCommission bool
 	Prefix         string
 	EsPrefix       string
@@ -52,18 +50,23 @@ type MetaTable struct {
 }
 
 var (
-	meta             *MetaTable
-	loc              *time.Location
-	ctx              = context.Background()
-	nine             = decimal.NewFromFloat(9.00)
-	dialect          = g.Dialect("mysql")
-	colsMember       = helper.EnumFields(Member{})
-	colsBankcard     = helper.EnumFields(BankCard{})
-	colsMemberRebate = helper.EnumFields(MemberRebate{})
-	colsMessageTD    = helper.EnumFields(MessageTD{})
-	colsLink         = helper.EnumFields(Link_t{})
-
-	colsEsCommissionTransaction = []string{"id", "bill_no", "uid", "username", "cash_type", "amount", "before_amount", "after_amount", "created_at"}
+	meta                   *MetaTable
+	loc                    *time.Location
+	ctx                    = context.Background()
+	nine                   = decimal.NewFromFloat(9.00)
+	dialect                = g.Dialect("mysql")
+	colsMember             = helper.EnumFields(Member{})
+	colsBankcard           = helper.EnumFields(BankCard{})
+	colsMemberRebate       = helper.EnumFields(MemberRebate{})
+	colsMessageTD          = helper.EnumFields(MessageTD{})
+	colsLink               = helper.EnumFields(Link_t{})
+	colsGameRecord         = helper.EnumFields(GameRecord{})
+	colsDeposit            = helper.EnumFields(Deposit{})
+	colsWithdraw           = helper.EnumFields(Withdraw{})
+	colsTransfer           = helper.EnumFields(Transfer{})
+	colsBalanceTransaction = helper.EnumFields(BalanceTransaction{})
+	colsAdjust             = helper.EnumFields(MemberAdjust{})
+	colsTransation         = helper.EnumFields(Transaction{})
 )
 
 func Constructor(mt *MetaTable, rpcconn string) {

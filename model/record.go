@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/olivere/elastic/v7"
 )
 
 type trade struct {
@@ -36,7 +35,7 @@ type TradeData struct {
 	Agg map[string]string `json:"agg"`
 }
 
-func RecordTransfer(username, billNo, state, transferType, pidIn, pidOut, startTime, endTime string, page, pageSize int) (TransferData, error) {
+func RecordTransfer(username, billNo, state, transferType, pidIn, pidOut, startTime, endTime string, page, pageSize uint) (TransferData, error) {
 
 	data := TransferData{}
 	//判断日期
@@ -55,54 +54,59 @@ func RecordTransfer(username, billNo, state, transferType, pidIn, pidOut, startT
 	}
 
 	//查询条件
-	param := map[string]interface{}{
+	ex := g.Ex{
 		"username": username,
 		"prefix":   meta.Prefix,
 	}
 
 	if billNo != "" {
-		param["bill_no"] = billNo
+		ex["bill_no"] = billNo
 	}
 
 	if transferType != "" {
-		param["transfer_type"] = transferType
+		ex["transfer_type"] = transferType
 	}
 
 	if pidIn != "" && pidOut == "" {
-		param["platform_id"] = pidIn
+		ex["platform_id"] = pidIn
 	}
 
 	if pidIn == "" && pidOut != "" {
-		param["platform_id"] = pidOut
+		ex["platform_id"] = pidOut
 	}
 
 	if transferType == "" && pidIn != "" && pidOut != "" {
-		param["platform_id"] = []interface{}{pidIn, pidOut}
+		ex["platform_id"] = []interface{}{pidIn, pidOut}
 	}
 
 	if state != "" {
-		param["state"] = state
+		ex["state"] = state
 	}
 
-	rangeParam := map[string][]interface{}{
-		"created_at": {startAt, endAt},
-	}
-	agg := map[string]string{
-		"amount_agg": "amount",
-	}
-	sortFields := map[string]bool{
-		"created_at": false,
-	}
-	data, err = esTransferQuery(esPrefixIndex("tbl_member_transfer"), sortFields, page, pageSize, param, rangeParam, agg)
+	ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+	query, _, _ := dialect.From("tbl_member_transfer").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
+	}
+
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_member_transfer").Select(colsTransfer...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&data.D, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
 	}
 
 	return data, nil
 }
 
 // pull data from es
-func RecordGame(ty int, uid, playerName, startTime, endTime string, flag, gameID int, pageSize, page int) (GameRecordData, error) {
+func RecordGame(ty int, uid, playerName, startTime, endTime string, flag, gameID int, pageSize, page uint) (GameRecordData, error) {
 
 	data := GameRecordData{}
 	//判断日期
@@ -120,48 +124,50 @@ func RecordGame(ty int, uid, playerName, startTime, endTime string, flag, gameID
 	}
 
 	//查询条件
-	params := map[string]interface{}{}
+	ex := g.Ex{}
 	if ty == 1 {
 		// 直属下级游戏记录
-		params["parent_uid"] = uid
+		ex["parent_uid"] = uid
 		if playerName != "" && validator.CheckUName(playerName, 5, 14) {
-			params["player_name"] = playerName
+			ex["player_name"] = playerName
 		}
 	} else { // 查自己的游戏记录
-		params["uid"] = uid
+		ex["uid"] = uid
 	}
 
 	if flag != -1 {
-		params["flag"] = flag
+		ex["flag"] = flag
 	}
 
 	if gameID > 0 {
-		params["api_type"] = gameID
+		ex["api_type"] = gameID
 	}
 
-	rangeParam := map[string][]interface{}{
-		"bet_time": {startAt, endAt},
-	}
+	ex["bet_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 
-	agg := map[string]string{
-		"bet_amount_agg":       "bet_amount",
-		"net_amount_agg":       "net_amount",
-		"valid_bet_amount_agg": "valid_bet_amount",
-	}
-
-	sortFields := map[string]bool{
-		"bet_time": false,
-	}
-	data, err = esGameRecordQuery(pullPrefixIndex("tbl_game_record"), sortFields, page, pageSize, params, rangeParam, agg)
+	query, _, _ := dialect.From("tbl_game_record").Select(g.COUNT("bill_no")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
+	}
+
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_game_record").Select(colsGameRecord...).Where(ex).Order(g.C("bet_time").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&data.D, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
 	}
 
 	return data, nil
 }
 
 // RecordTransaction es 账变记录列表
-func RecordTransaction(uid, cashTypes, startTime, endTime string, page, pageSize int) (TransactionData, error) {
+func RecordTransaction(uid, cashTypes, startTime, endTime string, page, pageSize uint) (TransactionData, error) {
 
 	data := TransactionData{}
 	startAt, err := helper.TimeToLocMs(startTime, loc)
@@ -178,7 +184,7 @@ func RecordTransaction(uid, cashTypes, startTime, endTime string, page, pageSize
 		return data, errors.New(helper.QueryTimeRangeErr)
 	}
 
-	param := map[string]interface{}{
+	ex := g.Ex{
 		"uid": uid,
 	}
 
@@ -191,26 +197,33 @@ func RecordTransaction(uid, cashTypes, startTime, endTime string, page, pageSize
 			}
 			types = append(types, v)
 		}
-		param["cash_type"] = types
+		ex["cash_type"] = types
 	}
 
-	rangeParam := map[string][]interface{}{
-		"created_at": {startAt, endAt},
-	}
-
-	sortFields := map[string]bool{
-		"created_at": false,
-	}
-	data, err = esTransactionQuery(esPrefixIndex("tbl_member_transaction"), sortFields, page, pageSize, param, rangeParam, map[string]string{})
+	ex["prefix"] = meta.Prefix
+	query, _, _ := dialect.From("tbl_member_transaction").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
+	}
+
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_member_transaction").Select(colsTransation...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&data.D, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
 	}
 
 	return data, nil
 }
 
 //交易记录
-func RecordTrade(uid, startTime, endTime string, flag, page, pageSize int) (TradeData, error) {
+func RecordTrade(uid, startTime, endTime string, flag int, page, pageSize uint) (TradeData, error) {
 
 	data := TradeData{}
 	startAtMs, err := helper.TimeToLocMs(startTime, loc)
@@ -231,27 +244,24 @@ func RecordTrade(uid, startTime, endTime string, flag, page, pageSize int) (Trad
 		return data, errors.New(helper.QueryTimeRangeErr)
 	}
 
-	param := map[string]interface{}{"uid": uid}
+	ex := g.Ex{"uid": uid}
 	switch flag {
 	case RecordTradeWithdraw: // 取款
-		rangeParam := map[string][]interface{}{"created_at": {startAt, endAt}}
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeWithdraw(flag, page, pageSize, param, rangeParam, aggField)
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		return recordTradeWithdraw(flag, page, pageSize, ex)
 
 	case RecordTradeDeposit: // 存款
-		rangeParam := map[string][]interface{}{"created_at": {startAt, endAt}}
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeDeposit(flag, page, pageSize, param, rangeParam, aggField)
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		return recordTradeDeposit(flag, page, pageSize, ex)
 
 	case RecordTradeTransfer: // 转账
-		rangeParam := map[string][]interface{}{"created_at": {startAtMs, endAtMs}}
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeTransfer(flag, page, pageSize, param, rangeParam, aggField)
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		return recordTradeTransfer(flag, page, pageSize, ex)
 
 	case RecordTradeDividend: // 红利
-		param["state"] = DividendReviewPass
-		rangeParam := map[string][]interface{}{"apply_at": {startAtMs, endAtMs}}
-		return recordTradeDividend(flag, page, pageSize, param, rangeParam, nil)
+		ex["state"] = DividendReviewPass
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAtMs, endAtMs)}
+		return recordTradeDividend(flag, page, pageSize, ex)
 
 	case RecordTradeRebate: // 返水/佣金
 		return recordTradeRebate(flag, page, pageSize, uid, startAtMs, endAtMs)
@@ -266,27 +276,24 @@ func RecordTrade(uid, startTime, endTime string, flag, page, pageSize int) (Trad
 // 交易详情
 func RecordTradeDetail(flag int, uid string, id string) (TradeData, error) {
 
-	param := map[string]interface{}{
-		"uid": uid,
-	}
+	ex := g.Ex{"uid": uid}
 	meta.MerchantRedis.SetNX(ctx, "1", "1", 1000*time.Second).Result()
 	data := TradeData{}
 	switch flag {
 	case RecordTradeWithdraw:
 		//取款
-		param["_id"] = id
-		return recordTradeWithdraw(flag, 1, 15, param, nil, nil)
+		ex["_id"] = id
+		return recordTradeWithdraw(flag, uint(1), 15, ex)
 
 	case RecordTradeDeposit:
 		//存款
-		param["_id"] = id
-		return recordTradeDeposit(flag, 1, 1, param, nil, nil)
+		ex["_id"] = id
+		return recordTradeDeposit(flag, uint(1), uint(1), ex)
 
 	case RecordTradeTransfer:
-		param["_id"] = id
+		ex["_id"] = id
 		//转账
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeTransfer(flag, 1, 15, param, nil, aggField)
+		return recordTradeTransfer(flag, uint(1), uint(15), ex)
 
 	default:
 		//红利 返水  调整
@@ -295,23 +302,31 @@ func RecordTradeDetail(flag int, uid string, id string) (TradeData, error) {
 }
 
 // 取款
-func recordTradeWithdraw(flag, page, pageSize int,
-	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (TradeData, error) {
+func recordTradeWithdraw(flag int, page, pageSize uint,
+	ex g.Ex) (TradeData, error) {
 
 	data := TradeData{}
-	param["prefix"] = meta.Prefix
-	sortFields := map[string]bool{
-		"created_at": false,
-	}
-	body, err := esWithdrawQuery(esPrefixIndex("tbl_withdraw"), sortFields, page, pageSize, param, rangeParam, aggField)
+	var list []Withdraw
+	ex["prefix"] = meta.Prefix
+	query, _, _ := dialect.From("tbl_withdraw").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
 	}
 
-	data.Agg = body.Agg
-	data.T = body.T
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_withdraw").Select(colsWithdraw...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&list, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
+	}
 
-	for _, v := range body.D {
+	for _, v := range list {
 		item := trade{
 			Flag:         flag,
 			ID:           v.ID,
@@ -338,23 +353,32 @@ func recordTradeWithdraw(flag, page, pageSize int,
 }
 
 // 存款
-func recordTradeDeposit(flag, page, pageSize int,
-	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (TradeData, error) {
+func recordTradeDeposit(flag int, page, pageSize uint,
+	ex g.Ex) (TradeData, error) {
 
 	data := TradeData{}
-	param["prefix"] = meta.Prefix
-	sortFields := map[string]bool{
-		"created_at": false,
-	}
-	body, err := esDepositQuery(esPrefixIndex("tbl_deposit"), sortFields, page, pageSize, param, rangeParam, aggField)
+	var list []Deposit
+	ex["prefix"] = meta.Prefix
+
+	query, _, _ := dialect.From("tbl_deposit").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
 	}
 
-	data.Agg = body.Agg
-	data.T = body.T
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_deposit").Select(colsDeposit...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&list, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
+	}
 
-	for _, v := range body.D {
+	for _, v := range list {
 		item := trade{
 			Flag:         flag,
 			ID:           v.ID,
@@ -367,11 +391,6 @@ func recordTradeDeposit(flag, page, pageSize int,
 			State:        v.State,
 			Username:     v.Username,
 		}
-		mb, err := MemberCache(nil, v.Username)
-		if err != nil {
-			return data, err
-		}
-		item.Balance = mb.Balance
 
 		data.D = append(data.D, item)
 	}
@@ -380,23 +399,31 @@ func recordTradeDeposit(flag, page, pageSize int,
 }
 
 // 转账
-func recordTradeTransfer(flag, page, pageSize int,
-	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (TradeData, error) {
+func recordTradeTransfer(flag int, page, pageSize uint,
+	ex g.Ex) (TradeData, error) {
 
 	data := TradeData{}
-	param["prefix"] = meta.Prefix
-	sortFields := map[string]bool{
-		"created_at": false,
-	}
-	body, err := esTransferQuery(esPrefixIndex("tbl_member_transfer"), sortFields, page, pageSize, param, rangeParam, aggField)
+	var list []Transfer
+	ex["prefix"] = meta.Prefix
+	query, _, _ := dialect.From("tbl_member_transfer").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
 	}
 
-	data.Agg = body.Agg
-	data.T = body.T
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_member_transfer").Select(colsTransfer...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&list, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
+	}
 
-	for _, v := range body.D {
+	for _, v := range list {
 		item := trade{
 			Flag:         flag,
 			ID:           v.ID,
@@ -416,21 +443,31 @@ func recordTradeTransfer(flag, page, pageSize int,
 }
 
 // 红利
-func recordTradeDividend(flag, page, pageSize int,
-	param map[string]interface{}, rangeParam map[string][]interface{}, aggField map[string]string) (TradeData, error) {
+func recordTradeDividend(flag int, page, pageSize uint,
+	ex g.Ex) (TradeData, error) {
 
 	data := TradeData{}
-	param["prefix"] = meta.Prefix
-	sortFields := map[string]bool{
-		"apply_at": false,
-	}
-	body, err := esDividendQuery(esPrefixIndex("tbl_member_dividend"), sortFields, page, pageSize, param, rangeParam, aggField)
+	ex["prefix"] = meta.Prefix
+	var list []Dividend
+	query, _, _ := dialect.From("tbl_member_dividend").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
 	}
 
-	data.T = body.T
-	for _, v := range body.D {
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_member_dividend").Select(colsTransfer...).Where(ex).Order(g.C("apply_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&list, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
+	}
+
+	for _, v := range list {
 		item := trade{
 			Flag:       flag,
 			ID:         v.ID,
@@ -451,51 +488,45 @@ func recordTradeDividend(flag, page, pageSize int,
 }
 
 // 返水
-func recordTradeRebate(flag, page, pageSize int, uid string, startAt, endAt int64) (TradeData, error) {
+func recordTradeRebate(flag int, page, pageSize uint, uid string, startAt, endAt int64) (TradeData, error) {
 
 	data := TradeData{}
-	query := elastic.NewBoolQuery()
+	ex := g.Ex{
+		"uid":       uid,
+		"cash_type": []int{161, 170, 642, 643, 644, 645, 646, 647, 648, 649},
+	}
+	ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 
-	query.Must(
-		elastic.NewRangeQuery("created_at").Gte(startAt).Lte(endAt),
-		elastic.NewTermQuery("uid", uid),
-		elastic.NewBoolQuery().Should(
-			elastic.NewTermQuery("cash_type", 161),
-			elastic.NewTermQuery("cash_type", 170),
-			elastic.NewTermQuery("cash_type", 642),
-			elastic.NewTermQuery("cash_type", 643),
-			elastic.NewTermQuery("cash_type", 644),
-			elastic.NewTermQuery("cash_type", 645),
-			elastic.NewTermQuery("cash_type", 646),
-			elastic.NewTermQuery("cash_type", 647),
-			elastic.NewTermQuery("cash_type", 648),
-			elastic.NewTermQuery("cash_type", 649),
-		),
-	)
-
-	total, esData, _, err := esQuerySearch(esPrefixIndex("tbl_balance_transaction"), "created_at",
-		page, pageSize, colsEsCommissionTransaction, query, nil)
-
+	var list []BalanceTransaction
+	query, _, _ := dialect.From("tbl_balance_transaction").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
 	}
 
-	data.T = total
-	for _, v := range esData {
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_balance_transaction").Select(colsBalanceTransaction...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&list, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
+	}
 
-		fmt.Println(string(v.Source))
-		comm := BalanceTransaction{}
-		_ = helper.JsonUnmarshal(v.Source, &comm)
-		fmt.Println(comm)
+	for _, v := range list {
+
 		item := trade{
 			Flag:         flag,
-			ID:           v.Id,
+			ID:           v.BillNo,
 			Ty:           1, // 佣金钱包
-			BillNo:       v.Id,
+			BillNo:       v.BillNo,
 			PlatformId:   "",
-			TransferType: comm.CashType,
-			Amount:       fmt.Sprintf(`%f`, comm.Amount),
-			CreatedAt:    fmt.Sprintf(`%d`, comm.CreatedAt),
+			TransferType: v.CashType,
+			Amount:       fmt.Sprintf(`%f`, v.Amount),
+			CreatedAt:    fmt.Sprintf(`%d`, v.CreatedAt),
 			State:        1,
 		}
 
@@ -506,48 +537,50 @@ func recordTradeRebate(flag, page, pageSize int, uid string, startAt, endAt int6
 }
 
 // 加币 减币 调整
-func recordTradeAdjust(uid string, flag, page, pageSize int, startAt, endAt int64) (TradeData, error) {
+func recordTradeAdjust(uid string, flag int, page, pageSize uint, startAt, endAt int64) (TradeData, error) {
 
 	data := TradeData{}
+	ex := g.Ex{
+		"uid":    uid,
+		"prefix": meta.Prefix,
+	}
+	ex["adjust_mode"] = []int{AdjustDownMode, AdjustUpMode}
+	ex["state"] = AdjustReviewPass
+	ex["apply_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 
-	query := elastic.NewBoolQuery()
-
-	query.Must(
-		elastic.NewRangeQuery("apply_at").Gte(startAt).Lte(endAt),
-		elastic.NewTermQuery("uid", uid),
-		elastic.NewTermQuery("prefix", meta.Prefix),
-		elastic.NewBoolQuery().Should(
-			elastic.NewTermQuery("adjust_mode", AdjustDownMode),
-			elastic.NewTermQuery("adjust_mode", AdjustUpMode),
-		),
-		elastic.NewBoolQuery().Must(
-			elastic.NewTermQuery("state", AdjustReviewPass),
-		))
-
-	total, esData, _, err := esQuerySearch(esPrefixIndex("tbl_member_adjust"), "apply_at", page, pageSize, adjustFields, query, nil)
+	var list []MemberAdjust
+	query, _, _ := dialect.From("tbl_member_adjust").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
 	}
 
-	data.T = total
-	for _, v := range esData {
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_member_adjust").Select(colsAdjust...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&list, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
+	}
 
-		adjust := MemberAdjust{}
-		adjust.ID = v.Id
-		_ = helper.JsonUnmarshal(v.Source, &adjust)
+	for _, v := range list {
 
 		t := trade{
 			Flag:       flag,
-			ID:         adjust.ID,
+			ID:         v.ID,
 			Ty:         1,
-			BillNo:     adjust.ID,
+			BillNo:     v.ID,
 			PlatformId: "1",
-			Amount:     fmt.Sprintf("%.4f", adjust.Amount),
-			CreatedAt:  fmt.Sprintf("%d", adjust.ApplyAt),
-			State:      adjust.State,
+			Amount:     fmt.Sprintf("%.4f", v.Amount),
+			CreatedAt:  fmt.Sprintf("%d", v.ApplyAt),
+			State:      v.State,
 		}
 
-		if adjust.AdjustMode == AdjustUpMode {
+		if v.AdjustMode == AdjustUpMode {
 			t.TransferType = helper.TransactionUpPoint
 		} else {
 			t.TransferType = helper.TransactionDownPoint
@@ -576,144 +609,20 @@ func CheckSmsCaptcha(ip, sid, phone, code string) error {
 	return errors.New(helper.PhoneVerificationErr)
 }
 
-// 会员列表查询执行
-func EsMemberList(page, pageSize, isAsc int, username, user, startTime, endTime, sortField string) (MemberListData, error) {
-
-	var (
-		data              = MemberListData{}
-		ids               []string
-		idMap             = make(map[string]string)
-		t, startAt, endAt int64
-		err               error
-		esResult          []*elastic.SearchHit
-	)
-
-	query := elastic.NewBoolQuery()
-	if username != "" {
-		query.Filter(elastic.NewTermQuery("username", username))
-	}
-
-	query.Filter(elastic.NewTermQuery("parent_name", user))
-
-	if startTime != "" && endTime != "" {
-		startAt, err = helper.TimeToLoc(startTime, loc)
-		if err != nil {
-			return data, errors.New(helper.TimeTypeErr)
-		}
-		endAt, err = helper.TimeToLoc(endTime, loc)
-		if err != nil {
-			return data, errors.New(helper.TimeTypeErr)
-		}
-		if startAt >= endAt {
-			return data, errors.New(helper.QueryTimeRangeErr)
-		}
-	}
-	data.S = pageSize
-
-	// 从es查下级成员
-	var members []Member
-	t, esResult, _, err = EsMemberListSearch(
-		esPrefixIndex("tbl_members"), "created_at", page, pageSize, []string{"uid", "username"}, query, nil)
-
-	if err != nil {
-		return data, pushLog(err, helper.DBErr)
-	}
-
-	data.T = int(t)
-	if len(esResult) == 0 {
-		return data, nil
-	}
-	for _, v := range esResult {
-		record := MemberListCol{}
-		_ = helper.JsonUnmarshal(v.Source, &record)
-		data.D = append(data.D, record)
-		members = append(members, Member{UID: record.UID, Username: record.Username})
-		ids = append(ids, record.UID)
-		idMap[record.UID] = record.Username
-
-	}
-
-	// 补全数据
-	if len(ids) == 0 {
-		return data, nil
-	}
-	// 补全报表聚合数据
-	if sortField != "" && username == "" {
-		ex := g.Ex{"username": username, "parent_name": user}
-		data.D, data.T, err = memberListSort(ex, sortField, startAt, endAt, isAsc, page, pageSize)
-		if err != nil {
-			return data, err
-		}
-	} else {
-		// 获取统计数据
-		ex := g.Ex{
-			"report_time": g.Op{"between": exp.NewRangeVal(startAt, endAt)},
-			"uid":         ids,
-			"report_type": 2, // 1投注时间2结算时间3投注时间月报4结算时间月报
-			"data_type":   1,
-		}
-		data.D, data.T, err = MemberAggList(ex, isAsc, page, pageSize)
-		if err != nil {
-			return data, err
-		}
-
-	}
-	// 从redis获取用户的反水比例
-	rebates, err := MemberRebateExistRedis(ids)
-	if err != nil {
-		return data, err
-	}
-	if len(data.D) == len(rebates) {
-		for i, v := range data.D {
-			if rb, ok := rebates[v.UID]; ok {
-				data.D[i].DJ = rb.DJ
-				data.D[i].TY = rb.TY
-				data.D[i].ZR = rb.ZR
-				data.D[i].QP = rb.QP
-				data.D[i].DZ = rb.DZ
-				data.D[i].CP = rb.CP
-				data.D[i].FC = rb.FC
-				data.D[i].BY = rb.BY
-				data.D[i].CGHighRebate = rb.CGHighRebate
-				data.D[i].CGOfficialRebate = rb.CGOfficialRebate
-			}
-		}
-	}
-
-	// 可能有会员未生成报表数据 这时需要给未生成报表的会员 赋值默认返回值
-	//否则会出现total和data length 不一致的问题
-	for _, v := range data.D {
-		if _, ok := idMap[v.UID]; ok {
-			delete(idMap, v.UID)
-		}
-	}
-
-	for id, u := range idMap {
-		data.D = append(data.D, MemberListCol{UID: id, Username: u})
-	}
-
-	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)
-	if meta.MerchantRedis.Exists(ctx, key).Val() > 0 {
-		data.EnableMod = true
-	}
-
-	return data, nil
-}
-
-func MemberRebateExistRedis(ids []string) (map[string]MemberRebate, error) {
-	pipe := meta.MerchantRedis.Pipeline()
-	defer pipe.Close()
-	mm := make(map[string]MemberRebate)
-	//// 任何一个错误的id 都将返回一个错误
-	for i, idd := range ids {
-		m, ee := MemberRebateGetCache(idd)
-		if ee != nil {
-			msg := fmt.Sprintf("%d ,errtype:%s", i, helper.RedisErr)
-			return nil, pushLog(ee, msg)
-		} else {
-			mm[idd] = m
-		}
-
-	}
-	return mm, nil
-}
+//func MemberRebateExistRedis(ids []string) (map[string]MemberRebate, error) {
+//	pipe := meta.MerchantRedis.Pipeline()
+//	defer pipe.Close()
+//	mm := make(map[string]MemberRebate)
+//	//// 任何一个错误的id 都将返回一个错误
+//	for i, idd := range ids {
+//		m, ee := MemberRebateGetCache(idd)
+//		if ee != nil {
+//			msg := fmt.Sprintf("%d ,errtype:%s", i, helper.RedisErr)
+//			return nil, pushLog(ee, msg)
+//		} else {
+//			mm[idd] = m
+//		}
+//
+//	}
+//	return mm, nil
+//}

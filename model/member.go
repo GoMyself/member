@@ -48,7 +48,6 @@ func MemberAmount(fctx *fasthttp.RequestCtx) (string, error) {
 	mb := MBBalance{}
 	t := dialect.From("tbl_members")
 	query, _, _ := t.Select("balance", "lock_amount").Where(g.Ex{"username": username}).Limit(1).ToSQL()
-	fmt.Println(query)
 	err := meta.MerchantDB.Get(&mb, query)
 	if err != nil && err == sql.ErrNoRows {
 		return "", pushLog(err, helper.DBErr)

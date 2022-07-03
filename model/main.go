@@ -65,6 +65,7 @@ var (
 	colsWithdraw           = helper.EnumFields(Withdraw{})
 	colsTransfer           = helper.EnumFields(Transfer{})
 	colsBalanceTransaction = helper.EnumFields(BalanceTransaction{})
+	colsDividend           = helper.EnumFields(Dividend{})
 	colsAdjust             = helper.EnumFields(MemberAdjust{})
 	colsTransation         = helper.EnumFields(Transaction{})
 )

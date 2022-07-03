@@ -299,7 +299,7 @@ func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx) (ReportSubMemb
 	return data, nil
 }
 
-func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int, pageSize, page int) (GameRecordData, error) {
+func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int, pageSize, page uint) (GameRecordData, error) {
 
 	data := GameRecordData{}
 	//判断日期
@@ -320,8 +320,8 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	}
 
 	//查询条件
-	params := map[string]interface{}{}
 	var uids []string
+	ex := g.Ex{}
 
 	if playerName != "" && validator.CheckUName(playerName, 5, 14) {
 		//查搜索的用户是否他的下级。如果不是返回空
@@ -330,7 +330,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		if err != nil {
 			return data, errors.New(helper.UsernameExist)
 		}
-		ex := g.Ex{
+		ex = g.Ex{
 			"ancestor":   uid,
 			"descendant": mb.UID,
 			"prefix":     meta.Prefix,
@@ -344,9 +344,12 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		if count == 0 {
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
-		params["player_name"] = playerName
+		ex = g.Ex{
+			"player_name": playerName,
+		}
+
 	} else {
-		ex := g.Ex{
+		ex = g.Ex{
 			"top_uid":     uid,
 			"report_time": g.Op{"between": exp.NewRangeVal(startAt/1000, endAt/1000)},
 			"report_type": 2,
@@ -359,48 +362,43 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}
-		fmt.Println("uids:", uids)
-		if len(uids) > 1 {
-			params["uids"] = uids
-		} else {
-			return data, nil
+		if len(uids) > 0 {
+			ex = g.Ex{
+				"uid": uids,
+			}
 		}
 	}
-	rangeParam := map[string][]interface{}{
-		"bet_time": {startAt, endAt},
-	}
+	ex["bet_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+
 	if flag == 1 {
-		params["flag"] = 0
+		ex["flag"] = 0
 	} else if flag == 2 { //未中奖
-		var netAMounts []interface{}
-		netAMounts = append(netAMounts, -999999999999.99)
-		netAMounts = append(netAMounts, 0.0000)
-		rangeParam["net_amount"] = netAMounts
+		ex["net_amount"] = g.Op{"lt": 0}
 	} else if flag == 3 { //已中奖
-		var netAMounts []interface{}
-		netAMounts = append(netAMounts, 0.000)
-		netAMounts = append(netAMounts, 999999999999.99)
-		rangeParam["net_amount"] = netAMounts
+		ex["net_amount"] = g.Op{"gt": 0}
 	}
 
 	if gameType > 0 {
-		params["game_type"] = gameType
+		ex["game_type"] = gameType
 	}
 
 	if gameID > 0 {
-		params["api_type"] = gameID
+		ex["api_type"] = gameID
 	}
 
-	agg := map[string]string{}
-
-	sortFields := map[string]bool{
-		"bet_time": false,
-	}
-	fmt.Println("param:", params)
-	fmt.Println("range:", rangeParam)
-	data, err := esGameRecordQuery(pullPrefixIndex("tbl_game_record"), sortFields, page, pageSize, params, rangeParam, agg)
+	query, _, _ := dialect.From("tbl_game_record").Select(g.COUNT("bill_no")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_game_record").Select(gameRecordFields).Where(ex).Order(g.C("bet_time").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&data.D, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
 	}
 
 	for i := 0; i < len(data.D); i++ {

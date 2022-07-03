@@ -71,7 +71,7 @@ func (that *ReportController) SubGameRecord(ctx *fasthttp.RequestCtx) {
 	if pageSize == 0 {
 		pageSize = 10
 	}
-	data, err := model.SubGameRecord(user.UID, playerName, gameType, dateFlag, flag, platformID, pageSize, page)
+	data, err := model.SubGameRecord(user.UID, playerName, gameType, dateFlag, flag, platformID, uint(pageSize), uint(page))
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

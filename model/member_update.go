@@ -231,7 +231,7 @@ func MemberUpdateAvatar(avatar string, fctx *fasthttp.RequestCtx) error {
 
 func CheckEmailCaptcha(ip, sid, email, code string) error {
 
-	key := fmt.Sprintf("%s:mail:%s%s%s", meta.Prefix, email, ip, sid)
+	key := fmt.Sprintf("%s:mail:%s%s", meta.Prefix, email, sid)
 	cmd := meta.MerchantRedis.Get(ctx, key)
 	//fmt.Println(cmd.String())
 	val, err := cmd.Result()

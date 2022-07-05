@@ -282,16 +282,16 @@ func RecordTradeDetail(flag int, uid string, id string) (TradeData, error) {
 	switch flag {
 	case RecordTradeWithdraw:
 		//取款
-		ex["_id"] = id
+		ex["id"] = id
 		return recordTradeWithdraw(flag, uint(1), 15, ex)
 
 	case RecordTradeDeposit:
 		//存款
-		ex["_id"] = id
+		ex["id"] = id
 		return recordTradeDeposit(flag, uint(1), uint(1), ex)
 
 	case RecordTradeTransfer:
-		ex["_id"] = id
+		ex["id"] = id
 		//转账
 		return recordTradeTransfer(flag, uint(1), uint(15), ex)
 

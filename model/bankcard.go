@@ -108,10 +108,10 @@ func BankcardInsert(fCtx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		realName = recs["realname"]
 	}
 
-	//statusCode := BankcardCheck(fCtx, bankcardNo, data.BankID, realName)
-	//if statusCode != helper.Success {
-	//	return errors.New(statusCode)
-	//}
+	statusCode := BankcardCheck(fCtx, bankcardNo, data.BankID, realName)
+	if statusCode != helper.Success {
+		return errors.New(statusCode)
+	}
 
 	bankcardRecord := g.Record{
 		"id":               data.ID,

@@ -50,11 +50,11 @@ func BankcardUpdateCache(username string) {
 	pipe.Close()
 }
 
-func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo string, data BankCard) error {
+func BankcardInsert(fCtx *fasthttp.RequestCtx, phone, realName, bankcardNo string, data BankCard) error {
 
 	encRes := [][]string{}
 
-	mb, err := MemberCache(fctx, "")
+	mb, err := MemberCache(fCtx, "")
 	if err != nil {
 		return err
 	}
@@ -108,10 +108,11 @@ func BankcardInsert(fctx *fasthttp.RequestCtx, phone, realName, bankcardNo strin
 		realName = recs["realname"]
 	}
 
-	statusCoce := BankcardCheck(fctx, bankcardNo, data.BankID, realName)
-	if statusCoce != helper.Success {
-		return errors.New(statusCoce)
+	statusCode := BankcardCheck(fCtx, bankcardNo, data.BankID, realName)
+	if statusCode != helper.Success {
+		return errors.New(statusCode)
 	}
+
 	bankcardRecord := g.Record{
 		"id":               data.ID,
 		"uid":              mb.UID,

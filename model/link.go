@@ -89,10 +89,10 @@ func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) e
 	if by.GreaterThan(own.BY) || by.IsNegative() {
 		return errors.New(helper.RebateOutOfRange)
 	}
-	if cgOfficialRebate.GreaterThan(own.CGOfficialRebate) || cgOfficialRebate.IsNegative() || nine.GreaterThan(cgOfficialRebate) {
+	if cgOfficialRebate.GreaterThan(own.CGOfficialRebate) || cgOfficialRebate.GreaterThan(ten) || nine.GreaterThan(cgOfficialRebate) {
 		return errors.New(helper.RebateOutOfRange)
 	}
-	if cgHighRebate.GreaterThan(own.CGHighRebate) || cgHighRebate.IsNegative() || nine.GreaterThan(cgHighRebate) {
+	if cgHighRebate.GreaterThan(own.CGHighRebate) || cgHighRebate.GreaterThan(ten) || nine.GreaterThan(cgHighRebate) {
 		return errors.New(helper.RebateOutOfRange)
 	}
 

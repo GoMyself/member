@@ -250,7 +250,7 @@ func MemberReg(device int, username, password, ip, deviceNo, regUrl, linkID, pho
 				return "", err
 			}
 
-			if regNum > num {
+			if regNum >= num {
 				return "", errors.New(helper.RegLimitExceed)
 			}
 		}

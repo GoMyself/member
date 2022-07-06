@@ -482,6 +482,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page u
 				"uid": uids,
 			}
 		} else {
+			fmt.Println(uid)
 			ex = g.Ex{
 				"uid": uid,
 			}

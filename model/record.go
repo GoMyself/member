@@ -359,7 +359,7 @@ func recordTradeDeposit(flag int, page, pageSize uint,
 	data := TradeData{}
 	var list []Deposit
 	ex["prefix"] = meta.Prefix
-
+	fmt.Println(ex["uid"])
 	query, _, _ := dialect.From("tbl_deposit").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
 	fmt.Println(query)
 	err := meta.TiDB.Get(&data.T, query)

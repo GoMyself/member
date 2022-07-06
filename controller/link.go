@@ -58,17 +58,17 @@ func (that *LinkController) List(ctx *fasthttp.RequestCtx) {
 
 func (that *LinkController) Delete(ctx *fasthttp.RequestCtx) {
 
-	id := string(ctx.QueryArgs().Peek("id"))
-	if !helper.CtypeDigit(id) {
-		helper.Print(ctx, false, helper.ParamErr)
-		return
-	}
-
-	err := model.LinkDelete(ctx, id)
-	if err != nil {
-		helper.Print(ctx, false, err.Error())
-		return
-	}
-
-	helper.Print(ctx, true, helper.Success)
+	//id := string(ctx.QueryArgs().Peek("id"))
+	//if !helper.CtypeDigit(id) {
+	//	helper.Print(ctx, false, helper.ParamErr)
+	//	return
+	//}
+	//
+	//err := model.LinkDelete(ctx, id)
+	//if err != nil {
+	//	helper.Print(ctx, false, err.Error())
+	//	return
+	//}
+	//
+	//helper.Print(ctx, true, helper.Success)
 }

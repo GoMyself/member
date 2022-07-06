@@ -448,7 +448,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page u
 		if err != nil {
 			return data, errors.New(helper.UsernameExist)
 		}
-		ex := g.Ex{
+		ex = g.Ex{
 			"ancestor":   uid,
 			"descendant": mb.UID,
 			"prefix":     meta.Prefix,
@@ -464,7 +464,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page u
 		ex["username"] = playerName
 	} else {
 		var uids []string
-		ex := g.Ex{
+		ex = g.Ex{
 			"top_uid":     uid,
 			"report_time": g.Op{"between": exp.NewRangeVal(startAt, endAt)},
 			"report_type": 2,

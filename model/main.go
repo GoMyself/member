@@ -54,6 +54,7 @@ var (
 	loc                    *time.Location
 	ctx                    = context.Background()
 	nine                   = decimal.NewFromFloat(9.00)
+	ten                    = decimal.NewFromFloat(10.00)
 	dialect                = g.Dialect("mysql")
 	colsMember             = helper.EnumFields(Member{})
 	colsBankcard           = helper.EnumFields(BankCard{})
@@ -67,7 +68,7 @@ var (
 	colsBalanceTransaction = helper.EnumFields(BalanceTransaction{})
 	colsDividend           = helper.EnumFields(Dividend{})
 	colsAdjust             = helper.EnumFields(MemberAdjust{})
-	colsTransation         = helper.EnumFields(Transaction{})
+	colsTransaction        = helper.EnumFields(Transaction{})
 )
 
 func Constructor(mt *MetaTable, rpcconn string) {

@@ -1073,7 +1073,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 			g.SUM("dividend_amount").As("dividend_amount"),
 			g.SUM("rebate_amount").As("rebate_amount"),
 			g.SUM("company_net_amount").As("company_net_amount"),
-		).GroupBy("uid").
+		).GroupBy("uid", "username").
 		ToSQL()
 
 	err = meta.ReportDB.Select(&data, query)

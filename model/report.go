@@ -492,11 +492,11 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page u
 	switch flag {
 	case 2: // 取款
 		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
-		return recordTradeWithdraw(flag, page, pageSize, ex)
+		return recordTradeWithdraw(RecordTradeWithdraw, page, pageSize, ex)
 
 	case 1: // 存款
 		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
-		return recordTradeDeposit(flag, page, pageSize, ex)
+		return recordTradeDeposit(RecordTradeDeposit, page, pageSize, ex)
 	default:
 	}
 

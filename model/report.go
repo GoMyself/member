@@ -415,6 +415,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		} else if data.D[i].NetAmount < 0 {
 			data.D[i].Flag = 2
 		}
+		data.D[i].ApiTypes = fmt.Sprintf(`%d`, data.D[i].ApiType)
 	}
 
 	return data, nil

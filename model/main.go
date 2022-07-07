@@ -54,6 +54,7 @@ var (
 	loc                    *time.Location
 	ctx                    = context.Background()
 	nine                   = decimal.NewFromFloat(9.00)
+	ten              = decimal.NewFromFloat(10.00)
 	dialect                = g.Dialect("mysql")
 	colsMember             = helper.EnumFields(Member{})
 	colsBankcard           = helper.EnumFields(BankCard{})

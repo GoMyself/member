@@ -212,7 +212,7 @@ func RecordTransaction(uid, cashTypes, startTime, endTime string, page, pageSize
 	}
 
 	offset := (page - 1) * pageSize
-	query, _, _ = dialect.From("tbl_member_transaction").Select(colsTransation...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	query, _, _ = dialect.From("tbl_member_transaction").Select(colsTransaction...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
 	fmt.Println(query)
 	err = meta.TiDB.Select(&data.D, query)
 	if err != nil {

@@ -31,7 +31,22 @@ type Link_t struct {
 	CreatedAt        string `db:"created_at" json:"created_at" rule:"none" required:"0"`                                                                   //
 }
 
-func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) error {
+func LinkInsert(fCtx *fasthttp.RequestCtx, uri string, device int, data Link_t) error {
+
+	sess, err := MemberInfo(fCtx)
+	if err != nil {
+		return err
+	}
+
+	// 在推广链接黑名单中，不允许新增
+	ok, err := MemberLinkBlacklist(sess.Username)
+	if err != nil {
+		return err
+	}
+
+	if ok {
+		return errors.New(helper.NotAllowAddLinkErr)
+	}
 
 	zr, _ := decimal.NewFromString(data.ZR)
 	qp, _ := decimal.NewFromString(data.QP)
@@ -54,11 +69,6 @@ func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) e
 	by = by.Truncate(1)
 	cgHighRebate = cgHighRebate.Truncate(2)
 	cgOfficialRebate = cgOfficialRebate.Truncate(2)
-
-	sess, err := MemberInfo(ctx)
-	if err != nil {
-		return err
-	}
 
 	own, err := MemberRebateFindOne(sess.UID)
 	if err != nil {
@@ -132,7 +142,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) e
 	}
 
 	key := fmt.Sprintf("%s:lk:%s", meta.Prefix, sess.UID)
-	num, err := meta.MerchantRedis.Exists(ctx, key).Result()
+	num, err := meta.MerchantRedis.Exists(fCtx, key).Result()
 	if err != nil {
 		_ = errors.New(helper.RedisErr)
 		return nil
@@ -146,7 +156,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) e
 		}
 
 		path := fmt.Sprintf(".$%s", data.ID)
-		meta.MerchantRedis.Do(ctx, "JSON.SET", key, path, string(value))
+		meta.MerchantRedis.Do(fCtx, "JSON.SET", key, path, string(value))
 	} else {
 		mp := map[string]Link_t{
 			"$" + data.ID: lk,
@@ -157,7 +167,7 @@ func LinkInsert(ctx *fasthttp.RequestCtx, uri string, device int, data Link_t) e
 			return nil
 		}
 
-		meta.MerchantRedis.Do(ctx, "JSON.SET", key, ".", string(value))
+		meta.MerchantRedis.Do(fCtx, "JSON.SET", key, ".", string(value))
 	}
 
 	return nil
@@ -212,12 +222,22 @@ func LinkDelete(ctx *fasthttp.RequestCtx, id string) error {
 		return err
 	}
 
-	query, _, _ := dialect.Delete("tbl_member_link").Where(g.Ex{
+	// 在推广链接黑名单中，不允许删除
+	ok, err := MemberLinkBlacklist(sess.Username)
+	if err != nil {
+		return err
+	}
+
+	if ok {
+		return errors.New(helper.NotAllowDeleteLinkErr)
+	}
+
+	ex := g.Ex{
 		"id":     id,
 		"uid":    sess.UID,
 		"prefix": meta.Prefix,
-	}).ToSQL()
-
+	}
+	query, _, _ := dialect.Delete("tbl_member_link").Where(ex).ToSQL()
 	_, err = meta.MerchantDB.Exec(query)
 	if err != nil {
 		return pushLog(err, helper.DBErr)

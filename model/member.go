@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"member/contrib/helper"
 	"member/contrib/session"
 	"strconv"
@@ -958,6 +959,7 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].CGHighRebate = rb.CGHighRebate
 			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
 		}
+		data.D[i].CompanyNetAmount, _ = decimal.NewFromFloat(data.D[i].CompanyNetAmount).Mul(decimal.NewFromInt(-1)).Float64()
 	}
 
 	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)

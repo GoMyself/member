@@ -255,12 +255,12 @@ func RecordTrade(uid, startTime, endTime string, flag int, page, pageSize uint) 
 		return recordTradeDeposit(flag, page, pageSize, ex)
 
 	case RecordTradeTransfer: // 转账
-		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAtMs, endAtMs)}
 		return recordTradeTransfer(flag, page, pageSize, ex)
 
 	case RecordTradeDividend: // 红利
 		ex["state"] = DividendReviewPass
-		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAtMs, endAtMs)}
+		ex["review_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 		return recordTradeDividend(flag, page, pageSize, ex)
 
 	case RecordTradeRebate: // 返水/佣金
@@ -391,6 +391,11 @@ func recordTradeDeposit(flag int, page, pageSize uint,
 			State:        v.State,
 			Username:     v.Username,
 		}
+		mb, err := MemberCache(nil, v.Username)
+		if err != nil {
+			return data, err
+		}
+		item.Balance = mb.Balance
 
 		data.D = append(data.D, item)
 	}
@@ -460,7 +465,7 @@ func recordTradeDividend(flag int, page, pageSize uint,
 	}
 
 	offset := (page - 1) * pageSize
-	query, _, _ = dialect.From("tbl_member_dividend").Select(colsDividend...).Where(ex).Order(g.C("apply_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	query, _, _ = dialect.From("tbl_member_dividend").Select(colsDividend...).Where(ex).Order(g.C("review_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
 	fmt.Println(query)
 	err = meta.TiDB.Select(&list, query)
 	if err != nil {
@@ -560,7 +565,7 @@ func recordTradeAdjust(uid string, flag int, page, pageSize uint, startAt, endAt
 	}
 
 	offset := (page - 1) * pageSize
-	query, _, _ = dialect.From("tbl_member_adjust").Select(colsAdjust...).Where(ex).Order(g.C("created_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	query, _, _ = dialect.From("tbl_member_adjust").Select(colsAdjust...).Where(ex).Order(g.C("apply_at").Desc()).Offset(offset).Limit(pageSize).ToSQL()
 	fmt.Println(query)
 	err = meta.TiDB.Select(&list, query)
 	if err != nil {

@@ -138,19 +138,19 @@ type TransferData struct {
 
 //转账记录
 type Transfer struct {
-	ID           string  `json:"id"`
-	UID          string  `json:"uid"`
-	BillNo       string  `json:"bill_no"`
-	PlatformId   string  `json:"platform_id"`
-	Username     string  `json:"username"`
-	TransferType int     `json:"transfer_type"`
-	Amount       float64 `json:"amount"`
-	BeforeAmount float64 `json:"before_amount"`
-	AfterAmount  float64 `json:"after_amount"`
-	CreatedAt    uint64  `json:"created_at"`
-	State        int     `json:"state"`
-	Automatic    int     `json:"automatic"`
-	ConfirmName  string  `json:"confirm_name"`
+	ID           string  `json:"id" db:"ID"`
+	UID          string  `json:"uid" db:"UID"`
+	BillNo       string  `json:"bill_no" db:"bill_no"`
+	PlatformId   string  `json:"platform_id" db:"platform_id"`
+	Username     string  `json:"username" db:"username"`
+	TransferType int     `json:"transfer_type" db:"transfer_type"`
+	Amount       float64 `json:"amount" db:"amount"`
+	BeforeAmount float64 `json:"before_amount" db:"before_amount"`
+	AfterAmount  float64 `json:"after_amount" db:"after_amount"`
+	CreatedAt    uint64  `json:"created_at" db:"created_at"`
+	State        int     `json:"state" db:"state"`
+	Automatic    int     `json:"automatic" db:"automatic"`
+	ConfirmName  string  `json:"confirm_name" db:"confirm_name"`
 }
 
 // 游戏记录数据
@@ -480,14 +480,14 @@ type MessageTDData struct {
 }
 
 type BalanceTransaction struct {
-	Uid          string  `json:"uid"`
-	Amount       float64 `json:"amount"`
-	BeforeAmount float64 `json:"before_amount"`
-	CashType     int     `json:"cash_type"`
-	CreatedAt    int64   `json:"created_at"`
-	BillNo       string  `json:"bill_no"`
-	AfterAmount  float64 `json:"after_amount"`
-	Username     string  `json:"username"`
+	Uid          string  `json:"uid" db:"uid"`
+	Amount       float64 `json:"amount" db:"amount"`
+	BeforeAmount float64 `json:"before_amount" db:"before_amount"`
+	CashType     int     `json:"cash_type" db:"cash_type"`
+	CreatedAt    int64   `json:"created_at" db:"created_at"`
+	BillNo       string  `json:"bill_no" db:"bill_no"`
+	AfterAmount  float64 `json:"after_amount" db:"after_amount"`
+	Username     string  `json:"username" db:"username"`
 }
 
 type WaterFlow struct {

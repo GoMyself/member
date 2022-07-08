@@ -391,6 +391,11 @@ func recordTradeDeposit(flag int, page, pageSize uint,
 			State:        v.State,
 			Username:     v.Username,
 		}
+		mb, err := MemberCache(nil, v.Username)
+		if err != nil {
+			return data, err
+		}
+		item.Balance = mb.Balance
 
 		data.D = append(data.D, item)
 	}

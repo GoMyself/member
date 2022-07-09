@@ -163,10 +163,10 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 	return data, nil
 }
 
-func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.RequestCtx) (ReportSubMemberData, error) {
+func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.RequestCtx, username string) (ReportSubMemberData, error) {
 
 	data := ReportSubMemberData{}
-	mb, err := MemberCache(fCtx, "")
+	mb, err := MemberCache(fCtx, username)
 	if err != nil {
 		return data, errors.New(helper.AccessTokenExpires)
 	}
@@ -247,11 +247,11 @@ func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.Request
 	return data, nil
 }
 
-func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx) (ReportSubMemberData, error) {
+func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx, username string) (ReportSubMemberData, error) {
 
 	offset := (page - 1) * pageSize
 	data := ReportSubMemberData{}
-	mb, err := MemberCache(fCtx, "")
+	mb, err := MemberCache(fCtx, username)
 	if err != nil {
 		return data, errors.New(helper.AccessTokenExpires)
 	}

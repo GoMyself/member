@@ -28,8 +28,9 @@ func (that *ReportController) SubReport(ctx *fasthttp.RequestCtx) {
 	flag := string(ctx.QueryArgs().Peek("flag"))
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
+	username := string(ctx.QueryArgs().Peek("username"))
 	if flag == "1" || flag == "2" || flag == "3" {
-		data, err := model.SubAgencyReport(ty, flag, page, pageSize, ctx)
+		data, err := model.SubAgencyReport(ty, flag, page, pageSize, ctx, username)
 		if err != nil {
 			helper.Print(ctx, false, err.Error())
 			return
@@ -37,7 +38,7 @@ func (that *ReportController) SubReport(ctx *fasthttp.RequestCtx) {
 		helper.Print(ctx, true, data)
 
 	} else {
-		data, err := model.SubAgencyList(page, pageSize, ctx)
+		data, err := model.SubAgencyList(page, pageSize, ctx, username)
 		if err != nil {
 			helper.Print(ctx, false, err.Error())
 			return

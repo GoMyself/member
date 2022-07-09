@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"member/contrib/helper"
-	"time"
 )
 
 func TutorialRead(uid string) error {
 
 	key := fmt.Sprintf(`%s:tutorial:%s`, meta.Prefix, uid)
 	z := redis.Z{
-		Score:  float64(time.Now().Unix()),
+		Score:  float64(1),
 		Member: uid,
 	}
 	err := meta.MerchantRedis.ZAdd(ctx, key, &z).Err()

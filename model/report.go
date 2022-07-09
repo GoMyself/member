@@ -354,7 +354,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			"prefix":      meta.Prefix,
 			"bet_amount":  g.Op{"gt": 0},
 		}
-		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Limit(100).ToSQL()
+		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Order(g.L("bet_amount").Desc()).Limit(100).ToSQL()
 		fmt.Println(query)
 		err := meta.ReportDB.Select(&uids, query)
 		if err != nil {
@@ -462,7 +462,9 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page u
 		if count == 0 {
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
-		ex["username"] = playerName
+		ex = g.Ex{
+			"username": playerName,
+		}
 	} else {
 		var uids []string
 		ex = g.Ex{

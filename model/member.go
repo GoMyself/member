@@ -1126,6 +1126,18 @@ func MemberAgg(username string) (MemberAggData, error) {
 	return data, nil
 }
 
+func MemberLinkBlacklist(username string) (bool, error) {
+
+	// 在推广链接黑名单中，不允许新增
+	key := fmt.Sprintf("%s:merchant:link_blacklist", meta.Prefix)
+	ok, err := meta.MerchantRedis.SIsMember(ctx, key, username).Result()
+	if err != nil {
+		return false, pushLog(err, helper.RedisErr)
+	}
+
+	return ok, nil
+}
+
 func MemberUpdateInfo(user Member, password string, mr MemberRebateResult_t) error {
 
 	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)

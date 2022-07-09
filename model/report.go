@@ -586,8 +586,8 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 			g.C("uid").As("uid"),
 			g.C("username").As("username"),
 			g.C("lvl").As("lvl"),
-			g.SUM("bet_amount").As("bet_amount"),           //投注金额
 			g.SUM("bet_mem_count").As("bet_mem_count"),     //投注人数
+			g.SUM("bet_amount").As("bet_amount"),           //投注金额
 			g.SUM("rebate_amount").As("rebate"),            //返水
 			g.SUM("dividend_amount").As("dividend_amount"), //活动礼金
 			g.SUM("win_amount").As("win_amount"),           //中奖金额

@@ -314,7 +314,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		endAt = helper.DayTET(0, loc).UnixMilli() - 24*60*60*1000
 
 	case 3: //七天
-		startAt = helper.DayTST(0, loc).UnixMilli() - 7*24*60*60*1000
+		startAt = helper.DayTST(0, loc).UnixMilli() - 6*24*60*60*1000
 	default:
 		startAt = helper.DayTST(0, loc).UnixMilli()
 	}
@@ -436,7 +436,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page u
 		startAt = helper.DayTST(0, loc).Unix() - 24*60*60
 		endAt = helper.DayTET(0, loc).Unix() - 24*60*60
 	case 3: //七天
-		startAt = helper.DayTST(0, loc).Unix() - 7*24*60*60
+		startAt = helper.DayTST(0, loc).Unix() - 6*24*60*60
 	default:
 		startAt = helper.DayTST(0, loc).Unix()
 	}

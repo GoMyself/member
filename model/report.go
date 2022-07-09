@@ -354,7 +354,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			"prefix":      meta.Prefix,
 			"bet_amount":  g.Op{"gt": 0},
 		}
-		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Order(g.L("bet_amount").Desc()).Limit(100).ToSQL()
+		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Order(g.SUM("bet_amount").Desc()).Limit(100).ToSQL()
 		fmt.Println(query)
 		err := meta.ReportDB.Select(&uids, query)
 		if err != nil {
@@ -522,12 +522,14 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 
 	var startAt int64
 	var reportType int
+	endAt := helper.DayTET(0, loc).Unix()
 	switch ty {
 	case "1": //今天
 		startAt = helper.DayTST(0, loc).Unix()
 		reportType = 2
 	case "2": //昨天
 		startAt = helper.DayTST(0, loc).Unix() - 24*60*60
+		endAt = helper.DayTST(0, loc).Unix() - 1
 		reportType = 2
 	case "3": //本月
 		startAt = helper.MonthTST(0, loc).Unix()
@@ -535,6 +537,14 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 	case "4": //上月
 		startAt = helper.MonthTST(helper.MonthTST(0, loc).Unix()-1, loc).Unix()
 		reportType = 4
+	case "5": //今天
+		startAt = helper.DayTST(0, loc).Unix()
+		endAt = helper.DayTST(0, loc).AddDate(0, 0, -2).Unix()
+		reportType = 2
+	case "6": //今天
+		startAt = helper.DayTST(0, loc).Unix()
+		endAt = helper.DayTST(0, loc).AddDate(0, 0, -6).Unix()
+		reportType = 2
 	default:
 		startAt = helper.DayTST(0, loc).Unix()
 		reportType = 2
@@ -542,7 +552,7 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 	// 获取统计数据
 	ex["report_type"] = reportType
 	ex["prefix"] = meta.Prefix
-	ex["report_time"] = startAt
+	ex["report_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 	ex["data_type"] = 1
 	if isOnline == 1 {
 		uids, err := allOnline()
@@ -558,7 +568,7 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 		ex["uid"] = g.L("not in ?", uids)
 	}
 
-	query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT(g.DISTINCT("uid"))).Where(ex).Limit(1).ToSQL()
 	query = strings.Replace(query, "= not in", "not in", 1)
 	fmt.Println(query)
 	err = meta.ReportDB.Get(&data.T, query)
@@ -576,14 +586,14 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 			g.C("uid").As("uid"),
 			g.C("username").As("username"),
 			g.C("lvl").As("lvl"),
-			g.C("bet_amount").As("bet_amount"),           //投注金额
-			g.C("bet_mem_count").As("bet_mem_count"),     //投注人数
-			g.C("rebate_amount").As("rebate"),            //返水
-			g.C("dividend_amount").As("dividend_amount"), //活动礼金
-			g.C("win_amount").As("win_amount"),           //中奖金额
-			g.C("cg_rebate").As("cg_rebate"),             //彩票返点
-			g.C("company_revenue").As("profit"),          //盈利
-		).Order(g.C("bet_mem_count").Desc()).Offset(uint(offset)).Limit(uint(pageSize)).
+			g.SUM("bet_amount").As("bet_amount"),           //投注金额
+			g.SUM("bet_mem_count").As("bet_mem_count"),     //投注人数
+			g.SUM("rebate_amount").As("rebate"),            //返水
+			g.SUM("dividend_amount").As("dividend_amount"), //活动礼金
+			g.SUM("win_amount").As("win_amount"),           //中奖金额
+			g.SUM("cg_rebate").As("cg_rebate"),             //彩票返点
+			g.SUM("company_revenue").As("profit"),          //盈利
+		).GroupBy("uid", "username", "lvl").Order(g.C("bet_mem_count").Desc()).Offset(uint(offset)).Limit(uint(pageSize)).
 		ToSQL()
 	query = strings.Replace(query, "= not in", "not in", 1)
 	fmt.Println(query)

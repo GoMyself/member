@@ -155,9 +155,9 @@ type Transfer struct {
 
 // 游戏记录数据
 type GameRecordData struct {
-	T   int64             `json:"t"`
-	D   []GameRecord      `json:"d"`
-	Agg map[string]string `json:"agg"`
+	T   int64        `json:"t"`
+	D   []GameRecord `json:"d"`
+	Agg GameRecord   `json:"agg"`
 }
 
 //游戏投注记录结构

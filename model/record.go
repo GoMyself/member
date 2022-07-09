@@ -145,18 +145,28 @@ func RecordGame(ty int, uid, playerName, startTime, endTime string, flag, gameID
 
 	ex["bet_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 
-	query, _, _ := dialect.From("tbl_game_record").Select(g.COUNT("bill_no")).Where(ex).Limit(1).ToSQL()
-	fmt.Println(query)
-	err = meta.TiDB.Get(&data.T, query)
-	if err != nil {
-		return data, pushLog(err, helper.DBErr)
-	}
-	if data.T == 0 {
-		return data, nil
+	if page == 1 {
+		query, _, _ := dialect.From("tbl_game_record").Select(g.COUNT("bill_no")).Where(ex).Limit(1).ToSQL()
+		fmt.Println(query)
+		err = meta.TiDB.Get(&data.T, query)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
+		if data.T == 0 {
+			return data, nil
+		}
+		query, _, _ = dialect.From("tbl_game_record").Select(g.SUM("net_amount").As("net_amount"), g.SUM("valid_bet_amount").As("valid_bet_amount"),
+			g.SUM("bet_amount").As("bet_amount"), g.SUM("rebate_amount").As("rebate_amount"),
+		).Where(ex).ToSQL()
+		fmt.Println(query)
+		err = meta.TiDB.Get(&data.Agg, query)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
 	}
 
 	offset := (page - 1) * pageSize
-	query, _, _ = dialect.From("tbl_game_record").Select(colsGameRecord...).Where(ex).Order(g.C("bet_time").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	query, _, _ := dialect.From("tbl_game_record").Select(colsGameRecord...).Where(ex).Order(g.C("bet_time").Desc()).Offset(offset).Limit(pageSize).ToSQL()
 	fmt.Println(query)
 	err = meta.TiDB.Select(&data.D, query)
 	if err != nil {

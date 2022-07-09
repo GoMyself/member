@@ -205,7 +205,7 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	// 代理报表
 	get("/member/agency/report/list", reportCtl.List)
 	// 新手教程-读取
-	post("/member/tutorial/read", tutorialCtl.Read)
+	get("/member/tutorial/read", tutorialCtl.Read)
 	// 新手教程-是否读取
 	get("/member/tutorial/state", tutorialCtl.State)
 	buildInfo = b

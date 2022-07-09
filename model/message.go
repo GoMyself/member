@@ -2,6 +2,7 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	g "github.com/doug-martin/goqu/v9"
 	"member/contrib/helper"
@@ -96,6 +97,10 @@ func MessageRead(ts string) error {
 
 	fmt.Println(ts)
 	l := len(ts)
+	if l < 26 {
+		return errors.New(helper.DateTimeErr)
+	}
+
 	ts = ts[:l-6] + "+" + ts[l-5:]
 	t, err := time.ParseInLocation("2006-01-02T15:04:05.999999+07:00", ts, loc)
 	if err != nil {

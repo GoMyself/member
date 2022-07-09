@@ -88,10 +88,11 @@ type MemberInfos struct {
 
 type MemberInfosData struct {
 	MemberInfos
-	RealName string `json:"real_name"`
-	Phone    string `json:"phone"`
-	Email    string `json:"email"`
-	Zalo     string `json:"zalo"`
+	RealName      string `json:"real_name"`
+	Phone         string `json:"phone"`
+	Email         string `json:"email"`
+	Zalo          string `json:"zalo"`
+	LinkBlackList int    `json:"link_lack_ist"`
 }
 
 type BankCard struct {

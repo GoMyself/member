@@ -580,6 +580,12 @@ func MemberInfo(fctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 		}
 	}
 
+	// 在推广链接黑名单中，不允许新增/删除
+	ok, _ := MemberLinkBlacklist(res.MemberInfos.Username)
+	if ok {
+		res.LinkBlackList = 1
+	}
+
 	return res, nil
 }
 

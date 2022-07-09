@@ -92,7 +92,7 @@ type MemberInfosData struct {
 	Phone         string `json:"phone"`
 	Email         string `json:"email"`
 	Zalo          string `json:"zalo"`
-	LinkBlackList int    `json:"link_lack_ist"`
+	LinkBlackList int    `json:"link_black_list"`
 }
 
 type BankCard struct {

@@ -25,6 +25,7 @@ type trade struct {
 	State        int    `json:"state"`         //0:失败1:成功2:处理中3:脚本确认中4:人工确认中',  只有ty = 2时需要判断
 	Remark       string `json:"remark"`
 	Username     string `json:"username"`
+	ParentName   string `json:"parent_name"`
 	Balance      string `json:"balance"`
 }
 
@@ -355,6 +356,7 @@ func recordTradeWithdraw(flag int, page, pageSize uint,
 			return data, err
 		}
 		item.Balance = mb.Balance
+		item.ParentName = mb.ParentName
 
 		data.D = append(data.D, item)
 	}
@@ -406,6 +408,7 @@ func recordTradeDeposit(flag int, page, pageSize uint,
 			return data, err
 		}
 		item.Balance = mb.Balance
+		item.ParentName = mb.ParentName
 
 		data.D = append(data.D, item)
 	}

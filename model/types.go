@@ -178,6 +178,7 @@ type GameRecord struct {
 	GameType       string  `db:"game_type" json:"game_type" form:"game_type"`
 	BetAmount      float64 `db:"bet_amount" json:"bet_amount" form:"bet_amount"`
 	ValidBetAmount float64 `db:"valid_bet_amount" json:"valid_bet_amount" form:"valid_bet_amount"`
+	RebateAmount   float64 `db:"rebate_amount" json:"rebate_amount"`
 	Flag           int     `db:"flag" json:"flag" form:"flag"`
 	PlayType       string  `db:"play_type" json:"play_type" form:"play_type"`
 	Prefix         string  `db:"prefix" json:"prefix" form:"prefix"`

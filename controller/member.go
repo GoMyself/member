@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	g "github.com/doug-martin/goqu/v9"
 	"net/url"
 	"strconv"
 	"strings"
@@ -447,30 +446,19 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		pageSize = 10
 	}
 
-	ex := g.Ex{}
 	if username != "" {
 		if !validator.CheckUName(username, 5, 14) {
 			helper.Print(ctx, false, helper.UsernameErr)
 			return
 		}
-		ex["username"] = username
 	}
 
-	currentUsername := string(ctx.UserValue("token").([]byte))
-	if currentUsername == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-	if parentName != "" {
-		currentUsername = parentName
-	}
-	ex["parent_name"] = currentUsername
-
-	data, err := model.MemberList(ex, ty, page, pageSize)
+	data, err := model.MemberList(ctx, username, parentName, ty, page, pageSize)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
+	currentUsername := string(ctx.UserValue("token").([]byte))
 
 	if agg == 1 {
 		aggData, err := model.MemberAgg(currentUsername)

@@ -900,9 +900,44 @@ func Nav() string {
 	return res
 }
 
-func MemberList(ex g.Ex, ty string, page, pageSize int) (MemberListData, error) {
+func MemberList(fctx *fasthttp.RequestCtx, username, parentName, ty string, page, pageSize int) (MemberListData, error) {
 
 	data := MemberListData{}
+	user, err := MemberCache(fctx, "")
+	if err != nil {
+		return data, errors.New(helper.AccessTokenExpires)
+	}
+	ex := g.Ex{}
+	if username != "" {
+		//查搜索的用户是否他的下级。如果不是返回空
+		var count int64
+		mb, err := MemberCache(nil, username)
+		if err != nil {
+			return data, errors.New(helper.UsernameExist)
+		}
+		ex = g.Ex{
+			"ancestor":   user.UID,
+			"descendant": mb.UID,
+			"prefix":     meta.Prefix,
+		}
+		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
+		err = meta.MerchantDB.Get(&count, query)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
+		if count == 0 {
+			return data, errors.New(helper.NotDirectSubordinate)
+		}
+		ex = g.Ex{
+			"username": username,
+		}
+	}
+
+	if parentName != "" && username == "" {
+		ex["parent_name"] = parentName
+	} else if parentName == "" && username == "" {
+		ex["parent_name"] = user.ParentName
+	}
 	var startAt int64
 	endAt := helper.DayTET(0, loc).Unix()
 	switch ty {

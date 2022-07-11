@@ -505,7 +505,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page u
 	return data, errors.New(helper.GetDataFailed)
 }
 
-func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, page, pageSize, isOnline int) (ReportAgencyData, error) {
+func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, parentName, playerName string, page, pageSize, isOnline int) (ReportAgencyData, error) {
 
 	data := ReportAgencyData{}
 	mb, err := MemberCache(fCtx, "")
@@ -513,10 +513,34 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 		return data, errors.New(helper.AccessTokenExpires)
 	}
 	ex := g.Ex{}
-	if len(playerName) == 0 {
-		ex["parent_name"] = mb.Username
+	if len(playerName) > 0 {
+		//查搜索的用户是否他的下级。如果不是返回空
+		var count int64
+		subMb, err := MemberCache(nil, playerName)
+		if err != nil {
+			return data, errors.New(helper.UsernameExist)
+		}
+		ex = g.Ex{
+			"ancestor":   mb.UID,
+			"descendant": subMb.UID,
+			"prefix":     meta.Prefix,
+		}
+		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
+		err = meta.MerchantDB.Get(&count, query)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
+		if count == 0 {
+			return data, errors.New(helper.NotDirectSubordinate)
+		}
+		ex = g.Ex{
+			"username": playerName,
+		}
+	}
+	if len(parentName) > 0 {
+		ex["parent_name"] = parentName
 	} else {
-		ex["parent_name"] = playerName
+		ex["parent_name"] = mb.Username
 	}
 	offset := (page - 1) * pageSize
 

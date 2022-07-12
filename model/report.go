@@ -537,13 +537,13 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 	case "4": //上月
 		startAt = helper.MonthTST(helper.MonthTST(0, loc).Unix()-1, loc).Unix()
 		reportType = 4
-	case "5": //今天
-		startAt = helper.DayTST(0, loc).Unix()
-		endAt = helper.DayTST(0, loc).AddDate(0, 0, -2).Unix()
+	case "5": //三天
+		startAt = helper.DayTST(0, loc).AddDate(0, 0, -2).Unix()
+		endAt = helper.DayTST(0, loc).Unix()
 		reportType = 2
-	case "6": //今天
-		startAt = helper.DayTST(0, loc).Unix()
-		endAt = helper.DayTST(0, loc).AddDate(0, 0, -6).Unix()
+	case "6": //七天
+		startAt = helper.DayTST(0, loc).AddDate(0, 0, -6).Unix()
+		endAt = helper.DayTST(0, loc).Unix()
 		reportType = 2
 	default:
 		startAt = helper.DayTST(0, loc).Unix()

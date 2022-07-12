@@ -339,7 +339,7 @@ func recordTradeWithdraw(flag int, page, pageSize uint,
 
 	for _, v := range list {
 		item := trade{
-			Flag:         2,
+			Flag:         flag,
 			ID:           v.ID,
 			Ty:           1,
 			BillNo:       v.OID,
@@ -392,7 +392,7 @@ func recordTradeDeposit(flag int, page, pageSize uint,
 
 	for _, v := range list {
 		item := trade{
-			Flag:         1,
+			Flag:         flag,
 			ID:           v.ID,
 			Ty:           1,
 			BillNo:       v.OID,

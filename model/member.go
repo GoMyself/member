@@ -950,6 +950,7 @@ func MemberList(fctx *fasthttp.RequestCtx, username, parentName, ty string, page
 		startAt = helper.MonthTST(0, loc).Unix()
 	case "4": //上月
 		startAt = helper.MonthTST(helper.MonthTST(0, loc).Unix()-1, loc).Unix()
+		endAt = helper.MonthTST(0, loc).Unix() - 1
 	case "5": //今天
 		startAt = helper.DayTST(0, loc).Unix()
 		endAt = helper.DayTST(0, loc).AddDate(0, 0, -2).Unix()
@@ -967,6 +968,7 @@ func MemberList(fctx *fasthttp.RequestCtx, username, parentName, ty string, page
 	}
 
 	data.S = pageSize
+	fmt.Println("last:", startAt)
 
 	data.D, data.T = memberList(ex, startAt, endAt, page, pageSize)
 
@@ -1015,6 +1017,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 	ex["prefix"] = meta.Prefix
 	if page == 1 {
 		query, _, _ := dialect.From("tbl_members").Select(g.COUNT(1)).Where(ex).ToSQL()
+		fmt.Println(query)
 		err := meta.MerchantDB.Get(&number, query)
 		if err != nil && err != sql.ErrNoRows {
 			pushLog(err, helper.DBErr)
@@ -1030,6 +1033,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 	offset := (page - 1) * pageSize
 	query, _, _ := dialect.From("tbl_members").Select("uid", "username").Where(ex).Offset(uint(offset)).
 		Limit(uint(pageSize)).Order(g.L("created_at").Desc()).ToSQL()
+	fmt.Println(query)
 	err := meta.MerchantDB.Select(&members, query)
 
 	if err != nil {
@@ -1063,7 +1067,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 			g.SUM("company_net_amount").As("company_net_amount"),
 		).GroupBy("uid", "username").
 		ToSQL()
-
+	fmt.Println(query)
 	err = meta.ReportDB.Select(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println(err.Error())

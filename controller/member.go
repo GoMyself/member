@@ -464,6 +464,9 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		if username != "" {
 			currentUsername = username
 		}
+		if parentName != "" {
+			currentUsername = parentName
+		}
 		aggData, err := model.MemberAgg(currentUsername)
 		if err != nil {
 			helper.Print(ctx, false, err.Error())

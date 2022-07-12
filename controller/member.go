@@ -461,6 +461,9 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 	currentUsername := string(ctx.UserValue("token").([]byte))
 
 	if agg == 1 {
+		if username != "" {
+			currentUsername = username
+		}
 		aggData, err := model.MemberAgg(currentUsername)
 		if err != nil {
 			helper.Print(ctx, false, err.Error())

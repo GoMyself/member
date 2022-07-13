@@ -163,10 +163,10 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 	return data, nil
 }
 
-func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.RequestCtx) (ReportSubMemberData, error) {
+func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.RequestCtx, username string) (ReportSubMemberData, error) {
 
 	data := ReportSubMemberData{}
-	mb, err := MemberCache(fCtx, "")
+	mb, err := MemberCache(fCtx, username)
 	if err != nil {
 		return data, errors.New(helper.AccessTokenExpires)
 	}
@@ -247,11 +247,11 @@ func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.Request
 	return data, nil
 }
 
-func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx) (ReportSubMemberData, error) {
+func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx, username string) (ReportSubMemberData, error) {
 
 	offset := (page - 1) * pageSize
 	data := ReportSubMemberData{}
-	mb, err := MemberCache(fCtx, "")
+	mb, err := MemberCache(fCtx, username)
 	if err != nil {
 		return data, errors.New(helper.AccessTokenExpires)
 	}
@@ -299,7 +299,7 @@ func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx) (ReportSubMemb
 	return data, nil
 }
 
-func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int, pageSize, page int) (GameRecordData, error) {
+func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int, pageSize, page uint) (GameRecordData, error) {
 
 	data := GameRecordData{}
 	//判断日期
@@ -314,15 +314,14 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		endAt = helper.DayTET(0, loc).UnixMilli() - 24*60*60*1000
 
 	case 3: //七天
-		startAt = helper.DayTST(0, loc).UnixMilli() - 7*24*60*60*1000
+		startAt = helper.DayTST(0, loc).UnixMilli() - 6*24*60*60*1000
 	default:
 		startAt = helper.DayTST(0, loc).UnixMilli()
 	}
 
 	//查询条件
-	params := map[string]interface{}{}
 	var uids []string
-
+	ex := g.Ex{}
 	if playerName != "" && validator.CheckUName(playerName, 5, 14) {
 		//查搜索的用户是否他的下级。如果不是返回空
 		var count int64
@@ -330,7 +329,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		if err != nil {
 			return data, errors.New(helper.UsernameExist)
 		}
-		ex := g.Ex{
+		ex = g.Ex{
 			"ancestor":   uid,
 			"descendant": mb.UID,
 			"prefix":     meta.Prefix,
@@ -344,63 +343,67 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		if count == 0 {
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
-		params["player_name"] = playerName
+		ex = g.Ex{
+			"player_name": playerName,
+		}
 	} else {
-		ex := g.Ex{
+		ex = g.Ex{
 			"top_uid":     uid,
 			"report_time": g.Op{"between": exp.NewRangeVal(startAt/1000, endAt/1000)},
 			"report_type": 2,
 			"prefix":      meta.Prefix,
 			"bet_amount":  g.Op{"gt": 0},
 		}
-		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Limit(100).ToSQL()
+		query, _, _ := dialect.From("tbl_report_sub_member").Select(g.C("uid")).Where(ex).GroupBy("uid").Order(g.SUM("bet_amount").Desc()).Limit(100).ToSQL()
 		fmt.Println(query)
 		err := meta.ReportDB.Select(&uids, query)
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}
-		fmt.Println("uids:", uids)
-		if len(uids) > 1 {
-			params["uids"] = uids
+		if len(uids) > 0 {
+			uids = append(uids, uid)
+			ex = g.Ex{
+				"uid": uids,
+			}
 		} else {
-			return data, nil
+			ex = g.Ex{
+				"uid": uid,
+			}
 		}
 	}
-	rangeParam := map[string][]interface{}{
-		"bet_time": {startAt, endAt},
-	}
+	ex["bet_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 	if flag == 1 {
-		params["flag"] = 0
+		ex["flag"] = 0
 	} else if flag == 2 { //未中奖
-		var netAMounts []interface{}
-		netAMounts = append(netAMounts, -999999999999.99)
-		netAMounts = append(netAMounts, 0.0000)
-		rangeParam["net_amount"] = netAMounts
+		ex["net_amount"] = g.Op{"lt": 0}
 	} else if flag == 3 { //已中奖
-		var netAMounts []interface{}
-		netAMounts = append(netAMounts, 0.000)
-		netAMounts = append(netAMounts, 999999999999.99)
-		rangeParam["net_amount"] = netAMounts
+		ex["net_amount"] = g.Op{"gt": 0}
 	}
 
 	if gameType > 0 {
-		params["game_type"] = gameType
+		ex["game_type"] = gameType
 	}
 
 	if gameID > 0 {
-		params["api_type"] = gameID
+		ex["api_type"] = gameID
 	}
 
-	agg := map[string]string{}
-
-	sortFields := map[string]bool{
-		"bet_time": false,
-	}
-	fmt.Println("param:", params)
-	fmt.Println("range:", rangeParam)
-	data, err := esGameRecordQuery(pullPrefixIndex("tbl_game_record"), sortFields, page, pageSize, params, rangeParam, agg)
+	query, _, _ := dialect.From("tbl_game_record").Select(g.COUNT("bill_no")).Where(ex).Limit(1).ToSQL()
+	fmt.Println(query)
+	err := meta.TiDB.Get(&data.T, query)
 	if err != nil {
-		return data, err
+		return data, pushLog(err, helper.DBErr)
+	}
+	if data.T == 0 {
+		return data, nil
+	}
+
+	offset := (page - 1) * pageSize
+	query, _, _ = dialect.From("tbl_game_record").Select(colsGameRecord...).Where(ex).Order(g.C("bet_time").Desc()).Offset(offset).Limit(pageSize).ToSQL()
+	fmt.Println(query)
+	err = meta.TiDB.Select(&data.D, query)
+	if err != nil {
+		return data, pushLog(err, helper.DBErr)
 	}
 
 	for i := 0; i < len(data.D); i++ {
@@ -412,12 +415,13 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		} else if data.D[i].NetAmount < 0 {
 			data.D[i].Flag = 2
 		}
+		data.D[i].ApiTypes = fmt.Sprintf(`%d`, data.D[i].ApiType)
 	}
 
 	return data, nil
 }
 
-func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page int) (TradeData, error) {
+func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page uint) (TradeData, error) {
 
 	data := TradeData{}
 
@@ -432,12 +436,12 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		startAt = helper.DayTST(0, loc).Unix() - 24*60*60
 		endAt = helper.DayTET(0, loc).Unix() - 24*60*60
 	case 3: //七天
-		startAt = helper.DayTST(0, loc).Unix() - 7*24*60*60
+		startAt = helper.DayTST(0, loc).Unix() - 6*24*60*60
 	default:
 		startAt = helper.DayTST(0, loc).Unix()
 	}
 
-	param := map[string]interface{}{}
+	ex := g.Ex{}
 	if playerName != "" && validator.CheckUName(playerName, 5, 14) {
 		//查搜索的用户是否他的下级。如果不是返回空
 		var count int64
@@ -445,7 +449,7 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		if err != nil {
 			return data, errors.New(helper.UsernameExist)
 		}
-		ex := g.Ex{
+		ex = g.Ex{
 			"ancestor":   uid,
 			"descendant": mb.UID,
 			"prefix":     meta.Prefix,
@@ -458,10 +462,12 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		if count == 0 {
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
-		param["username"] = playerName
+		ex = g.Ex{
+			"username": playerName,
+		}
 	} else {
 		var uids []string
-		ex := g.Ex{
+		ex = g.Ex{
 			"top_uid":     uid,
 			"report_time": g.Op{"between": exp.NewRangeVal(startAt, endAt)},
 			"report_type": 2,
@@ -473,23 +479,26 @@ func SubTradeRecord(uid, playerName string, dateType, flag int, pageSize, page i
 		if err != nil {
 			return data, pushLog(err, helper.DBErr)
 		}
-		fmt.Println("uids:", uids)
-		if len(uids) > 1 {
-			param["uids"] = uids
+		if len(uids) > 0 {
+			uids = append(uids, uid)
+			ex = g.Ex{
+				"uid": uids,
+			}
 		} else {
-			return data, nil
+			fmt.Println(uid)
+			ex = g.Ex{
+				"uid": uid,
+			}
 		}
 	}
 	switch flag {
 	case 2: // 取款
-		rangeParam := map[string][]interface{}{"created_at": {startAt, endAt}}
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeWithdraw(flag, page, pageSize, param, rangeParam, aggField)
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		return recordTradeWithdraw(RecordTradeWithdraw, page, pageSize, ex)
 
 	case 1: // 存款
-		rangeParam := map[string][]interface{}{"created_at": {startAt, endAt}}
-		aggField := map[string]string{"amount_agg": "amount"}
-		return recordTradeDeposit(flag, page, pageSize, param, rangeParam, aggField)
+		ex["created_at"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
+		return recordTradeDeposit(RecordTradeDeposit, page, pageSize, ex)
 	default:
 	}
 
@@ -504,21 +513,23 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 		return data, errors.New(helper.AccessTokenExpires)
 	}
 	ex := g.Ex{}
-	if len(playerName) == 0 {
-		ex["parent_name"] = mb.Username
-	} else {
+	if len(playerName) > 0 {
 		ex["parent_name"] = playerName
+	} else {
+		ex["parent_name"] = mb.Username
 	}
 	offset := (page - 1) * pageSize
 
 	var startAt int64
 	var reportType int
+	endAt := helper.DayTET(0, loc).Unix()
 	switch ty {
 	case "1": //今天
 		startAt = helper.DayTST(0, loc).Unix()
 		reportType = 2
 	case "2": //昨天
 		startAt = helper.DayTST(0, loc).Unix() - 24*60*60
+		endAt = helper.DayTST(0, loc).Unix() - 1
 		reportType = 2
 	case "3": //本月
 		startAt = helper.MonthTST(0, loc).Unix()
@@ -526,6 +537,14 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 	case "4": //上月
 		startAt = helper.MonthTST(helper.MonthTST(0, loc).Unix()-1, loc).Unix()
 		reportType = 4
+	case "5": //三天
+		startAt = helper.DayTST(0, loc).AddDate(0, 0, -2).Unix()
+		endAt = helper.DayTST(0, loc).Unix()
+		reportType = 2
+	case "6": //七天
+		startAt = helper.DayTST(0, loc).AddDate(0, 0, -6).Unix()
+		endAt = helper.DayTST(0, loc).Unix()
+		reportType = 2
 	default:
 		startAt = helper.DayTST(0, loc).Unix()
 		reportType = 2
@@ -533,7 +552,7 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 	// 获取统计数据
 	ex["report_type"] = reportType
 	ex["prefix"] = meta.Prefix
-	ex["report_time"] = startAt
+	ex["report_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
 	ex["data_type"] = 1
 	if isOnline == 1 {
 		uids, err := allOnline()
@@ -549,7 +568,7 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 		ex["uid"] = g.L("not in ?", uids)
 	}
 
-	query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT("id")).Where(ex).Limit(1).ToSQL()
+	query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT(g.DISTINCT("uid"))).Where(ex).Limit(1).ToSQL()
 	query = strings.Replace(query, "= not in", "not in", 1)
 	fmt.Println(query)
 	err = meta.ReportDB.Get(&data.T, query)
@@ -567,14 +586,14 @@ func AgencyReportList(ty string, fCtx *fasthttp.RequestCtx, playerName string, p
 			g.C("uid").As("uid"),
 			g.C("username").As("username"),
 			g.C("lvl").As("lvl"),
-			g.C("bet_amount").As("bet_amount"),           //投注金额
-			g.C("bet_mem_count").As("bet_mem_count"),     //投注人数
-			g.C("rebate_amount").As("rebate"),            //返水
-			g.C("dividend_amount").As("dividend_amount"), //活动礼金
-			g.C("win_amount").As("win_amount"),           //中奖金额
-			g.C("cg_rebate").As("cg_rebate"),             //彩票返点
-			g.C("company_revenue").As("profit"),          //盈利
-		).Order(g.C("bet_mem_count").Desc()).Offset(uint(offset)).Limit(uint(pageSize)).
+			g.SUM("bet_mem_count").As("bet_mem_count"),     //投注人数
+			g.SUM("bet_amount").As("bet_amount"),           //投注金额
+			g.SUM("rebate_amount").As("rebate"),            //返水
+			g.SUM("dividend_amount").As("dividend_amount"), //活动礼金
+			g.SUM("win_amount").As("win_amount"),           //中奖金额
+			g.SUM("cg_rebate").As("cg_rebate"),             //彩票返点
+			g.SUM("company_revenue").As("profit"),          //盈利
+		).GroupBy("uid", "username", "lvl").Order(g.C("bet_mem_count").Desc()).Offset(uint(offset)).Limit(uint(pageSize)).
 		ToSQL()
 	query = strings.Replace(query, "= not in", "not in", 1)
 	fmt.Println(query)

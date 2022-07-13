@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/shopspring/decimal"
 	"member/contrib/helper"
 	"member/contrib/session"
 	"strconv"
@@ -48,7 +49,6 @@ func MemberAmount(fctx *fasthttp.RequestCtx) (string, error) {
 	mb := MBBalance{}
 	t := dialect.From("tbl_members")
 	query, _, _ := t.Select("balance", "lock_amount").Where(g.Ex{"username": username}).Limit(1).ToSQL()
-	fmt.Println(query)
 	err := meta.MerchantDB.Get(&mb, query)
 	if err != nil && err == sql.ErrNoRows {
 		return "", pushLog(err, helper.DBErr)
@@ -906,36 +906,77 @@ func Nav() string {
 	return res
 }
 
-func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, page, pageSize int) (MemberListData, error) {
+func MemberList(fctx *fasthttp.RequestCtx, username, parentName, ty string, page, pageSize int) (MemberListData, error) {
 
 	data := MemberListData{}
-	startAt, err := helper.TimeToLoc(startTime, loc)
+	user, err := MemberCache(fctx, "")
 	if err != nil {
-		return data, errors.New(helper.DateTimeErr)
+		return data, errors.New(helper.AccessTokenExpires)
+	}
+	ex := g.Ex{}
+	if username != "" {
+		//查搜索的用户是否他的下级。如果不是返回空
+		var count int64
+		mb, err := MemberCache(nil, username)
+		if err != nil {
+			return data, errors.New(helper.UsernameExist)
+		}
+		ex = g.Ex{
+			"ancestor":   user.UID,
+			"descendant": mb.UID,
+			"prefix":     meta.Prefix,
+		}
+		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
+		err = meta.MerchantDB.Get(&count, query)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
+		if count == 0 {
+			return data, errors.New(helper.NotDirectSubordinate)
+		}
+		ex = g.Ex{
+			"username": username,
+		}
 	}
 
-	endAt, err := helper.TimeToLoc(endTime, loc)
-	if err != nil {
-		return data, errors.New(helper.DateTimeErr)
+	if parentName != "" && username == "" {
+		ex["parent_name"] = parentName
+	} else if parentName == "" && username == "" {
+		ex["parent_name"] = user.ParentName
 	}
-
-	if startAt >= endAt {
-		return data, errors.New(helper.QueryTimeRangeErr)
+	var startAt int64
+	endAt := helper.DayTET(0, loc).Unix()
+	switch ty {
+	case "1": //今天
+		startAt = helper.DayTST(0, loc).Unix()
+	case "2": //昨天
+		startAt = helper.DayTST(0, loc).Unix() - 24*60*60
+		endAt = helper.DayTST(0, loc).Unix() - 1
+	case "3": //本月
+		startAt = helper.MonthTST(0, loc).Unix()
+	case "4": //上月
+		startAt = helper.MonthTST(helper.MonthTST(0, loc).Unix()-1, loc).Unix()
+		endAt = helper.MonthTST(0, loc).Unix() - 1
+	case "5": //3天
+		startAt = helper.DayTST(0, loc).AddDate(0, 0, -2).Unix()
+		endAt = helper.DayTST(0, loc).Unix()
+	case "6": //七天
+		startAt = helper.DayTST(0, loc).AddDate(0, 0, -6).Unix()
+		endAt = helper.DayTST(0, loc).Unix()
+	case "7": //本周
+		startAt = helper.WeekTST(0, loc).Unix()
+	case "8": //上周
+		st := helper.WeekTET(0, loc).Unix()
+		startAt = helper.WeekTST(st-1, loc).Unix()
+		endAt = helper.WeekTET(st-1, loc).Unix()
+	default:
+		startAt = helper.DayTST(0, loc).Unix()
 	}
 
 	data.S = pageSize
+	fmt.Println("last:", startAt)
 
-	if sortField != "" && username == "" {
-		data.D, data.T, err = memberListSort(ex, sortField, startAt, endAt, isAsc, page, pageSize)
-		if err != nil {
-			return data, err
-		}
-	} else {
-		data.D, data.T, err = memberList(ex, startAt, endAt, page, pageSize)
-		if err != nil {
-			return data, err
-		}
-	}
+	data.D, data.T = memberList(ex, startAt, endAt, page, pageSize)
 
 	if len(data.D) == 0 {
 		return data, nil
@@ -964,6 +1005,7 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 			data.D[i].CGHighRebate = rb.CGHighRebate
 			data.D[i].CGOfficialRebate = rb.CGOfficialRebate
 		}
+		data.D[i].CompanyNetAmount, _ = decimal.NewFromFloat(data.D[i].CompanyNetAmount).Mul(decimal.NewFromInt(-1)).Float64()
 	}
 
 	key := fmt.Sprintf("%s:rebate:enablemod", meta.Prefix)
@@ -974,75 +1016,22 @@ func MemberList(ex g.Ex, username, startTime, endTime, sortField string, isAsc, 
 	return data, nil
 }
 
-func memberListSort(ex g.Ex, sortField string, startAt, endAt int64, isAsc, page, pageSize int) ([]MemberListCol, int, error) {
-
-	var data []MemberListCol
-
-	ex["report_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
-	ex["report_type"] = 2 //  1投注时间2结算时间3投注时间月报4结算时间月报
-	ex["data_type"] = 1
-	number := 0
-	if page == 1 {
-
-		query, _, _ := dialect.From("tbl_report_agency").Select(g.COUNT(g.DISTINCT("uid"))).Where(ex).ToSQL()
-		err := meta.ReportDB.Get(&number, query)
-		if err != nil && err != sql.ErrNoRows {
-			return data, 0, pushLog(err, helper.DBErr)
-		}
-
-		if number == 0 {
-			return data, 0, nil
-		}
-	}
-
-	orderField := g.C("report_time")
-	if sortField != "" {
-		orderField = g.C(sortField)
-	}
-
-	orderBy := orderField.Desc()
-	if isAsc == 1 {
-		orderBy = orderField.Asc()
-	}
-
-	offset := (page - 1) * pageSize
-	query, _, _ := dialect.From("tbl_report_agency").Select(
-		"uid",
-		"username",
-		g.SUM("deposit_amount").As("deposit_amount"),
-		g.SUM("withdrawal_amount").As("withdrawal_amount"),
-		g.SUM("dividend_amount").As("dividend_amount"),
-		g.SUM("rebate_amount").As("rebate_amount"),
-		g.SUM("company_net_amount").As("company_net_amount"),
-	).GroupBy("uid").
-		Where(ex).
-		Offset(uint(offset)).
-		Limit(uint(pageSize)).
-		Order(orderBy).
-		ToSQL()
-
-	err := meta.ReportDB.Select(&data, query)
-	if err != nil {
-		return data, number, pushLog(err, helper.DBErr)
-	}
-
-	return data, number, nil
-}
-
-func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberListCol, int, error) {
+func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberListCol, int) {
 
 	var data []MemberListCol
 	number := 0
 	ex["prefix"] = meta.Prefix
 	if page == 1 {
 		query, _, _ := dialect.From("tbl_members").Select(g.COUNT(1)).Where(ex).ToSQL()
+		fmt.Println(query)
 		err := meta.MerchantDB.Get(&number, query)
 		if err != nil && err != sql.ErrNoRows {
-			return data, number, pushLog(err, helper.DBErr)
+			pushLog(err, helper.DBErr)
+			return data, number
 		}
 
 		if number == 0 {
-			return data, number, nil
+			return data, number
 		}
 	}
 
@@ -1050,10 +1039,12 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 	offset := (page - 1) * pageSize
 	query, _, _ := dialect.From("tbl_members").Select("uid", "username").Where(ex).Offset(uint(offset)).
 		Limit(uint(pageSize)).Order(g.L("created_at").Desc()).ToSQL()
+	fmt.Println(query)
 	err := meta.MerchantDB.Select(&members, query)
 
 	if err != nil {
-		return data, number, pushLog(err, helper.DBErr)
+		pushLog(err, helper.DBErr)
+		return data, number
 	}
 
 	// 补全数据
@@ -1080,17 +1071,18 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 			g.SUM("dividend_amount").As("dividend_amount"),
 			g.SUM("rebate_amount").As("rebate_amount"),
 			g.SUM("company_net_amount").As("company_net_amount"),
-		).GroupBy("uid").
+		).GroupBy("uid", "username").
 		ToSQL()
-
+	fmt.Println(query)
 	err = meta.ReportDB.Select(&data, query)
 	if err != nil && err != sql.ErrNoRows {
 		fmt.Println(err.Error())
-		return data, number, pushLog(err, helper.DBErr)
+		pushLog(err, helper.DBErr)
+		return data, number
 	}
 
 	if len(ids) == len(data) {
-		return data, number, nil
+		return data, number
 	}
 
 	// 可能有会员未生成报表数据 这时需要给未生成报表的会员 赋值默认返回值
@@ -1105,7 +1097,7 @@ func memberList(ex g.Ex, startAt, endAt int64, page, pageSize int) ([]MemberList
 		data = append(data, MemberListCol{UID: id, Username: username})
 	}
 
-	return data, number, nil
+	return data, number
 }
 
 //  获取 活跃人数 直属下级人数 新增注册人数

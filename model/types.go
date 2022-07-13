@@ -139,59 +139,60 @@ type TransferData struct {
 
 //转账记录
 type Transfer struct {
-	ID           string  `json:"id"`
-	UID          string  `json:"uid"`
-	BillNo       string  `json:"bill_no"`
-	PlatformId   string  `json:"platform_id"`
-	Username     string  `json:"username"`
-	TransferType int     `json:"transfer_type"`
-	Amount       float64 `json:"amount"`
-	BeforeAmount float64 `json:"before_amount"`
-	AfterAmount  float64 `json:"after_amount"`
-	CreatedAt    uint64  `json:"created_at"`
-	State        int     `json:"state"`
-	Automatic    int     `json:"automatic"`
-	ConfirmName  string  `json:"confirm_name"`
+	ID           string  `json:"id" db:"ID"`
+	UID          string  `json:"uid" db:"UID"`
+	BillNo       string  `json:"bill_no" db:"bill_no"`
+	PlatformId   string  `json:"platform_id" db:"platform_id"`
+	Username     string  `json:"username" db:"username"`
+	TransferType int     `json:"transfer_type" db:"transfer_type"`
+	Amount       float64 `json:"amount" db:"amount"`
+	BeforeAmount float64 `json:"before_amount" db:"before_amount"`
+	AfterAmount  float64 `json:"after_amount" db:"after_amount"`
+	CreatedAt    uint64  `json:"created_at" db:"created_at"`
+	State        int     `json:"state" db:"state"`
+	Automatic    int     `json:"automatic" db:"automatic"`
+	ConfirmName  string  `json:"confirm_name" db:"confirm_name"`
 }
 
 // 游戏记录数据
 type GameRecordData struct {
-	T   int64             `json:"t"`
-	D   []GameRecord      `json:"d"`
-	Agg map[string]string `json:"agg"`
+	T   int64        `json:"t"`
+	D   []GameRecord `json:"d"`
+	Agg GameRecord   `json:"agg"`
 }
 
 //游戏投注记录结构
 type GameRecord struct {
-	ID             string  `db:"column:id" json:"id" form:"id"`
-	RowId          string  `db:"column:row_id" json:"row_id" form:"row_id"`
-	BillNo         string  `db:"column:bill_no" json:"bill_no" form:"bill_no"`
-	ApiType        int     `db:"column:api_type" json:"api_type" form:"api_type"`
-	ApiTypes       string  `json:"api_types"`
-	PlayerName     string  `db:"column:player_name" json:"player_name" form:"player_name"`
-	Name           string  `db:"column:name" json:"name" form:"name"`
-	Uid            string  `db:"column:uid" json:"uid" form:"uid"`
-	NetAmount      float64 `db:"column:net_amount" json:"net_amount" form:"net_amount"`
-	BetTime        int64   `db:"column:bet_time" json:"bet_time" form:"bet_time"`
-	StartTime      int64   `db:"column:start_time" json:"start_time" form:"start_time"`
-	Resettle       uint8   `db:"column:resettle" json:"resettle" form:"resettle"`
-	Presettle      uint8   `db:"column:presettle" json:"presettle" form:"presettle"`
-	GameType       string  `db:"column:game_type" json:"game_type" form:"game_type"`
-	BetAmount      float64 `db:"column:bet_amount" json:"bet_amount" form:"bet_amount"`
-	ValidBetAmount float64 `db:"column:valid_bet_amount" json:"valid_bet_amount" form:"valid_bet_amount"`
-	Flag           int     `db:"column:flag" json:"flag" form:"flag"`
-	PlayType       string  `db:"column:play_type" json:"play_type" form:"play_type"`
-	Prefix         string  `db:"column:prefix" json:"prefix" form:"prefix"`
-	Result         string  `db:"column:result" json:"result" form:"result"`
-	ApiName        string  `db:"column:api_name" json:"api_name" form:"api_name"`
-	ApiBillNo      string  `db:"column:api_bill_no" json:"api_bill_no" form:"api_bill_no"`
-	GameName       string  `db:"column:game_name" json:"game_name" form:"game_name"`
-	Odds           float64 `db:"column:odds" json:"odds" form:"odds"`
-	SettleTime     int64   `db:"column:settle_time" json:"settle_time" form:"settle_time"`
-	ApiBetTime     uint64  `db:"column:api_bet_time" json:"api_bet_time" form:"api_bet_time"`
-	ApiSettleTime  uint64  `db:"column:api_settle_time" json:"api_settle_time" form:"api_settle_time"`
-	ParentUid      string  `db:"column:parent_uid" json:"parent_uid" form:"parent_uid"`
-	ParentName     string  `db:"column:parent_name" json:"parent_name" form:"parent_name"`
+	ID             string  `db:"id" json:"id" form:"id"`
+	RowId          string  `db:"row_id" json:"row_id" form:"row_id"`
+	BillNo         string  `db:"bill_no" json:"bill_no" form:"bill_no"`
+	ApiType        int     `db:"api_type" json:"api_type" form:"api_type"`
+	ApiTypes       string  `db:"-" json:"api_types"`
+	PlayerName     string  `db:"player_name" json:"player_name" form:"player_name"`
+	Name           string  `db:"name" json:"name" form:"name"`
+	Uid            string  `db:"uid" json:"uid" form:"uid"`
+	NetAmount      float64 `db:"net_amount" json:"net_amount" form:"net_amount"`
+	BetTime        int64   `db:"bet_time" json:"bet_time" form:"bet_time"`
+	StartTime      int64   `db:"start_time" json:"start_time" form:"start_time"`
+	Resettle       uint8   `db:"resettle" json:"resettle" form:"resettle"`
+	Presettle      uint8   `db:"presettle" json:"presettle" form:"presettle"`
+	GameType       string  `db:"game_type" json:"game_type" form:"game_type"`
+	BetAmount      float64 `db:"bet_amount" json:"bet_amount" form:"bet_amount"`
+	ValidBetAmount float64 `db:"valid_bet_amount" json:"valid_bet_amount" form:"valid_bet_amount"`
+	RebateAmount   float64 `db:"rebate_amount" json:"rebate_amount"`
+	Flag           int     `db:"flag" json:"flag" form:"flag"`
+	PlayType       string  `db:"play_type" json:"play_type" form:"play_type"`
+	Prefix         string  `db:"prefix" json:"prefix" form:"prefix"`
+	Result         string  `db:"result" json:"result" form:"result"`
+	ApiName        string  `db:"api_name" json:"api_name" form:"api_name"`
+	ApiBillNo      string  `db:"api_bill_no" json:"api_bill_no" form:"api_bill_no"`
+	GameName       string  `db:"game_name" json:"game_name" form:"game_name"`
+	Odds           float64 `db:"odds" json:"odds" form:"odds"`
+	SettleTime     int64   `db:"settle_time" json:"settle_time" form:"settle_time"`
+	ApiBetTime     uint64  `db:"api_bet_time" json:"api_bet_time" form:"api_bet_time"`
+	ApiSettleTime  uint64  `db:"api_settle_time" json:"api_settle_time" form:"api_settle_time"`
+	ParentUid      string  `db:"parent_uid" json:"parent_uid" form:"parent_uid"`
+	ParentName     string  `db:"parent_name" json:"parent_name" form:"parent_name"`
 	IsRisk         int     `db:"-" json:"is_risk"`
 }
 
@@ -481,14 +482,14 @@ type MessageTDData struct {
 }
 
 type BalanceTransaction struct {
-	Uid          string  `json:"uid"`
-	Amount       float64 `json:"amount"`
-	BeforeAmount float64 `json:"before_amount"`
-	CashType     int     `json:"cash_type"`
-	CreatedAt    int64   `json:"created_at"`
-	BillNo       string  `json:"bill_no"`
-	AfterAmount  float64 `json:"after_amount"`
-	Username     string  `json:"username"`
+	Uid          string  `json:"uid" db:"uid"`
+	Amount       float64 `json:"amount" db:"amount"`
+	BeforeAmount float64 `json:"before_amount" db:"before_amount"`
+	CashType     int     `json:"cash_type" db:"cash_type"`
+	CreatedAt    int64   `json:"created_at" db:"created_at"`
+	BillNo       string  `json:"bill_no" db:"bill_no"`
+	AfterAmount  float64 `json:"after_amount" db:"after_amount"`
+	Username     string  `json:"username" db:"username"`
 }
 
 type WaterFlow struct {

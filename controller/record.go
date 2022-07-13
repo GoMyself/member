@@ -41,7 +41,7 @@ func (that *RecordController) Game(ctx *fasthttp.RequestCtx) {
 	if pageSize == 0 {
 		pageSize = 10
 	}
-	data, err := model.RecordGame(ty, user.UID, playerName, startTime, endTime, flags, platformID, pageSize, page)
+	data, err := model.RecordGame(ty, user.UID, playerName, startTime, endTime, flags, platformID, uint(pageSize), uint(page))
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -75,7 +75,7 @@ func (that *RecordController) Transfer(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	data, err := model.RecordTransfer(user.Username, billNo, state, transferType, pidIn, pidOut, startTime, endTime, page, pageSize)
+	data, err := model.RecordTransfer(user.Username, billNo, state, transferType, pidIn, pidOut, startTime, endTime, uint(page), uint(pageSize))
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -99,7 +99,7 @@ func (that *RecordController) Transaction(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	data, err := model.RecordTransaction(user.UID, cashTypes, startTime, endTime, page, pageSize)
+	data, err := model.RecordTransaction(user.UID, cashTypes, startTime, endTime, uint(page), uint(pageSize))
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
@@ -123,7 +123,7 @@ func (that *RecordController) Trade(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	data, err := model.RecordTrade(user.UID, startTime, endTime, flag, page, pageSize)
+	data, err := model.RecordTrade(user.UID, startTime, endTime, flag, uint(page), uint(pageSize))
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return

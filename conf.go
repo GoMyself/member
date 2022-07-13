@@ -37,6 +37,11 @@ type conf struct {
 			MaxIdleConn int    `json:"max_idle_conn"`
 			MaxOpenConn int    `json:"max_open_conn"`
 		} `json:"bet"`
+		Tidb struct {
+			Addr        string `json:"addr"`
+			MaxIdleConn int    `json:"max_idle_conn"`
+			MaxOpenConn int    `json:"max_open_conn"`
+		} `json:"tidb"`
 	} `json:"db"`
 	Td struct {
 		Addr        string `json:"addr"`
@@ -51,11 +56,6 @@ type conf struct {
 		Addr     []string `json:"addr"`
 		Password string   `json:"password"`
 	} `json:"redis"`
-	Es struct {
-		Host     []string `json:"host"`
-		Username string   `json:"username"`
-		Password string   `json:"password"`
-	} `json:"es"`
 	Email struct {
 		Name     string `json:"name"`
 		Account  string `json:"account"`

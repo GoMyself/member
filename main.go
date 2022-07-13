@@ -47,11 +47,12 @@ func main() {
 	mt.MerchantTD = conn.InitTD(cfg.Td.Addr, cfg.Td.MaxIdleConn, cfg.Td.MaxOpenConn)
 	mt.MerchantDB = conn.InitDB(cfg.Db.Master.Addr, cfg.Db.Master.MaxIdleConn, cfg.Db.Master.MaxOpenConn)
 	mt.ReportDB = conn.InitDB(cfg.Db.Report.Addr, cfg.Db.Report.MaxIdleConn, cfg.Db.Report.MaxOpenConn)
+	mt.TiDB = conn.InitDB(cfg.Db.Tidb.Addr, cfg.Db.Tidb.MaxIdleConn, cfg.Db.Tidb.MaxOpenConn)
+
 	mt.MerchantRedis = conn.InitRedisCluster(cfg.Redis.Addr, cfg.Redis.Password)
 
 	bin := strings.Split(os.Args[0], "/")
 	mt.Program = bin[len(bin)-1]
-	mt.ES = conn.InitES(cfg.Es.Host, cfg.Es.Username, cfg.Es.Password)
 
 	mt.CardValid = cfg.BankcardValidAPI
 	model.Constructor(mt, cfg.RPC)

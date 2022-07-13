@@ -2,7 +2,6 @@ package controller
 
 import (
 	"fmt"
-	g "github.com/doug-martin/goqu/v9"
 	"net/url"
 	"strconv"
 	"strings"
@@ -433,13 +432,11 @@ func (that *MemberController) Nav(ctx *fasthttp.RequestCtx) {
 
 func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 
+	parentName := string(ctx.QueryArgs().Peek("parent_name"))
 	username := string(ctx.QueryArgs().Peek("username"))
-	startTime := string(ctx.QueryArgs().Peek("start_time"))
-	endTime := string(ctx.QueryArgs().Peek("end_time"))
+	ty := string(ctx.QueryArgs().Peek("ty")) //1今天2昨天3本月4上月5三天6七天7本周8上周
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
-	sortField := string(ctx.QueryArgs().Peek("sort_field"))
-	isAsc := ctx.QueryArgs().GetUintOrZero("is_asc")
 	agg := ctx.QueryArgs().GetUintOrZero("agg")
 	if page == 0 {
 		page = 1
@@ -449,50 +446,27 @@ func (that *MemberController) List(ctx *fasthttp.RequestCtx) {
 		pageSize = 10
 	}
 
-	ex := g.Ex{}
 	if username != "" {
 		if !validator.CheckUName(username, 5, 14) {
 			helper.Print(ctx, false, helper.UsernameErr)
 			return
 		}
-		ex["username"] = username
 	}
 
-	if sortField != "" {
-		sortFields := map[string]bool{
-			"deposit_amount":     true,
-			"withdrawal_amount":  true,
-			"dividend_amount":    true,
-			"rebate_amount":      true,
-			"company_net_amount": true,
-		}
-
-		if _, ok := sortFields[sortField]; !ok {
-			helper.Print(ctx, false, helper.ParamErr)
-			return
-		}
-
-		if !validator.CheckIntScope(strconv.Itoa(isAsc), 0, 1) {
-			helper.Print(ctx, false, helper.ParamErr)
-			return
-		}
-	}
-
-	currentUsername := string(ctx.UserValue("token").([]byte))
-	if currentUsername == "" {
-		helper.Print(ctx, false, helper.AccessTokenExpires)
-		return
-	}
-	//currentUsername := "jasper01"
-	ex["parent_name"] = currentUsername
-
-	data, err := model.MemberList(ex, username, startTime, endTime, sortField, isAsc, page, pageSize)
+	data, err := model.MemberList(ctx, username, parentName, ty, page, pageSize)
 	if err != nil {
 		helper.Print(ctx, false, err.Error())
 		return
 	}
+	currentUsername := string(ctx.UserValue("token").([]byte))
 
 	if agg == 1 {
+		if parentName != "" {
+			currentUsername = parentName
+		}
+		if username != "" {
+			currentUsername = username
+		}
 		aggData, err := model.MemberAgg(currentUsername)
 		if err != nil {
 			helper.Print(ctx, false, err.Error())

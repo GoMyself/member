@@ -93,6 +93,8 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	reportCtl := new(controller.ReportController)
 	// vip
 	vipCtl := new(controller.VipController)
+	//新手教程
+	tutorialCtl := new(controller.TutorialController)
 
 	get("/member/version", Version)
 
@@ -202,6 +204,10 @@ func SetupRouter(b BuildInfo) *fasthttprouter.Router {
 	get("/member/agency/record/trade", reportCtl.SubTradeRecord)
 	// 代理报表
 	get("/member/agency/report/list", reportCtl.List)
+	// 新手教程-读取
+	get("/member/tutorial/read", tutorialCtl.Read)
+	// 新手教程-是否读取
+	get("/member/tutorial/state", tutorialCtl.State)
 	buildInfo = b
 
 	return router

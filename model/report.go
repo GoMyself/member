@@ -79,7 +79,6 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 		if count == 0 {
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
-
 	}
 
 	var startAt int64
@@ -166,9 +165,29 @@ func AgencyReport(ty string, fCtx *fasthttp.RequestCtx, username string) (Report
 func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.RequestCtx, username string) (ReportSubMemberData, error) {
 
 	data := ReportSubMemberData{}
+	loginUser, err := MemberCache(fCtx, "")
+	if err != nil {
+		return data, errors.New(helper.AccessTokenExpires)
+	}
 	mb, err := MemberCache(fCtx, username)
 	if err != nil {
 		return data, errors.New(helper.AccessTokenExpires)
+	}
+	if len(username) > 0 {
+		var count int64
+		ex := g.Ex{
+			"ancestor":   loginUser.UID,
+			"descendant": mb.UID,
+			"prefix":     meta.Prefix,
+		}
+		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
+		err := meta.MerchantDB.Get(&count, query)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
+		if count == 0 {
+			return data, errors.New(helper.NotDirectSubordinate)
+		}
 	}
 
 	var startAt int64
@@ -251,9 +270,29 @@ func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx, username strin
 
 	offset := (page - 1) * pageSize
 	data := ReportSubMemberData{}
+	loginUser, err := MemberCache(fCtx, "")
+	if err != nil {
+		return data, errors.New(helper.AccessTokenExpires)
+	}
 	mb, err := MemberCache(fCtx, username)
 	if err != nil {
 		return data, errors.New(helper.AccessTokenExpires)
+	}
+	if len(username) > 0 {
+		var count int64
+		ex := g.Ex{
+			"ancestor":   loginUser.UID,
+			"descendant": mb.UID,
+			"prefix":     meta.Prefix,
+		}
+		query, _, _ := dialect.From("tbl_members_tree").Select(g.COUNT("*")).Where(ex).Limit(1).ToSQL()
+		err := meta.MerchantDB.Get(&count, query)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
+		if count == 0 {
+			return data, errors.New(helper.NotDirectSubordinate)
+		}
 	}
 
 	if page == 1 {

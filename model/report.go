@@ -383,7 +383,7 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 			return data, errors.New(helper.NotDirectSubordinate)
 		}
 		ex = g.Ex{
-			"player_name": playerName,
+			"uid": mb.UID,
 		}
 	} else {
 		ex = g.Ex{

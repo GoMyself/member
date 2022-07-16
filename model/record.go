@@ -130,7 +130,11 @@ func RecordGame(ty int, uid, playerName, startTime, endTime string, flag, gameID
 		// 直属下级游戏记录
 		ex["parent_uid"] = uid
 		if playerName != "" && validator.CheckUName(playerName, 5, 14) {
-			ex["player_name"] = playerName
+			mb, err := MemberCacheByName(playerName)
+			if err != nil {
+				return data, errors.New(helper.UsernameErr)
+			}
+			ex["uid"] = mb.UID
 		}
 	} else { // 查自己的游戏记录
 		ex["uid"] = uid

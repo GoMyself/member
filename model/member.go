@@ -678,6 +678,35 @@ func MemberCache(fctx *fasthttp.RequestCtx, name string) (Member, error) {
 	return m, nil
 }
 
+// 通过用户名获取用户在redis中的数据
+func MemberCacheByName(name string) (Member, error) {
+
+	m := Member{}
+
+	field := []string{"uid", "username", "password", "birth", "birth_hash", "realname_hash", "email_hash", "phone_hash", "zalo_hash", "prefix", "tester", "withdraw_pwd", "regip", "reg_device", "reg_url", "created_at", "last_login_ip", "last_login_at", "source_id", "first_deposit_at", "first_deposit_amount", "first_bet_at", "first_bet_amount", "top_uid", "top_name", "parent_uid", "parent_name", "bankcard_total", "last_login_device", "last_login_source", "remarks", "state", "level", "balance", "lock_amount", "commission", "group_name", "agency_type", "address", "avatar"}
+	key := meta.Prefix + ":member:" + name
+
+	pipe := meta.MerchantRedis.TxPipeline()
+	defer pipe.Close()
+
+	exist := pipe.Exists(ctx, key)
+	rs := pipe.HMGet(ctx, key, field...)
+
+	_, err := pipe.Exec(ctx)
+	if err != nil {
+		return m, pushLog(err, helper.RedisErr)
+	}
+
+	if exist.Val() == 0 {
+		return m, errors.New(helper.UsernameErr)
+	}
+
+	if err = rs.Scan(&m); err != nil {
+		return m, pushLog(rs.Err(), helper.RedisErr)
+	}
+	return m, nil
+}
+
 // 查询用户单条数据
 func MemberFindOne(name string) (Member, error) {
 

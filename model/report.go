@@ -199,6 +199,7 @@ func SubAgencyReport(ty, flag string, page, pageSize int, fCtx *fasthttp.Request
 		reportType = 2
 	case "2": //昨天
 		startAt = helper.DayTST(0, loc).Unix() - 24*60*60
+		endAt = helper.DayTST(0, loc).Unix() - 1
 		reportType = 2
 	case "3": //本月
 		startAt = helper.MonthTST(0, loc).Unix()

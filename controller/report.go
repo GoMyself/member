@@ -53,7 +53,7 @@ func (that *ReportController) SubGameRecord(ctx *fasthttp.RequestCtx) {
 
 	page := ctx.QueryArgs().GetUintOrZero("page")
 	pageSize := ctx.QueryArgs().GetUintOrZero("page_size")
-	flag := ctx.QueryArgs().GetUintOrZero("flag") //0全部1待开奖2未中奖3已中奖
+	flag := string(ctx.QueryArgs().Peek("flag")) //-1全部0未结算1已结算2取消3无效4中奖撤单
 	gameType := ctx.QueryArgs().GetUintOrZero("game_type")
 	platformID := ctx.QueryArgs().GetUintOrZero("platform_id")
 	dateFlag := ctx.QueryArgs().GetUintOrZero("date_flag")    //1今天2昨天3七天

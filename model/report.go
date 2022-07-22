@@ -10,6 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"member/contrib/helper"
 	"member/contrib/validator"
+	"strconv"
 	"strings"
 )
 
@@ -339,7 +340,7 @@ func SubAgencyList(page, pageSize int, fCtx *fasthttp.RequestCtx, username strin
 	return data, nil
 }
 
-func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int, pageSize, page uint) (GameRecordData, error) {
+func SubGameRecord(uid, playerName string, gameType, dateType int, flag string, gameID int, pageSize, page uint) (GameRecordData, error) {
 
 	data := GameRecordData{}
 	//判断日期
@@ -412,12 +413,12 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 		}
 	}
 	ex["bet_time"] = g.Op{"between": exp.NewRangeVal(startAt, endAt)}
-	if flag == 1 {
-		ex["flag"] = 0
-	} else if flag == 2 { //未中奖
-		ex["net_amount"] = g.Op{"lt": 0}
-	} else if flag == 3 { //已中奖
-		ex["net_amount"] = g.Op{"gt": 0}
+	if flag != "-1" {
+		f, err := strconv.Atoi(flag)
+		if err != nil {
+			return data, pushLog(err, helper.DBErr)
+		}
+		ex["flag"] = f
 	}
 
 	if gameType > 0 {
@@ -447,14 +448,6 @@ func SubGameRecord(uid, playerName string, gameType, dateType, flag, gameID int,
 	}
 
 	for i := 0; i < len(data.D); i++ {
-		//1待开奖2未中奖3已中奖
-		if data.D[i].Flag == 0 {
-			data.D[i].Flag = 1
-		} else if data.D[i].NetAmount > 0 {
-			data.D[i].Flag = 3
-		} else if data.D[i].NetAmount < 0 {
-			data.D[i].Flag = 2
-		}
 		data.D[i].ApiTypes = fmt.Sprintf(`%d`, data.D[i].ApiType)
 	}
 

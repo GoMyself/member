@@ -448,14 +448,6 @@ func SubGameRecord(uid, playerName string, gameType, dateType int, flag string, 
 	}
 
 	for i := 0; i < len(data.D); i++ {
-		//1待开奖2未中奖3已中奖
-		if data.D[i].Flag == 0 {
-			data.D[i].Flag = 1
-		} else if data.D[i].NetAmount > 0 {
-			data.D[i].Flag = 3
-		} else if data.D[i].NetAmount < 0 {
-			data.D[i].Flag = 2
-		}
 		data.D[i].ApiTypes = fmt.Sprintf(`%d`, data.D[i].ApiType)
 	}
 

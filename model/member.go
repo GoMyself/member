@@ -7,6 +7,7 @@ import (
 	"github.com/shopspring/decimal"
 	"member/contrib/helper"
 	"member/contrib/session"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -169,7 +170,6 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 	//	"parent_name": mb.ParentName,
 	//	"ts":          ts.In(loc).UnixMicro(),
 	//	"create_at":   ts.In(loc).Unix(),
-	//	"uniq":        fmt.Sprintf("%s|%s", username, ip),
 	//	"team":        mb.GroupName,
 	//}
 	//
@@ -519,29 +519,24 @@ func MemberInfo(fctx *fasthttp.RequestCtx) (MemberInfosData, error) {
 
 	encRes := []string{}
 	if res.MemberInfos.RealnameHash != "0" {
-
 		encRes = append(encRes, "realname")
 	}
 
 	if res.MemberInfos.PhoneHash != "0" {
-
 		encRes = append(encRes, "phone")
 	}
 
 	if res.MemberInfos.EmailHash != "0" {
-
 		encRes = append(encRes, "email")
 	}
 
 	if res.MemberInfos.ZaloHash != "0" {
-
 		encRes = append(encRes, "zalo")
 	}
 
 	if len(encRes) > 0 {
 		recs, err := grpc_t.Decrypt(res.MemberInfos.UID, true, encRes)
 		if err != nil {
-
 			//fmt.Println("MemberInfo res.MemberInfos.UID = ", res.MemberInfos.UID)
 			//fmt.Println("MemberInfo grpc_t.Decrypt err = ", err.Error())
 			return res, errors.New(helper.UpdateRPCErr)
@@ -594,6 +589,8 @@ func memberInfoCache(fCtx *fasthttp.RequestCtx) (MemberInfos, error) {
 	if err = rs.Scan(&m); err != nil {
 		return m, pushLog(rs.Err(), helper.RedisErr)
 	}
+
+	m.Address, _ = url.QueryUnescape(m.Address)
 
 	return m, nil
 }

@@ -145,27 +145,27 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 		return "", err
 	}
 
-	data := g.Record{
-		"prefix":      meta.Prefix,
-		"username":    username,
-		"ip":          ip,
-		"device":      device,
-		"device_no":   deviceNo,
-		"top_uid":     mb.TopUid,
-		"top_name":    mb.TopName,
-		"parent_uid":  mb.ParentUid,
-		"parent_name": mb.ParentName,
-		"ts":          ts.In(loc).UnixMicro(),
-		"create_at":   ts.In(loc).Unix(),
-		//"uniq":        fmt.Sprintf("%s|%s", username, ip),
-		//"team":        mb.GroupName,
-	}
-
-	query, _, _ = dialect.Insert("member_login_log").Rows(data).ToSQL()
-	_, err = meta.MerchantTD.Exec(query)
-	if err != nil {
-		fmt.Println("insert member_login_log = ", err.Error())
-	}
+	//data := g.Record{
+	//	"prefix":      meta.Prefix,
+	//	"username":    username,
+	//	"ip":          ip,
+	//	"device":      device,
+	//	"device_no":   deviceNo,
+	//	"top_uid":     mb.TopUid,
+	//	"top_name":    mb.TopName,
+	//	"parent_uid":  mb.ParentUid,
+	//	"parent_name": mb.ParentName,
+	//	"ts":          ts.In(loc).UnixMicro(),
+	//	"create_at":   ts.In(loc).Unix(),
+	//	"uniq":        fmt.Sprintf("%s|%s", username, ip),
+	//	"team":        mb.GroupName,
+	//}
+	//
+	//query, _, _ = dialect.Insert("member_login_log").Rows(data).ToSQL()
+	//_, err = meta.MerchantTD.Exec(query)
+	//if err != nil {
+	//	fmt.Println("insert member_login_log = ", err.Error())
+	//}
 
 	MemberUpdateCache(mb.UID, "")
 	/*

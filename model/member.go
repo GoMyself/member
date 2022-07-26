@@ -157,8 +157,8 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 		"parent_name": mb.ParentName,
 		"ts":          ts.In(loc).UnixMicro(),
 		"create_at":   ts.In(loc).Unix(),
-		"uniq":        fmt.Sprintf("%s|%s", username, ip),
-		"team":        mb.GroupName,
+		//"uniq":        fmt.Sprintf("%s|%s", username, ip),
+		//"team":        mb.GroupName,
 	}
 
 	query, _, _ = dialect.Insert("member_login_log").Rows(data).ToSQL()

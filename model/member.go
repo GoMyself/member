@@ -145,6 +145,18 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 		return "", err
 	}
 
+	_ = MemberUpdateCache(mb.UID, "")
+
+	sid, err := session.Set([]byte(username), mb.UID)
+	if err != nil {
+		return "", errors.New(helper.SessionErr)
+	}
+
+	_, err = meta.MerchantRedis.Unlink(ctx, key).Result()
+	if err != nil {
+		return "", pushLog(err, helper.RedisErr)
+	}
+
 	//data := g.Record{
 	//	"prefix":      meta.Prefix,
 	//	"username":    username,
@@ -166,44 +178,6 @@ func MemberLogin(fctx *fasthttp.RequestCtx, vid, code, username, password, ip, d
 	//if err != nil {
 	//	fmt.Println("insert member_login_log = ", err.Error())
 	//}
-
-	MemberUpdateCache(mb.UID, "")
-	/*
-		log := map[string]string{
-			"username":  mb.Username,
-			"ip":        ip,
-			"device":    device,
-			"device_no": deviceNo,
-			"parents":   mb.ParentName,
-		}
-		err = tdlog.WriteLog("member_login_log", log)
-		if err != nil {
-			fmt.Printf("member write member_login_log error : [%s]/n", err.Error())
-		}
-
-		l := MemberLoginLog{
-			Username: username,
-			IPS:      ip,
-			Device:   device,
-			DeviceNo: deviceNo,
-			Date:     lastLoginAt,
-			Parents:  mb.ParentName,
-			Prefix:   meta.Prefix,
-		}
-		err = meta.Zlog.Post(esPrefixIndex("memberlogin"), l)
-		if err != nil {
-			fmt.Printf("zlog error : %v data : %#v\n", err, l)
-		}
-	*/
-	sid, err := session.Set([]byte(username), mb.UID)
-	if err != nil {
-		return "", errors.New(helper.SessionErr)
-	}
-
-	_, err = meta.MerchantRedis.Unlink(ctx, key).Result()
-	if err != nil {
-		return "", pushLog(err, helper.RedisErr)
-	}
 
 	return sid, nil
 }

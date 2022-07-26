@@ -15,6 +15,8 @@ func MessageList(ty, page, pageSize int, isRead, username string) (MessageTDData
 	data := MessageTDData{
 		S: pageSize,
 	}
+	return data, nil
+
 	ex := g.Ex{
 		"prefix":    meta.Prefix,
 		"username":  username,
@@ -53,6 +55,8 @@ func MessageList(ty, page, pageSize int, isRead, username string) (MessageTDData
 func MessageEmergency(username string) (MessageTD, error) {
 
 	data := MessageTD{}
+	return data, nil
+
 	ex := g.Ex{
 		"prefix":   meta.Prefix,
 		"username": username,
@@ -75,6 +79,8 @@ func MessageEmergency(username string) (MessageTD, error) {
 
 func MessageNum(username string) (int64, error) {
 
+	return 0, nil
+
 	var num int64
 	ex := g.Ex{
 		"prefix":    meta.Prefix,
@@ -94,6 +100,8 @@ func MessageNum(username string) (int64, error) {
 
 //MessageRead  站内信已读
 func MessageRead(ts string) error {
+
+	return nil
 
 	fmt.Println(ts)
 	l := len(ts)
@@ -123,6 +131,8 @@ func MessageRead(ts string) error {
 
 // 站内信删除已读
 func MessageDelete(username string, tss []string, flag int) error {
+
+	return nil
 
 	fmt.Println("MessageDelete", username, tss)
 	if flag == 2 {

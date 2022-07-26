@@ -55,8 +55,7 @@ func MessageList(ty, page, pageSize int, isRead, username string) (MessageTDData
 func MessageEmergency(username string) (MessageTD, error) {
 
 	data := MessageTD{}
-	return data, nil
-
+	return data, sql.ErrNoRows
 	ex := g.Ex{
 		"prefix":   meta.Prefix,
 		"username": username,

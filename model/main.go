@@ -39,6 +39,7 @@ type MetaTable struct {
 	MerchantDB     *sqlx.DB
 	ReportDB       *sqlx.DB
 	MerchantTD     *sqlx.DB
+	MerchantLogTD  *sqlx.DB
 	TiDB           *sqlx.DB
 	CardValid      bankcardValidAPI_t
 	AutoCommission bool
@@ -117,7 +118,7 @@ func pushLog(err error, code string) error {
 
 	query, _, _ := dialect.Insert("goerror").Rows(fields).ToSQL()
 	fmt.Println(query)
-	_, err1 := meta.MerchantTD.Exec(query)
+	_, err1 := meta.MerchantLogTD.Exec(query)
 	if err1 != nil {
 		fmt.Println("insert SMS = ", err1.Error(), query)
 	}

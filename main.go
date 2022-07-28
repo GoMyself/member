@@ -44,7 +44,8 @@ func main() {
 	mt.PullPrefix = cfg.PullPrefix
 	mt.AutoCommission = cfg.AutoCommission
 
-	mt.MerchantTD = conn.InitTD(cfg.Td.Addr, cfg.Td.MaxIdleConn, cfg.Td.MaxOpenConn)
+	mt.MerchantTD = conn.InitTD(cfg.Td.Message.Addr, cfg.Td.Message.MaxIdleConn, cfg.Td.Message.MaxOpenConn)
+	mt.MerchantLogTD = conn.InitTD(cfg.Td.Log.Addr, cfg.Td.Log.MaxIdleConn, cfg.Td.Log.MaxOpenConn)
 	mt.MerchantDB = conn.InitDB(cfg.Db.Master.Addr, cfg.Db.Master.MaxIdleConn, cfg.Db.Master.MaxOpenConn)
 	mt.ReportDB = conn.InitDB(cfg.Db.Report.Addr, cfg.Db.Report.MaxIdleConn, cfg.Db.Report.MaxOpenConn)
 	mt.TiDB = conn.InitDB(cfg.Db.Tidb.Addr, cfg.Db.Tidb.MaxIdleConn, cfg.Db.Tidb.MaxOpenConn)
@@ -62,13 +63,6 @@ func main() {
 		model.Close()
 		mt = nil
 	}()
-
-	if os.Args[3] == "load" {
-		model.MemberRebateUpdateALL()
-		model.MemberFlushAll()
-		fmt.Println("MemberRebateUpdateALL done")
-		return
-	}
 
 	b := router.BuildInfo{
 		GitReversion:   gitReversion,

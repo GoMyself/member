@@ -464,7 +464,6 @@ type MessageTD struct {
 	MsgID    string `json:"message_id" db:"message_id"` //站内信id
 	Username string `json:"username" db:"username"`     //会员名
 	Title    string `json:"title" db:"title"`           //标题
-	SubTitle string `json:"sub_title" db:"sub_title"`   //标题
 	Content  string `json:"content" db:"content"`       //内容
 	IsTop    int    `json:"is_top" db:"is_top"`         //0不置顶 1置顶
 	IsVip    int    `json:"is_vip" db:"is_vip"`         //0非vip站内信 1vip站内信
